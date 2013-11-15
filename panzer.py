@@ -72,8 +72,7 @@ cli_options = {
     'pandoc': {
         'clioptions'      : [],
         'write'           : '',
-        'output_filename' : '-',
-        'input_filenames' : ['-'],
+        'output'          : '-'
     }
 }
 
@@ -341,37 +340,24 @@ def parse_cli_options():
         print 'Known:  ', json.dumps(pandoc_known, indent=1)
         print 'Unknown:', json.dumps(pandoc_unknown, indent=1)
 
-    ## Update cli_options with input and output filenames for pandoc
-    ## by running `pandoc --dump-args`. From pandoc's manual:
-    ## --dump-args:
-    ## Print information about command-line arguments to stdout, then exit. This option is intended primarily for use in wrapper scripts. The first line of output contains the name of the output file specified with the -o option, or - (for stdout) if no output file was specified. The remaining lines contain the command-line arguments, one per line, in the order they appear. These do not include regular Pandoc options and their arguments, but do include any options appearing after a -- separator at the end of the line.
-    cmd = ["pandoc", "--dump-args"]
-    cmd.extend(panzer_unknown)
-    stdout = subprocess.check_output(cmd).splitlines()
-    input_filenames = []
-    output_filename = ''
-    for index, line in enumerate(stdout):
-        if index == 0:
-            ## First line of --dump-args is output filename
-            output_filename = line
-        else:
-            ## Other lines are input filenames
-            input_filenames.append(line)
-    if output_filename:
-        cli_options['pandoc']['output_filename'] = output_filename
-    if input_filenames:
-        cli_options['pandoc']['input_filenames'] = input_filenames
+    ## Update cli_options with pandoc's output
+    if pandoc_known['output']:
+        ## First case: output explicitly specified by cli option
+        cli_options['pandoc']['output'] = pandoc_known['output']
+    else:
+        ## Second case: default output is stdout
+        cli_options['pandoc']['output'] = '-'
 
     ## Update cli_options with pandoc's writer
     if pandoc_known['write']:
         ## First case: writer explicitly specified by cli option
         cli_options['pandoc']['write'] = pandoc_known['write']
-    elif cli_options['pandoc']['output_filename'] == '-':
+    elif cli_options['pandoc']['output'] == '-':
         ## Second case: html default writer for stdout
         cli_options['pandoc']['write'] = 'html'
     else:
         ## Third case: writer set via output filename extension
-        ext = os.path.splitext(cli_options['pandoc']['output_filename'])[1].lower()
+        ext = os.path.splitext(cli_options['pandoc']['output'])[1].lower()
         implicit_writer = PANDOC_WRITER_MAPPING.get(ext)
         if implicit_writer is not None:
             cli_options['pandoc']['write'] = implicit_writer
@@ -379,18 +365,9 @@ def parse_cli_options():
             ## html is default writer for unrecognised extensions
             cli_options['pandoc']['write'] = 'html'
 
-    ## Store all remaining cli options for pandoc in cli_options
-    ## This is full list of options passed to panzer minus:
-    ##      1. Panzer-specific options
-    ##      2. -w option
-    ##      3. -o option
-    ##      4. - items for input files (replaced with temp filenames below)
-    ## These all need to be replaced when pandoc runs internally in panzer
-    cli_options['pandoc']['clioptions'] = pandoc_unknown
-
-    ## If stdin one of the inputs then read from stdin into temp file and
-    ## replace reference to stdin with reference to temporary file
-    if '-' in cli_options['pandoc']['input_filenames']:
+    ## If one of the inputs is stdin then read from stdin now into 
+    ## a temp file, then replace '-'s in input with reference to file
+    if '-' in pandoc_unknown:
         ## Read from stdin now into temp file in cwd
         stdin = sys.stdin.read()
         fp = tempfile.NamedTemporaryFile(prefix='__stdin-panzer-', suffix='__', dir=os.getcwd(), delete=False)
@@ -398,12 +375,18 @@ def parse_cli_options():
         fp.write(stdin)
         fp.close()
         ## Replace all reference to stdin in pandoc cli with temp file
-        for i, n in enumerate(cli_options['pandoc']['input_filenames']):
+        for i, n in enumerate(pandoc_unknown):
             if n == '-':
-                cli_options['pandoc']['input_filenames'][i] = cli_options['panzer']['stdin_temp_file']
-        for i, n in enumerate(cli_options['pandoc']['clioptions']):
-            if n == '-':
-                cli_options['pandoc']['clioptions'][i] = cli_options['panzer']['stdin_temp_file']
+                pandoc_unknown[i] = cli_options['panzer']['stdin_temp_file']
+
+    ## Store all remaining cli options for pandoc in cli_options
+    ## This is full list of options passed to panzer minus:
+    ##      1. Panzer-specific options
+    ##      2. -w option
+    ##      3. -o option
+    ##      4. - items for input replaced with temp filenames below
+    ## These all need to be replaced when pandoc runs internally in panzer
+    cli_options['pandoc']['clioptions'] = pandoc_unknown
 
     if debug_cli:
         print '----------------------- cli_options -------------------------------'
