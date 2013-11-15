@@ -17,7 +17,8 @@ Copyright:  Copyright 2013, Mark Sprevak
 License:    BSD3
 """
 
-__version__    = "0.1"
+__version__            = "0.1"
+REQUIRE_PANDOC_ATLEAST = "1.12.1"
 
 PANZER_HELP_DESCRIPTION = '''
 Panzer provides an elegant and powerful way of driving pandoc using styles.
@@ -43,11 +44,12 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
+import yaml
 from   distutils.version import StrictVersion
 
 TEMP_DIR               = '.tmp'
 DEFAULT_SUPPORT_DIR    = os.path.join(os.path.expanduser('~'), '.panzer')
-REQUIRE_PANDOC_ATLEAST = "1.12.1" 
 
 class PanzerError(Exception):
     pass
@@ -55,19 +57,23 @@ class PanzerError(Exception):
 class PanzerSetupError(PanzerError):
     pass
 
+default_styledef = {}
+
 # default settings for command line arguments
 cli_options = {
     'panzer': {
-        'panzer_support': DEFAULT_SUPPORT_DIR,
-        'debug'        : False,
-        'silent'       : False,
-        'html'         : False
+        'panzer_support' : DEFAULT_SUPPORT_DIR,
+        'debug'          : False,
+        'silent'         : False,
+        'html'           : False,
+        'stdin_temp_file': '',
+        'style'          : ''
     },
     'pandoc': {
-        'clioptions'       : [],
-        'write'            : '',
-        'output_filename'  : '-',
-        'input_filenames'  : ['-'],
+        'clioptions'      : [],
+        'write'           : '',
+        'output_filename' : '-',
+        'input_filenames' : ['-'],
     }
 }
 
@@ -172,15 +178,15 @@ def move_temp_files_back(basename):
 
 def check_support_directory():
     """docstring for create_default_data_directory"""
-    
+
     support = cli_options['panzer']['panzer_support']
-    
+
     if support != DEFAULT_SUPPORT_DIR:
         if not os.path.exists(support):
-            logger.error('Panzer support directory "%s" not found.' % support)
+            logger.error('Panzer support directory "%s" not found.', support)
             logger.info('Using default panzer support directory: %s' % DEFAULT_SUPPORT_DIR)
             support = DEFAULT_SUPPORT_DIR
-            
+
     if not os.path.exists(DEFAULT_SUPPORT_DIR):
         logger.info('Default panzer support directory does not exist.')
         os.makedirs(DEFAULT_SUPPORT_DIR)
@@ -193,19 +199,11 @@ def check_support_directory():
         logger.info('Created default panzer support directory: %s' % DEFAULT_SUPPORT_DIR)
 
 
-    # input_basefilename = os.path.splitext(input_filename)[0]
-    # temp_basefilename  = mangle(input_basefilename)
-    # 
-    # move_temp_files_out(temp_basefilename)
-
-    # read (pandoc -t json dafauts.md) as JSON
-    # read (pandoc -t json input_filename) as JSON
-    
     # read the style in the list
     # find the template
     # find the filters
     # run the filters
-    # 
+    #
     # currentdocument.remove('stylecustom')
     # metadata = dict()
     # metadata.update(style.default.all_styles.all_writers.metadata)
@@ -217,23 +215,23 @@ def check_support_directory():
     # metadata.update(customstyle.default.current_style.all_writers.metadata)
     # metadata.update(customstyle.default.current_style.current_writer.metadata)
     # metadata.update(currentdocument)
-    # 
+    #
     # new_temp_md_file(input_filename, temp_md_filename)
     # append_metadata_defaults(new_filename)
-    
+
     #
 
 def start_logger():
     """docstring for initialise_logger"""
     config = {
-        'version': 1,              
+        'version': 1,
         'disable_existing_loggers': False,
         'formatters': {
             'detailed': {
                 'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
             },
             'short': {
-                'format': '%(levelname)s - %(message)s'
+                'format': 'panzer - %(levelname)s - %(message)s'
             },
             'html': {
                 'format': '<div class"%(levelname)s">%(message)s</div>'
@@ -260,22 +258,22 @@ def start_logger():
             __name__: {
                 'handlers'   : [ 'console', 'log_file_handler' ],
                 'level'      : 'DEBUG',
-                'propagate'  : True  
+                'propagate'  : True
             }
         }
     }
-    
+
     ## Modify default logging option with settings from cli
     if not cli_options['panzer']['debug']:
         config['loggers'][__name__]['handlers'].remove('log_file_handler')
         del config['handlers']['log_file_handler']
-    
+
     if cli_options['panzer']['silent']:
         config['handlers']['console']['level'] = 'CRITICAL'
-    
+
     if cli_options['panzer']['html']:
         config['handlers']['console']['formatter'] = 'html'
-    
+
     ## Configure and create the logger
     logging.config.dictConfig(config)
     global logger
@@ -293,33 +291,33 @@ def check_pandoc_exists():
     pandoc_version = re.sub('[^0-9.]', '', stdout[0])
     if StrictVersion(pandoc_version) < StrictVersion(REQUIRE_PANDOC_ATLEAST):
         raise PanzerSetupError('Pandoc %s or greater required. Found pandoc version %s' % (REQUIRE_PANDOC_ATLEAST, pandoc_version))
-        
+
 
 def parse_cli_options():
     """Parse the command line options passed to panzer, and print help text
-    
-    Sets the global variable `cli_options`. 
-    
+
+    Sets the global variable `cli_options`.
+
     `cli_options` is a dict that holds all the options that apply to this
-    invocation of panzer. 
+    invocation of panzer.
     """
-    
+
     ## This function runs before logging starts so use print statements for debugging
     debug_cli = False
-    
+
     ## Parse options specific to panzer
     panzer_parser = argparse.ArgumentParser(
         description     = PANZER_HELP_DESCRIPTION,
-        epilog          = PANZER_HELP_EPILOG, 
+        epilog          = PANZER_HELP_EPILOG,
         formatter_class = argparse.RawTextHelpFormatter)
     panzer_parser.add_argument("---panzer-support", help='location of directory of support files for panzer')
     panzer_parser.add_argument("---debug", help='write debug info to `panzer.log`', action="store_true")
     panzer_parser.add_argument("---silent", help='suppress panzer-generated messages to console', action="store_true")
     panzer_parser.add_argument("---html", help='format console messages in HTML', action="store_true")
-    panzer_parser.add_argument('---version', action='version', version=('%(prog)s ' + __version__))    
+    panzer_parser.add_argument('---version', action='version', version=('%(prog)s ' + __version__))
     known, panzer_unknown = panzer_parser.parse_known_args()
     panzer_known = vars(known)
-    
+
     ## Update cli_options with panzer-specific values passed from cli
     for key in panzer_known:
         value = panzer_known[key]
@@ -327,15 +325,15 @@ def parse_cli_options():
             cli_options['panzer'][key] = value
 
     if debug_cli:
-        print '----------------------- panzer ------------------------------------'    
+        print '----------------------- panzer ------------------------------------'
         print 'Known:  ', json.dumps(panzer_known, indent=1)
         print 'Unknown:', json.dumps(panzer_unknown, indent=1)
-    
+
     ## Parse options specific to pandoc
     pandoc_parser = argparse.ArgumentParser(prog='pandoc')
     pandoc_parser.add_argument("--write","-w","--to","-t", help='writer')
     pandoc_parser.add_argument("--output","-o", help='output')
-    known, pandoc_unknown = pandoc_parser.parse_known_args(panzer_unknown)    
+    known, pandoc_unknown = pandoc_parser.parse_known_args(panzer_unknown)
     pandoc_known = vars(known)
 
     if debug_cli:
@@ -368,7 +366,6 @@ def parse_cli_options():
     if pandoc_known['write']:
         ## First case: writer explicitly specified by cli option
         cli_options['pandoc']['write'] = pandoc_known['write']
-    
     elif cli_options['pandoc']['output_filename'] == '-':
         ## Second case: html default writer for stdout
         cli_options['pandoc']['write'] = 'html'
@@ -379,7 +376,7 @@ def parse_cli_options():
         if implicit_writer is not None:
             cli_options['pandoc']['write'] = implicit_writer
         else:
-            ## html is the default writer
+            ## html is default writer for unrecognised extensions
             cli_options['pandoc']['write'] = 'html'
 
     ## Store all remaining cli options for pandoc in cli_options
@@ -387,13 +384,77 @@ def parse_cli_options():
     ##      1. Panzer-specific options
     ##      2. -w option
     ##      3. -o option
-    ## All these are replaced with new values when panzer runs pandoc
+    ##      4. - items for input files (replaced with temp filenames below)
+    ## These all need to be replaced when pandoc runs internally in panzer
     cli_options['pandoc']['clioptions'] = pandoc_unknown
-    
-    if debug_cli:        
-        print '----------------------- cli_options -------------------------------'    
+
+    ## If stdin one of the inputs then read from stdin into temp file and
+    ## replace reference to stdin with reference to temporary file
+    if '-' in cli_options['pandoc']['input_filenames']:
+        ## Read from stdin now into temp file in cwd
+        stdin = sys.stdin.read()
+        fp = tempfile.NamedTemporaryFile(prefix='__stdin-panzer-', suffix='__', dir=os.getcwd(), delete=False)
+        cli_options['panzer']['stdin_temp_file'] = os.path.join(os.getcwd(), fp.name)
+        fp.write(stdin)
+        fp.close()
+        ## Replace all reference to stdin in pandoc cli with temp file
+        for i, n in enumerate(cli_options['pandoc']['input_filenames']):
+            if n == '-':
+                cli_options['pandoc']['input_filenames'][i] = cli_options['panzer']['stdin_temp_file']
+        for i, n in enumerate(cli_options['pandoc']['clioptions']):
+            if n == '-':
+                cli_options['pandoc']['clioptions'][i] = cli_options['panzer']['stdin_temp_file']
+
+    if debug_cli:
+        print '----------------------- cli_options -------------------------------'
         print json.dumps(cli_options, indent=1)
-    
+
+def pandoc2json(files_and_options):
+    """docstring for pandoc2json"""
+    cmd = ['pandoc']
+    cmd.extend(files_and_options)
+    cmd.extend(['--write', 'json', '--output', '-'])
+    logger.debug('pandoc run to create single JSON output:')
+    logger.debug(' '.join(cmd))
+    output = json.loads(subprocess.check_output(cmd))
+    return output
+
+def load_defaults():
+    """docstring for load_defaults"""
+    filename = os.path.join(cli_options['panzer']['panzer_support'], 'defaults', 'defaults.yaml')
+    try:
+        stream = open(filename, 'r')
+    except IOError, e:
+        if e.errno == os.errno.ENOENT:
+            logger.info('Defaults file not found: %s' % filename)
+            return
+    default_styledef = yaml.safe_load(stream)
+
+# class document (Object):
+#     self.full_ast       = {}
+#     self.metadata       = {}
+#     self.style          = ''
+#     self.filters        = []
+#     self.postprocessors = []
+# 
+# def __init__(self, full_ast):
+#     """docstring for __init__"""
+#     # set the metadata, style, etc
+#     pass
+# 
+# def transform(self, default_styledef, style, writer):
+#     """docstring for transform"""
+#     pass
+# 
+# def extract_preflight(self, default_styledef, style, writer):
+#     """docstring for extract_preflight"""
+#     pass
+# 
+# def update_full_ast(self, metadata):
+#     """docstring for update_full_ast"""
+#     pass
+
+
 def main():
     """This is the main.
     Here is the documentation.
@@ -402,14 +463,27 @@ def main():
         check_pandoc_exists()
         parse_cli_options()
         start_logger()
-        check_support_directory()
         logger.info('panzer started -----')
-        logger.debug('Debug message')
-        logger.info('panzer quitting ----\n')
+        check_support_directory()
+        load_defaults()
+        mydoc = document(pandoc2json(cli_options['pandoc']['clioptions']))
+        # print json.dumps(document, indent=1)
+
+        # transform_doc(document, default_styledef, cli_options['panzer']['style'], cli_options['pandoc']['write'])
+
     except PanzerSetupError, e:
-        # Errors that occur before logging starts
+        # Catch errors that occur before logging starts
         print(e)
-        sys.exit(1)        
+        sys.exit(1)
+    except subprocess.CalledProcessError:
+        logger.critical('Panzer cannot continue because pandoc failed')
+        sys.exit(1)
+
+    finally:
+        if cli_options['panzer']['stdin_temp_file']:
+            os.remove(cli_options['panzer']['stdin_temp_file'])
+            logger.debug('Deleted temp file: %s' % cli_options['panzer']['stdin_temp_file'])
+        logger.info('panzer quitting ----')
 
     sys.exit(0)
 
