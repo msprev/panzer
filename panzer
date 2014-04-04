@@ -589,16 +589,9 @@ def run_scripts(commands, kind, force_run=False):
         log('DEBUG', kind, filename, submessage=fullpath)
         stderr = []
         try:
-            if OPTIONS['panzer']['verbose'] >= 2:
-                s = '%08s  ' % '' + '%s: ' % os.path.splitext(filename)[0] + 'running...'
-                sys.stdout.write(s)
-                sys.stdout.flush()
             p = subprocess.Popen(command, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
             # send panzer's OPTIONS to scripts via stdin as a json
             stderr = p.communicate(input=json.dumps(OPTIONS))[1]
-            if OPTIONS['panzer']['verbose'] >= 2:
-                sys.stdout.write("\r")
-                sys.stdout.flush()
         except OSError as error:
             log('ERROR', filename, error)
             continue
@@ -734,15 +727,20 @@ def start_logger():
             }
         }
     }
-    # ---debug flag not set
+    # - check debug flag
     if not OPTIONS['panzer']['debug']:
         config['loggers'][__name__]['handlers'].remove('log_file_handler')
         del config['handlers']['log_file_handler']
-    # ---verbosity level
-    if OPTIONS['panzer']['verbose']:
-        verbosity = { 0: 'CRITICAL', 1: 'WARNING', 2: 'INFO' }
-        verbosity_level = verbosity[OPTIONS['panzer'].get('verbose', 2)]
-        config['handlers']['console']['level'] = verbosity_level
+    # - set verbosity level
+    verbosity = [ 'CRITICAL', 'WARNING', 'INFO' ]
+    index = OPTIONS['panzer'].get('verbose', 2)
+    try:
+        verbosity_level = verbosity[index]
+    except IndexError:
+        print 'error: unknown setting for verbosity level'
+        verbosity_level = 'INFO'
+    config['handlers']['console']['level'] = verbosity_level
+    # - send configuration to logger
     logging.config.dictConfig(config)
 
 def log(level_str, sender, message, submessage=str()):
