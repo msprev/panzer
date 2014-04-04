@@ -1151,12 +1151,10 @@ def main():
             log('DEBUG', 'panzer', 'key "style" not found')
         # 3. Transform input based on style
         current_document.transform(default_document, current_document.style, OPTIONS['pandoc']['write'])
-        log('DEBUG', 'panzer', '----------------- NEW METADATA -------------------------\n' +
-                     json.dumps(current_document.metadata, sort_keys=True, indent=1))
+        log('DEBUG', 'panzer', '-'*20+'NEW METADATA'+'-'*20+'\n'+json.dumps(current_document.metadata, sort_keys=True, indent=1))
         # 4. Build list of commands to run based on style
         commands = build_commands(current_document.metadata)
-        log('DEBUG', 'panzer', '----------------- COMMANDS -------------------------\n' +
-                     json.dumps(commands, sort_keys=True, indent=1))
+        log('DEBUG', 'panzer', '-'*20+'COMMANDS'+'-'*20+'\n'+json.dumps(commands, sort_keys=True, indent=1))
         # 5. Run preflight scripts
         if 'preflight' in commands:
             run_scripts(commands, 'preflight')
