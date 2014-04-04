@@ -46,6 +46,7 @@ OPTIONS = {
         'debug': False,
         'verbose': 2,
         'html': False,
+        '80col': False,
         'stdin_temp_file': ''
     },
     'pandoc': {
@@ -795,11 +796,8 @@ def log(level_str, sender, message, submessage=str()):
     if sender:
         sender_str = sender[:8].rjust(8) + ': '
     # -- message
-    # don't wrap DEBUG-level messages
-    if level == logging.DEBUG:
-        message_str = message
-    else:
-        #message_str = message
+    # - wrap if: i) 80col option set, and ii) message not DEBUG level
+    if OPTIONS['panzer']['80col'] and level != logging.DEBUG:
         wrapped_list = textwrap.wrap(message, 60)
         try:
             message_str += wrapped_list[0]
@@ -808,6 +806,8 @@ def log(level_str, sender, message, submessage=str()):
                 message_str += '\n' + indent + line
         except IndexError:
             pass
+    else:
+        message_str = message
     # -- submessage
     if submessage:
         submessage_str = ' (%s)' % submessage
@@ -1001,6 +1001,9 @@ def parse_cli_options():
                   ' 2: full info (default)')
     panzer_parser.add_argument("---html",
         help    = 'format console messages in HTML',
+        action  = "store_true")
+    panzer_parser.add_argument("---80col",
+        help    = 'wrap error messages at 80 columns',
         action  = "store_true")
     panzer_parser.add_argument('---version',
         action  = 'version',
