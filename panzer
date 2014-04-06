@@ -830,20 +830,31 @@ def log_stderr(stderr, sender=str()):
         stderr : string returned from the stderr of subprocess
         sender : name of process sending message
     """
+    # 1. check for blank input
     if not stderr:
-        # nothing to do
+        # - nothing to do
         return
+    # 2. get a string with sender's name
     if sender:
-        # remove file extension from sender's name if present
+        # - remove file extension from sender's name if present
         sender = os.path.splitext(sender)[0]
+    # 3. now handle the messages sent by sender
+    # - split the input (based on newlines) into list of json strings
     for line in stderr.rstrip().split('\n'):
-        # '!+!' is special sequence in stderr stream to indicate split
-        # between text giving error level and message text
-        message = line.split('!+!', 1)
-        if len(message) == 2:
-            log(message[0], sender, message[1])
-        else:
-            log('ERROR', sender, line)
+        if not line:
+            # - skip blank lines: no valid json or message to decode
+            continue
+        incoming = dict()
+        try:
+            incoming = json.loads(line)
+        except ValueError:
+            # - if json cannot be decoded, just log line as INFO
+            log('DEBUG', panzer, 'failed to decode json message from %s: "%s"' % (sender, message))
+            incoming = { 'level': 'INFO', 'message': line }
+        # - default to INFO level and blank message
+        level = incoming.get('level', 'INFO')
+        message = incoming.get('message', '')
+        log(level, sender, message)
 
 def check_pandoc_exists():
     """docstring for check_pandoc_exists"""
