@@ -850,7 +850,7 @@ def log_stderr(stderr, sender=str()):
         except ValueError:
             # - if json cannot be decoded, just log line as INFO
             log('DEBUG', 'panzer', 'failed to decode json message from %s: "%s"' % (sender, message))
-            incoming = { 'level': 'INFO', 'message': line }
+            incoming = { 'level': 'ERROR', 'message': '!' + line }
         # - default to INFO level and blank message
         level = incoming.get('level', 'INFO')
         message = incoming.get('message', '')
