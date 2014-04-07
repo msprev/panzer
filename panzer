@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Panzer: A way to add styles to pandoc
 
 Styles are handy ways to use templates, metadata, filters,
@@ -738,7 +738,7 @@ def start_logger():
     try:
         verbosity_level = verbosity[index]
     except IndexError:
-        print 'error: unknown setting for verbosity level'
+        print('error: unknown setting for verbosity level', file=sys.stderr)
         verbosity_level = 'INFO'
     config['handlers']['console']['level'] = verbosity_level
     # - send configuration to logger
@@ -1187,7 +1187,7 @@ def main():
 
     except PanzerSetupError as error:
         # - errors that occur before logging starts
-        print(error)
+        print(error, file=sys.stderr)
         sys.exit(1)
     except subprocess.CalledProcessError:
         log('CRITICAL', 'panzer', 'cannot continue because of fatal error')
