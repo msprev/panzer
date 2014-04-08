@@ -32,6 +32,7 @@ __version__ = "1.0"
 REQUIRE_PANDOC_ATLEAST = "1.12.1"
 DEFAULT_SUPPORT_DIR = os.path.join(os.path.expanduser('~'), '.panzer')
 REMOTE_URL = "https://github.com/msprev/.panzer.git"
+ENCODING = 'utf8'
 T = 't'
 C = 'c'
 ADDITIVE_KEYS = ['preflight',
@@ -203,12 +204,11 @@ class Document(object):
         if kind == 'filter':
             in_pipe = json.dumps(self.ast)
         elif kind == 'postprocess':
-            # pdf output
+            # pdf output: skip postprocess
             if OPTIONS['pandoc']['pdf_output']:
                 log('INFO', kind, 'skipping since output is PDF')
                 return
-            else:
-                in_pipe = self.output
+            in_pipe = self.output
         else:
             raise PanzerInternalError('illegal invocation of "run_piped" in panzer.py')
         # 2. Set up outgoing pipe in case of failure
@@ -229,7 +229,10 @@ class Document(object):
                                            stderr = subprocess.PIPE,
                                            stdin  = subprocess.PIPE,
                                            stdout = subprocess.PIPE)
-                out_pipe, stderr = process.communicate(input = in_pipe)
+                in_pipe_bytes = in_pipe.encode(ENCODING)
+                out_pipe_bytes, stderr_bytes = process.communicate(input=in_pipe_bytes)
+                out_pipe = out_pipe_bytes.decode(ENCODING)
+                stderr = stderr_bytes.decode(ENCODING)
             except OSError as error:
                 log('ERROR', command_name, error)
                 continue
@@ -287,7 +290,10 @@ class Document(object):
                                        stderr = subprocess.PIPE,
                                        stdin  = subprocess.PIPE,
                                        stdout = subprocess.PIPE)
-            out_pipe, stderr = process.communicate(input = in_pipe)
+            in_pipe_bytes = in_pipe.encode(ENCODING)
+            out_pipe_bytes, stderr_bytes = process.communicate(input=in_pipe_bytes)
+            out_pipe = out_pipe_bytes.decode(ENCODING)
+            stderr = stderr_bytes.decode(ENCODING)
         except OSError as error:
             log('ERROR', 'pandoc', error)
         finally:
@@ -309,11 +315,11 @@ class Document(object):
             return
         # case 2: stdout as output
         if OPTIONS['pandoc']['output'] == '-':
-            sys.stdout.write(self.output)
+            sys.stdout.buffer.write(self.output.encode(ENCODING))
             sys.stdout.flush()
             return
         # case 3: any other file as output
-        with open(OPTIONS['pandoc']['output'], 'w') as output_file:
+        with open(OPTIONS['pandoc']['output'], 'wt', encoding=ENCODING) as output_file:
             output_file.write(self.output)
             output_file.flush()
 
@@ -386,7 +392,7 @@ def apply_kill_rules(old_list):
             error_msg += 'value must be of type "MetaMap"---ignoring 1 item'
             log('ERROR', 'panzer', error_msg)
             continue
-        if len(item_content.viewkeys() & {'run', 'kill', 'killall'}) != 1:
+        if len(item_content.keys() & {'run', 'kill', 'killall'}) != 1:
             error_msg += 'must contain exactly one "run", "kill", or "killall" '
             error_msg += 'per item---ignoring 1 item'
             log('ERROR', 'panzer', error_msg)
@@ -553,7 +559,9 @@ def load(input_files, options=list()):
     # 2. Use pandoc to convert input files to json
     try:
         process = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        out_pipe, stderr = process.communicate()
+        out_pipe_bytes, stderr_bytes = process.communicate()
+        out_pipe = out_pipe_bytes.decode(ENCODING)
+        stderr = stderr_bytes.decode(ENCODING)
     except OSError as error:
         log('ERROR', 'pandoc', error)
     finally:
@@ -588,11 +596,17 @@ def run_scripts(commands, kind, force_run=False):
         filename = os.path.basename(command[0])
         fullpath = ' '.join(command).replace(os.path.expanduser('~'), '~')
         log('DEBUG', kind, filename, submessage=fullpath)
-        stderr = []
+        stderr = out_pipe = str()
         try:
             p = subprocess.Popen(command, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
             # send panzer's OPTIONS to scripts via stdin as a json
-            stderr = p.communicate(input=json.dumps(OPTIONS))[1]
+            in_pipe = json.dumps(OPTIONS)
+            in_pipe_bytes = in_pipe.encode(ENCODING)
+            out_pipe_bytes, stderr_bytes = p.communicate(input=in_pipe_bytes)
+            if out_pipe_bytes:
+                out_pipe = out_pipe_bytes.decode(ENCODING)
+            if stderr_bytes:
+                stderr = stderr_bytes.decode(ENCODING)
         except OSError as error:
             log('ERROR', filename, error)
             continue
@@ -709,9 +723,9 @@ def start_logger():
                 'level'        : 'DEBUG',
                 'formatter'    : 'detailed',
                 'filename'     : 'panzer.log',
-                'maxBytes'     : '10485760',
-                'backupCount'  : '5',
-                'encoding'     : 'utf8'
+                'maxBytes'     : 10485760,
+                'backupCount'  : 5,
+                'encoding'     : ENCODING
             },
             'console': {
                 'class'      : 'logging.StreamHandler',
@@ -840,7 +854,7 @@ def log_stderr(stderr, sender=str()):
         sender = os.path.splitext(sender)[0]
     # 3. now handle the messages sent by sender
     # - split the input (based on newlines) into list of json strings
-    for line in stderr.rstrip().split('\n'):
+    for line in stderr.split('\n'):
         if not line:
             # - skip blank lines: no valid json or message to decode
             continue
@@ -859,14 +873,15 @@ def log_stderr(stderr, sender=str()):
 def check_pandoc_exists():
     """docstring for check_pandoc_exists"""
     try:
-        stdout = subprocess.check_output(["pandoc", "--version"]).splitlines()
+        stdout_bytes = subprocess.check_output(["pandoc", "--version"])
+        stdout = stdout_bytes.decode(ENCODING)
     except OSError as error:
         if error.errno == os.errno.ENOENT:
             raise PanzerSetupError('pandoc not found')
         else:
             raise PanzerSetupError(error)
-
-    pandoc_version = stdout[0].split(' ')[1]
+    stdout_list = stdout.splitlines()
+    pandoc_version = stdout_list[0].split(' ')[1]
     if versiontuple(pandoc_version) < versiontuple(REQUIRE_PANDOC_ATLEAST):
         raise PanzerSetupError('pandoc %s or greater required---found pandoc version %s' %
                                (REQUIRE_PANDOC_ATLEAST, pandoc_version))
@@ -917,15 +932,15 @@ def query_yes_no(question, default="yes"):
         raise ValueError("invalid default answer: '%s'" % default)
 
     while True:
-        sys.stdout.write(question + prompt)
+        stdout = question + prompt
+        sys.stdout.buffer.write(stdout.encode(ENCODING))
         choice = input().lower()
         if default is not None and choice == '':
             return valid[default]
         elif choice in valid:
             return valid[choice]
         else:
-            sys.stdout.write("Please respond with 'yes' or 'no' "\
-                             "(or 'y' or 'n').\n")
+            sys.stdout.buffer.write("Please respond with 'yes' or 'no' (or 'y' or 'n').\n".encode(ENCODING))
 
 def parse_cli_options():
     """Parse the command line options passed to panzer, and print help text
@@ -1074,11 +1089,13 @@ def parse_cli_options():
     # a temp file, then replace '-'s in input with reference to file
     if '-' in pandoc_unknown:
         # Read from stdin now into temp file in cwd
-        stdin     = sys.stdin.read()
-        with tempfile.NamedTemporaryFile(prefix='__panzer-', suffix='__', dir=os.getcwd(), delete=False) as temp_file:
+        stdin_bytes = sys.stdin.buffer.read()
+        with tempfile.NamedTemporaryFile(prefix='__panzer-',
+                                         suffix='__', dir=os.getcwd(),
+                                         delete=False) as temp_file:
             temp_filename = os.path.join(os.getcwd(), temp_file.name)
             OPTIONS['panzer']['stdin_temp_file'] = temp_filename
-            temp_file.write(stdin)
+            temp_file.write(stdin_bytes)
             temp_file.flush()
         # Replace all reference to stdin in pandoc cli with temp file
         for index, value in enumerate(pandoc_unknown):
@@ -1087,9 +1104,11 @@ def parse_cli_options():
 
     # Find all input files by using `pandoc --dump-args`
     command = ['pandoc', '--dump-args'] + pandoc_unknown
-    stdout = subprocess.check_output(command).splitlines()
+    stdout_bytes = subprocess.check_output(command)
+    stdout = stdout_bytes.decode(ENCODING)
+    stdout_list = stdout.splitlines()
     # first line is output file, ignore it
-    OPTIONS['pandoc']['input'] = stdout[1:]
+    OPTIONS['pandoc']['input'] = stdout_list[1:]
     # remove input files from pandoc_unknown
     pandoc_unknown = [ opt for opt in pandoc_unknown if                 \
                                opt not in OPTIONS['pandoc']['input'] ]
