@@ -805,17 +805,19 @@ def log(level_str, sender, message, submessage=str()):
     # - normal output
     # -- level
     pretty_level_str = pretty_levels.get(level_str, pretty_levels['ERROR'])
-    # -- sender
-    if sender:
-        sender_str = sender[:8].rjust(8) + ': '
+    # -- sender - right justify name if less than 8 chars long
+    if len(sender) < 8:
+        sender_str = sender[:8].rjust(8)
+    else:
+        sender_str = sender
     # -- message
     message_str = message
     # -- submessage
     if submessage:
         submessage_str = ' (%s)' % submessage
-    output = pretty_level_str + \
-             sender_str       + \
-             message_str      + \
+    output = pretty_level_str  + \
+             sender_str + ': ' + \
+             message_str       + \
              submessage_str
     LOGGER.log(level, output)
 
