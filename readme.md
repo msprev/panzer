@@ -19,6 +19,9 @@ date:            5 November 2013
 *Styles* are reusable combinations of templates, metadata settings, filters, postprocessers, and pre- and post-flight scripts. Styles are invoked and customised via a document's metadata. 
 
 
+Like pandoc, panzer expects all input to be encoded in utf-8, and yields all output in utf-8. 
+This also to all interactions between panzer and processes that it spawns (scripts, etc.).
+
 
 # Installing
 
@@ -36,7 +39,6 @@ Styles are almost equivalent to templates. Invoking a style selects a template (
 
 # Style definitions
 
-
 # Writing new styles
 
 
@@ -45,9 +47,7 @@ Styles are almost equivalent to templates. Invoking a style selects a template (
 
 # The support files
 
-
 # Customising styles
-
 
 --------------------------------------    --------      
 `styledefault.all_styles.all_writers`     lowest                                
