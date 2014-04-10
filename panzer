@@ -864,11 +864,16 @@ def log_stderr(stderr, sender=str()):
         except ValueError:
             # - if json cannot be decoded, just log line as ERROR prefixed by '!'
             log('DEBUG', 'panzer', 'failed to decode json message from %s: "%s"' % (sender, line))
-            incoming = { 'level': 'ERROR', 'message': '!' + line }
+            incoming = [ { 'error_msg': { 'level': 'ERROR', 'message': '!' + line } } ]
         # - default to INFO level and blank message
-        level = incoming.get('level', 'INFO')
-        message = incoming.get('message', '')
-        log(level, sender, message)
+        for item in incoming:
+            try:
+                level = item['error_msg']['level']
+                message = item['error_msg']['message']
+            except KeyError:
+                level = 'ERROR'
+                message = ''
+            log(level, sender, message)
 
 def check_pandoc_exists():
     """docstring for check_pandoc_exists"""
