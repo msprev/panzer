@@ -598,7 +598,7 @@ def run_scripts(commands, kind, force_run=False):
         try:
             p = subprocess.Popen(command, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
             # send panzer's OPTIONS to scripts via stdin as a json
-            message_out = [ { 'options': OPTIONS } ]
+            message_out = [ { 'cli_options': OPTIONS } ]
             in_pipe = json.dumps(message_out)
             in_pipe_bytes = in_pipe.encode(ENCODING)
             out_pipe_bytes, stderr_bytes = p.communicate(input=in_pipe_bytes)
