@@ -25,7 +25,6 @@ import subprocess
 import shlex
 import sys
 import tempfile
-import textwrap
 from   pandocfilters import stringify
 
 __version__ = "1.0"
@@ -165,6 +164,18 @@ class Document(object):
             del new_metadata['All']
         if style in new_metadata:
             del new_metadata[style]
+        # 4. Add special panzer_reserved field to pass OPTIONS
+        # - check if already exists
+        try:
+            get_content(new_metadata, 'panzer_reserved')
+            log('ERROR', 'panzer', 'special key "panzer_reserved" already in metadata---overwriting')
+        except PanzerKeyError:
+            pass
+        # - add it
+        data_out = [ { 'cli_options': OPTIONS } ]
+        json_content = json.dumps(data_out)
+        field_content = [{"t":"CodeBlock", "c":[["",[],[]],json_content]}]
+        set_content(new_metadata, 'panzer_reserved', field_content, 'MetaBlocks')
         # 4. Update document
         # - ast
         try:
