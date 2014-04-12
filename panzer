@@ -101,14 +101,19 @@ class Document(object):
         try:
             self.metadata = self.ast[0]['unMeta']
         except KeyError:
-            log('WARNING', 'panzer', 'no metadata found in source documents')
+            log('WARNING', 'panzer',
+                'no metadata found in source documents')
         # - style
         try:
-            self.style = stringify(get_content(self.metadata, 'style', 'MetaInlines'))
+            self.style = stringify(get_content(self.metadata,
+                                               'style',
+                                               'MetaInlines'))
         except PanzerKeyError:
-            log('DEBUG', 'panzer', 'no style key found')
+            log('DEBUG', 'panzer',
+                'no style key found')
         except PanzerTypeError as error:
-            log('WARNING', 'panzer', error)
+            log('WARNING', 'panzer',
+                error)
         # - template : set after transform has been applied
         # - output   : set after run_pandoc has been applied
 
@@ -156,7 +161,8 @@ class Document(object):
             except PanzerKeyError:
                 continue
             except PanzerTypeError as error:
-                log('WARNING', 'panzer', error)
+                log('WARNING', 'panzer',
+                    error)
                 continue
         # 3. Tidy up after transform
         # - remove now unneeded style keys from document's metadata
@@ -168,14 +174,17 @@ class Document(object):
         # - check if already exists
         try:
             get_content(new_metadata, 'panzer_reserved')
-            log('ERROR', 'panzer', 'special key "panzer_reserved" already in metadata---overwriting')
+            log('ERROR', 'panzer',
+                'special key "panzer_reserved" already in'
+                'metadata---overwriting it')
         except PanzerKeyError:
             pass
         # - add it
         data_out = [ { 'cli_options': OPTIONS } ]
         json_content = json.dumps(data_out)
         field_content = [{"t":"CodeBlock", "c":[["",[],[]],json_content]}]
-        set_content(new_metadata, 'panzer_reserved', field_content, 'MetaBlocks')
+        set_content(new_metadata, 'panzer_reserved',
+                    field_content, 'MetaBlocks')
         # 4. Update document
         # - ast
         try:
@@ -190,7 +199,8 @@ class Document(object):
             template = stringify(template)
             self.template = resolve_path(template, 'template')
         except (PanzerKeyError, PanzerTypeError) as error:
-            log('DEBUG', 'panzer', 'panzer', error)
+            log('DEBUG', 'panzer',
+                error)
 
     def run_piped(self, commands, kind):
         """ Pass document through an external command.
@@ -220,7 +230,8 @@ class Document(object):
                 return
             in_pipe = self.output
         else:
-            raise PanzerInternalError('illegal invocation of "run_piped" in panzer.py')
+            raise PanzerInternalError('illegal invocation of'
+                                      '"run_piped" in panzer.py')
         # 2. Set up outgoing pipe in case of failure
         out_pipe = in_pipe
         # 3. Run commands
@@ -230,17 +241,18 @@ class Document(object):
                 command.insert(1, OPTIONS['pandoc']['write'])
             # - add debugging info
             command_name = os.path.basename(command[0])
-            command_path = ' '.join(command).replace(os.path.expanduser('~'), '~')
+            command_path = ' '.join(command).replace(os.path.expanduser('~'),
+                                                     '~')
             log('DEBUG', kind, command_name, submessage=command_path)
             # - run the command and log any errors
             stderr = ''
             try:
-                process = subprocess.Popen(command,
-                                           stderr = subprocess.PIPE,
-                                           stdin  = subprocess.PIPE,
-                                           stdout = subprocess.PIPE)
+                p = subprocess.Popen(command,
+                                    stderr = subprocess.PIPE,
+                                    stdin  = subprocess.PIPE,
+                                    stdout = subprocess.PIPE)
                 in_pipe_bytes = in_pipe.encode(ENCODING)
-                out_pipe_bytes, stderr_bytes = process.communicate(input=in_pipe_bytes)
+                out_pipe_bytes, stderr_bytes = p.communicate(input=in_pipe_bytes)
                 out_pipe = out_pipe_bytes.decode(ENCODING)
                 stderr = stderr_bytes.decode(ENCODING)
             except OSError as error:
@@ -255,7 +267,9 @@ class Document(object):
             try:
                 self.ast = json.loads(out_pipe)
             except ValueError:
-                log('ERROR', 'panzer', 'failed to receive json object from filters---ignoring all filters')
+                log('ERROR', 'panzer',
+                    'failed to receive json object from filters'
+                    '---ignoring all filters')
                 return
         elif kind == 'postprocess':
             self.output = out_pipe
@@ -295,12 +309,12 @@ class Document(object):
         # 3. Run pandoc command
         log('DEBUG', 'pandoc', ' '.join(command))
         try:
-            process = subprocess.Popen(command,
-                                       stderr = subprocess.PIPE,
-                                       stdin  = subprocess.PIPE,
-                                       stdout = subprocess.PIPE)
+            p = subprocess.Popen(command,
+                                 stderr = subprocess.PIPE,
+                                 stdin  = subprocess.PIPE,
+                                 stdout = subprocess.PIPE)
             in_pipe_bytes = in_pipe.encode(ENCODING)
-            out_pipe_bytes, stderr_bytes = process.communicate(input=in_pipe_bytes)
+            out_pipe_bytes, stderr_bytes = p.communicate(input=in_pipe_bytes)
             out_pipe = out_pipe_bytes.decode(ENCODING)
             stderr = stderr_bytes.decode(ENCODING)
         except OSError as error:
@@ -328,7 +342,8 @@ class Document(object):
             sys.stdout.flush()
             return
         # case 3: any other file as output
-        with open(OPTIONS['pandoc']['output'], 'wt', encoding=ENCODING) as output_file:
+        with open(OPTIONS['pandoc']['output'], 'wt',
+                  encoding=ENCODING) as output_file:
             output_file.write(self.output)
             output_file.flush()
 
@@ -390,7 +405,6 @@ def apply_kill_rules(old_list):
     Returns:
         list after kill rules applied
     """
-    error_msg = 'keys "' + '", "'.join(ADDITIVE_KEYS) + '" '
     new_list = []
     for item in old_list:
         # 1. Sanity checks
@@ -398,20 +412,21 @@ def apply_kill_rules(old_list):
         item_content = item[C]
         item_tag     = item[T]
         if item_tag != 'MetaMap':
-            error_msg += 'value must be of type "MetaMap"---ignoring 1 item'
-            log('ERROR', 'panzer', error_msg)
+            log('ERROR', 'panzer',
+                'keys "' + '", "'.join(ADDITIVE_KEYS) + '" '
+                'value must be of type "MetaMap"---ignoring 1 item')
             continue
         if len(item_content.keys() & {'run', 'kill', 'killall'}) != 1:
-            error_msg += 'must contain exactly one "run", "kill", or "killall" '
-            error_msg += 'per item---ignoring 1 item'
-            log('ERROR', 'panzer', error_msg)
+            log('ERROR', 'panzer',
+                'must contain exactly one "run", "kill", or "killall" '
+                'per item---ignoring 1 item')
             continue
         # 2. Now operate on content
         if 'run' in item_content:
             if get_tag(item_content, 'run') != 'MetaInlines':
-                error_msg = '"run" value must be of type "MetaInlines"'
-                error_msg += '---ignoring 1 item'
-                log('ERROR', 'panzer', error_msg)
+                log('ERROR', 'panzer',
+                    '"run" value must be of type "MetaInlines"'
+                    '---ignoring 1 item')
                 continue
             new_list.append(item)
         elif 'kill' in item_content:
@@ -420,8 +435,8 @@ def apply_kill_rules(old_list):
             except PanzerTypeError as error:
                 log('WARNING', 'panzer', error)
                 continue
-            new_list = [ new_item for new_item in new_list if               \
-                         get_content(new_item[C], 'run', 'MetaInlines') !=  \
+            new_list = [ new_item for new_item in new_list if
+                         get_content(new_item[C], 'run', 'MetaInlines') !=
                          to_be_killed ]
         elif 'killall' in item_content:
             try:
@@ -491,8 +506,9 @@ def get_content(dictionary, key, expected_type=None):
     if expected_type:
         found_type = dictionary[key][T]
         if found_type != expected_type:
-            raise PanzerTypeError('value of "%s": expecting type "%s", but found type "%s"' % \
-                                  (key, expected_type, found_type))
+            raise PanzerTypeError('value of "%s": expecting type "%s", '
+                                  'but found type "%s"'
+                                  % (key, expected_type, found_type))
     return dictionary[key][C]
 
 def get_tag(dictionary, key):
@@ -562,13 +578,18 @@ def load(input_files, options=list()):
         PanzerBadASTError : if pandoc cannot pass a valid json object back
     """
     # 1. Build pandoc command
-    command = ['pandoc'] + input_files + ['--write', 'json', '--output', '-'] + options
+    command = ['pandoc']
+    command += input_files
+    command += ['--write', 'json', '--output', '-']
+    command += options
     log('DEBUG', 'pandoc', ' '.join(command))
     stderr = []
     # 2. Use pandoc to convert input files to json
     try:
-        process = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        out_pipe_bytes, stderr_bytes = process.communicate()
+        p = subprocess.Popen(command,
+                             stderr=subprocess.PIPE,
+                             stdout=subprocess.PIPE)
+        out_pipe_bytes, stderr_bytes = p.communicate()
         out_pipe = out_pipe_bytes.decode(ENCODING)
         stderr = stderr_bytes.decode(ENCODING)
     except OSError as error:
@@ -579,7 +600,8 @@ def load(input_files, options=list()):
     try:
         ast = json.loads(out_pipe)
     except ValueError:
-        raise PanzerBadASTError('failed to receive valid json object from pandoc')
+        raise PanzerBadASTError('failed to receive valid'
+                                'json object from pandoc')
     else:
         return Document(ast)
 
@@ -607,7 +629,9 @@ def run_scripts(commands, kind, force_run=False):
         log('DEBUG', kind, filename, submessage=fullpath)
         stderr = out_pipe = str()
         try:
-            p = subprocess.Popen(command, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+            p = subprocess.Popen(command,
+                                 stdin=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
             # send panzer's OPTIONS to scripts via stdin as a json
             message_out = [ { 'cli_options': OPTIONS } ]
             in_pipe = json.dumps(message_out)
@@ -657,13 +681,17 @@ def build_command(dictionary, key):
         check_C_and_T_exist(item)
         item_content = item[C]
         # command name
-        command = [resolve_path(stringify(get_content(item_content, 'run', 'MetaInlines')), key)]
+        command = [resolve_path(stringify(get_content(item_content,
+                                                      'run',
+                                                      'MetaInlines')), key)]
         # options
         options = []
         if 'opt' in item_content:
             if get_tag(item_content, 'opt') == 'MetaInlines':
                 # options are raw string
-                options = shlex.split(stringify(get_content(item_content, 'opt', 'MetaInlines')))
+                options = shlex.split(stringify(get_content(item_content,
+                                                            'opt',
+                                                            'MetaInlines')))
             elif get_tag(item_content, 'opt') == 'MetaMap':
                 # options specified as MetaMap in yaml
                 options_dict = get_content(item_content, 'opt', 'MetaMap')
@@ -678,12 +706,18 @@ def parse_command_options(options_dict):
     for key in options_dict:
         value_tag = get_tag(options_dict, key)
 
-        if value_tag == 'MetaBool' and get_content(options_dict, key, 'MetaBool') == True:
+        if value_tag == 'MetaBool' and \
+           get_content(options_dict, key, 'MetaBool') == True:
             options.append('--' + key)
         elif value_tag == 'MetaInlines':
-            options.append('--%s="%s"' % (key, stringify(get_content(options_dict, key, 'MetaInlines'))))
+            options.append('--%s="%s"'
+                           % (key, stringify(get_content(options_dict,
+                                                         key,
+                                                         'MetaInlines'))))
         else:
-            log('ERROR', 'panzer', 'option values of type "%s" not supported---"%s" ignored' % (value_tag, key))
+            log('ERROR', 'panzer',
+                'option values of type "%s" not'
+                'supported---"%s" ignored' % (value_tag, key))
     return options
 
 def resolve_path(filename, key):
@@ -703,8 +737,10 @@ def resolve_path(filename, key):
     paths.append(filename)
     paths.append(os.path.join(key, filename))
     paths.append(os.path.join(key, basename, filename))
-    paths.append(os.path.join(OPTIONS['panzer']['support'], key, filename))
-    paths.append(os.path.join(OPTIONS['panzer']['support'], key, basename, filename))
+    paths.append(os.path.join(OPTIONS['panzer']['support'],
+                              key, filename))
+    paths.append(os.path.join(OPTIONS['panzer']['support'],
+                              key, basename, filename))
     for path in paths:
         if os.path.exists(path):
             return path
@@ -826,10 +862,11 @@ def log(level_str, sender, message, submessage=str()):
     # -- submessage
     if submessage:
         submessage_str = ' (%s)' % submessage
-    output = pretty_level_str  + \
-             sender_str + ': ' + \
-             message_str       + \
-             submessage_str
+    output = ''
+    output += pretty_level_str
+    output += sender_str + ': '
+    output += message_str
+    output += submessage_str
     LOGGER.log(level, output)
 
 def log_stderr(stderr, sender=str()):
@@ -864,8 +901,14 @@ def log_stderr(stderr, sender=str()):
             incoming = json.loads(line)
         except ValueError:
             # - if json cannot be decoded, just log line as ERROR prefixed by '!'
-            log('DEBUG', 'panzer', 'failed to decode json message from %s: "%s"' % (sender, line))
-            incoming = [ { 'error_msg': { 'level': 'ERROR', 'message': '!' + line } } ]
+            log('DEBUG', 'panzer',
+                'failed to decode json message from %s: "%s"' % (sender, line))
+            incoming = [ {'error_msg':
+                            {
+                              'level': 'ERROR',
+                              'message': '!' + line
+                            }
+                         } ]
         for item in incoming:
             level = item['error_msg']['level']
             message = item['error_msg']['message']
@@ -884,8 +927,9 @@ def check_pandoc_exists():
     stdout_list = stdout.splitlines()
     pandoc_version = stdout_list[0].split(' ')[1]
     if versiontuple(pandoc_version) < versiontuple(REQUIRE_PANDOC_ATLEAST):
-        raise PanzerSetupError('pandoc %s or greater required---found pandoc version %s' %
-                               (REQUIRE_PANDOC_ATLEAST, pandoc_version))
+        raise PanzerSetupError('pandoc %s or greater required'
+                               '---found pandoc version %s'
+                               % (REQUIRE_PANDOC_ATLEAST, pandoc_version))
 
 def versiontuple(version_string):
     return tuple(map(int, (version_string.split("."))))
@@ -895,21 +939,37 @@ def check_support_directory():
 
     if OPTIONS['panzer']['support'] != DEFAULT_SUPPORT_DIR:
         if not os.path.exists(support):
-            log('ERROR', 'panzer', 'panzer support directory "%s" not found' % OPTIONS['panzer']['support'])
-            log('WARNING', 'panzer', 'using default panzer support directory: %s' % DEFAULT_SUPPORT_DIR)
+            log('ERROR', 'panzer',
+                'panzer support directory "%s" not found'
+                % OPTIONS['panzer']['support'])
+            log('WARNING', 'panzer',
+                'using default panzer support directory: %s'
+                % DEFAULT_SUPPORT_DIR)
             OPTIONS['panzer']['support'] = DEFAULT_SUPPORT_DIR
 
     if not os.path.exists(DEFAULT_SUPPORT_DIR):
-        log('WARNING', 'panzer', 'default panzer support directory "%s" not found' % DEFAULT_SUPPORT_DIR)
-        if query_yes_no('would you like me to download and install an example panzer support directory? (y/n)'):
-            log('INFO', 'panzer', 'Attempting to download support from %s', REMOTE_URL)
-            return_code = subprocess.call(["git", "clone", REMOTE_URL, DEFAULT_SUPPORT_DIR])
+        log('WARNING', 'panzer',
+            'default panzer support directory "%s" not found'
+            % DEFAULT_SUPPORT_DIR)
+        if query_yes_no('would you like me to download and install an '
+                        'example panzer support directory? (y/n)'):
+            log('INFO', 'panzer',
+                'Attempting to download support from %s'
+                % REMOTE_URL)
+            return_code = subprocess.call(["git", "clone",
+                                           REMOTE_URL,
+                                           DEFAULT_SUPPORT_DIR])
             if return_code == 0:
-                log('INFO', 'panzer', 'successfully cloned using git to: %s' % DEFAULT_SUPPORT_DIR)
+                log('INFO', 'panzer',
+                    'successfully cloned using git to: %s'
+                    % DEFAULT_SUPPORT_DIR)
             else:
-                log('ERROR', 'panzer', 'failed to clone using git to: %s' % DEFAULT_SUPPORT_DIR)
+                log('ERROR', 'panzer',
+                    'failed to clone using git to: %s'
+                    % DEFAULT_SUPPORT_DIR)
                 return
-    os.environ['PANZER_SHARED'] = os.path.join(OPTIONS['panzer']['support'], 'shared')
+    os.environ['PANZER_SHARED'] = os.path.join(OPTIONS['panzer']['support'],
+                                               'shared')
 
 def query_yes_no(question, default="yes"):
     """Ask a yes/no question via raw_input() and return their answer.
@@ -941,7 +1001,8 @@ def query_yes_no(question, default="yes"):
         elif choice in valid:
             return valid[choice]
         else:
-            sys.stdout.buffer.write("Please respond with 'yes' or 'no' (or 'y' or 'n').\n".encode(ENCODING))
+            sys.stdout.buffer.write("Please respond with 'yes' or 'no'"
+                                    "(or 'y' or 'n').\n".encode(ENCODING))
 
 def parse_cli_options():
     """Parse the command line options passed to panzer, and print help text
@@ -1047,20 +1108,23 @@ def parse_cli_options():
     pandoc_parser.add_argument("--write", "-w", "--to", "-t", help='writer')
     pandoc_parser.add_argument("--output", "-o", help='output')
     pandoc_parser.add_argument("--template", help='template')
-    pandoc_parser.add_argument("--filter", "-F", nargs=1, action='append', help='filter')
+    pandoc_parser.add_argument("--filter", "-F", nargs=1, action='append',
+                               help='filter')
     known, pandoc_unknown = pandoc_parser.parse_known_args(panzer_unknown)
     pandoc_known = vars(known)
 
+    OPTIONS['pandoc']['filter'] = None
+    OPTIONS['pandoc']['read'] = None
+    OPTIONS['pandoc']['output'] = '-'
+
     if pandoc_known['template']:
         OPTIONS['pandoc']['template'] = pandoc_known['template']
-    OPTIONS['pandoc']['filter'] = \
-        pandoc_known['filter'] if pandoc_known['filter'] else None
-    OPTIONS['pandoc']['read'] = \
-        pandoc_known['read'] if pandoc_known['read'] else ''
-
-    # Update OPTIONS with pandoc's output, with '-' as default output
-    OPTIONS['pandoc']['output'] = \
-        pandoc_known['output'] if pandoc_known['output'] else '-'
+    if pandoc_known['filter']:
+        OPTIONS['pandoc']['filter'] = pandoc_known['filter']
+    if pandoc_known['read']:
+        OPTIONS['pandoc']['read'] = pandoc_known['read']
+    if pandoc_known['output']:
+        OPTIONS['pandoc']['output'] = pandoc_known['output']
 
     # Check for output being a pdf
     if os.path.splitext(OPTIONS['pandoc']['output'])[1].lower() == '.pdf':
@@ -1108,7 +1172,7 @@ def parse_cli_options():
     # first line is output file, ignore it
     OPTIONS['pandoc']['input'] = stdout_list[1:]
     # remove input files from pandoc_unknown
-    pandoc_unknown = [ opt for opt in pandoc_unknown if                 \
+    pandoc_unknown = [ opt for opt in pandoc_unknown if
                                opt not in OPTIONS['pandoc']['input'] ]
 
     # Store all remaining options for pandoc in OPTIONS
@@ -1160,29 +1224,33 @@ def main():
         parse_cli_options()
         start_logger()
         log('DEBUG', 'panzer', '>>>>> panzer starts <<<<<')
-        log('DEBUG', 'panzer', '------------------ OPTIONS --------------------------\n' +
-                      json.dumps(OPTIONS, indent=1))
+        log('DEBUG', 'panzer', '-'*20+'OPTIONS'+'-'*20+'\n'+
+            json.dumps(OPTIONS, indent=1))
         # 2. Load documents and defaults
         check_support_directory()
         default_document = load_defaults()
-        log('DEBUG', 'panzer', '----------------- DEFAULTS METADATA -------------------------\n' +
-                     json.dumps(default_document.metadata, sort_keys=True, indent=1))
+        log('DEBUG', 'panzer', '-'*20+'DEFAULTS METADATA'+'-'*20+'\n'+
+            json.dumps(default_document.metadata, sort_keys=True, indent=1))
         input_docs = OPTIONS['pandoc']['input']
         if OPTIONS['pandoc']['read']:
             input_docs += [ '--read', OPTIONS['pandoc']['read'] ]
         current_document = load(input_docs, OPTIONS['pandoc']['options'])
-        log('DEBUG', 'panzer', '----------------- ORIGINAL METADATA -------------------------\n' +
-                     json.dumps(current_document.metadata, sort_keys=True, indent=1))
+        log('DEBUG', 'panzer', '-'*20+'ORIGINAL METADATA'+'-'*20+'\n'+
+            json.dumps(current_document.metadata, sort_keys=True, indent=1))
         if current_document.style:
             log('DEBUG', 'panzer', 'style "%s"' % current_document.style)
         else:
             log('DEBUG', 'panzer', 'key "style" not found')
         # 3. Transform input based on style
-        current_document.transform(default_document, current_document.style, OPTIONS['pandoc']['write'])
-        log('DEBUG', 'panzer', '-'*20+'NEW METADATA'+'-'*20+'\n'+json.dumps(current_document.metadata, sort_keys=True, indent=1))
+        current_document.transform(default_document,
+                                   current_document.style,
+                                   OPTIONS['pandoc']['write'])
+        log('DEBUG', 'panzer', '-'*20+'NEW METADATA'+'-'*20+'\n'+
+            json.dumps(current_document.metadata, sort_keys=True, indent=1))
         # 4. Build list of commands to run based on style
         commands = build_commands(current_document.metadata)
-        log('DEBUG', 'panzer', '-'*20+'COMMANDS'+'-'*20+'\n'+json.dumps(commands, sort_keys=True, indent=1))
+        log('DEBUG', 'panzer', '-'*20+'COMMANDS'+'-'*20+'\n'+
+            json.dumps(commands, sort_keys=True, indent=1))
         # 5. Run preflight scripts
         if 'preflight' in commands:
             run_scripts(commands, 'preflight')
@@ -1197,7 +1265,8 @@ def main():
         # 9. Write output to stdout or file
         current_document.write_output()
         if OPTIONS['pandoc']['output'] != '-':
-            log('INFO', 'panzer', 'output written to "%s"' % OPTIONS['pandoc']['output'])
+            log('INFO', 'panzer',
+                'output written to "%s"' % OPTIONS['pandoc']['output'])
         # 10. Run postflight scripts
         if 'postflight' in commands:
             run_scripts(commands, 'postflight')
@@ -1207,7 +1276,8 @@ def main():
         print(error, file=sys.stderr)
         sys.exit(1)
     except subprocess.CalledProcessError:
-        log('CRITICAL', 'panzer', 'cannot continue because of fatal error')
+        log('CRITICAL', 'panzer',
+            'cannot continue because of fatal error')
         sys.exit(1)
     except (KeyError,
             PanzerKeyError,
@@ -1221,7 +1291,8 @@ def main():
         # - if temp file created in setup, remove it
         if OPTIONS['panzer']['stdin_temp_file']:
             os.remove(OPTIONS['panzer']['stdin_temp_file'])
-            log('DEBUG', 'panzer', 'deleted temp file: %s' % OPTIONS['panzer']['stdin_temp_file'])
+            log('DEBUG', 'panzer',
+                'deleted temp file: %s' % OPTIONS['panzer']['stdin_temp_file'])
         # - run cleanup scripts
         if 'cleanup' in commands:
             run_scripts(commands, 'cleanup', force_run=True)
