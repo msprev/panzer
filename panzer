@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Panzer: A way to add styles to pandoc
 
-Styles are handy ways to use templates, metadata, filters,
-postprocessors, pre- and post-flight scripts in pandoc documents. Styles
-can be invoked and customised on a per document basis. Panzer allows you
-to manage your defaults via a configuration file in the support
-directory (default: "~./panzer/")
+Styles provide an easy interface to combinations of templates, metadata,
+filters, postprocessors, pre- and post-flight scripts for pandoc
+documents. Styles can be invoked and customised on a per document basis.
+Panzer allows you to manage default styles via a configuration file in
+the support directory (default: "~./panzer/")
 
 Panzer-specific command line options (prefixed by triple dashes '---')
-are removed by panzer and remaining command line options are passed
-transparently to the underlying instances of pandoc.
+are removed by panzer and all remaining command line options are passed
+transparently to pandoc.
 
 Author:     Mark Sprevak <mark.sprevak@ed.ac.uk>
 Copyright:  Copyright 2014, Mark Sprevak
@@ -63,21 +63,24 @@ OPTIONS = {
 # Document class
 
 class Document(object):
-    """ panzer's representation of pandoc documents
+    """
+
+    panzer's representation of pandoc documents
 
     Attributes:
-        ast      : list giving input abstract syntax tree (taken from
-                   pandoc's json representation)
-        metadata : dict giving metadata branch of ast
-        style    : string style for document
-        template : string template for document
-        output   : string filled by pandoc's writer once run on ast
+        - ast      : list giving input abstract syntax tree (taken from
+        pandoc's json representation)
+        - metadata : dict giving metadata branch of ast
+        - style    : string style for document
+        - template : string template for document
+        - output   : string filled by pandoc's writer once run on ast
 
     Important methods:
-        transform    : transform document's metadata using panzer styles
-        run_piped    : filter a document based on an external command
-        run_pandoc   : invoke pandoc, populating self.output
-        write_output : write self.output based on cli options
+        - transform    : transform document's metadata using panzer styles
+        - run_piped    : filter a document based on an external command
+        - run_pandoc   : invoke pandoc, populating self.output
+        - write_output : write self.output based on cli options
+
     """
     def __init__(self, ast=None):
         """ Create a new document.
@@ -870,17 +873,20 @@ def log(level_str, sender, message, submessage=str()):
     LOGGER.log(level, output)
 
 def log_stderr(stderr, sender=str()):
-    """ Handle messages from subprocesses sent via stderr and pass them
-    on to the log function.
+    """
 
-    A special character sequence ('!+!') is used in stderr to indicate
-    the break between text giving the error level and the message text.
+    Handle messages from subprocesses sent via stderr and pass them on
+    to the log function.
+
+    Messages from subprocesses are sent in a json format that specifies
+    the error level and message text.
 
     New lines in stderr indicate a new message.
 
     Args:
-        stderr : string returned from the stderr of subprocess
-        sender : name of process sending message
+        - stderr : string returned from the stderr of subprocess
+        - sender : name of process sending message
+
     """
     # 1. check for blank input
     if not stderr:
