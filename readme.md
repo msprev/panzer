@@ -1,14 +1,3 @@
----
-title           : "panzer"
-author          :
-  - name        : Mark Sprevak
-    affiliation : University of Edinburgh
-    email       : mark.sprevak@ed.ac.uk
-date            : 5 November 2013
-...
-
-# Rationale
-
 [pandoc] is an extremely powerful and flexible document processing tool. 
     However, using it is like sitting behind the flight deck of the Space Shuttle. 
     Millions of dials can be twiddled, and it is not easy to know which combinations to choose. 
@@ -69,6 +58,7 @@ Requirements:
     Run the command `panzer -h` to see a list of these panzer-specific options.
 
 The `panzer` command can be used as a drop-in replacement for the `pandoc` command.
+
 
 
 # Creating styles
