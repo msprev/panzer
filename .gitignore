@@ -1,2 +1,8 @@
-!panzer
-
+venv/
+tests/
+.tmp/
+.ropeproject/
+panzer.log
+readme.pdf
+readme.tex
+tags

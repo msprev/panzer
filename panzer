@@ -83,11 +83,14 @@ class Document(object):
 
     """
     def __init__(self, ast=None):
-        """ Create a new document.
+        """
+
+        Create a new document.
 
         Args:
-            ast : (optional) input ast (as taken from pandoc's json
-                    representation)
+            - ast : (optional) input ast (as taken from pandoc's json
+            representation)
+
         """
         # 1. Defaults for new documents
         self.ast      = []
@@ -121,14 +124,17 @@ class Document(object):
         # - output   : set after run_pandoc has been applied
 
     def transform(self, defaults, style, writer):
-        """ Transforms document using panzer's styles.
+        """
+
+        Transforms document using panzer's styles.
 
         Modify metadata of document based on a style and writer.
 
         Args:
-            defaults : dict of metadata defaults
-            style    : string style for transform
-            writer   : string writer for transform
+            - defaults : dict of metadata defaults
+            - style    : string style for transform
+            - writer   : string writer for transform
+
         """
         if style:
             if style not in self.metadata and style not in defaults.metadata:
