@@ -1,9 +1,9 @@
-[pandoc] is an extremely powerful and flexible document processing tool. 
+[pandoc][] is an extremely powerful and flexible document processing tool. 
     However, using it is like sitting behind the flight deck of the Space Shuttle. 
     Millions of dials can be twiddled, and it is not easy to know which combinations to choose. 
     Often you want to take it for a reliable and familiar ride rather than a trip to the moon. 
 
-[panzer] can help by allowing you to drive pandoc with *styles*. 
+[panzer][] can help by allowing you to drive pandoc with *styles*. 
     Styles control the look and feel of your document in a simple and reusable way. 
     Styles are combinations of templates, metadata settings, filters, postprocessers, and pre- and post-flight scripts. 
     panzer wraps around pandoc and twiddles the dials appropriate for your chosen style. 
@@ -42,8 +42,8 @@ A style is defined inside the document(s) fed to panzer, or in panzer's defaults
 
 Requirements:
 
-* [pandoc]
-* [python 3]
+* [pandoc][]
+* [python 3][]
 
 `panzer` is a python script and it can be installed via the standard mechanism.
 
@@ -58,4 +58,8 @@ Requirements:
     Run the command `panzer -h` to see a list of these panzer-specific options.
 
 The `panzer` command can be used as a drop-in replacement for the `pandoc` command.
+
+[pandoc]: http://johnmacfarlane.net/pandoc/index.html
+[panzer]: https://github.com/msprev
+[python 3]: https://www.python.org/download/releases/3.0
 
