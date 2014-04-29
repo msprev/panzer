@@ -595,15 +595,40 @@ def load():
         PanzerBadASTError : if pandoc cannot pass a valid json object back
     """
     # 1. Build pandoc command
-    command = ['pandoc']
-    command += OPTIONS['pandoc']['input']
+    command = OPTIONS['pandoc']['input']
     if OPTIONS['pandoc']['read']:
         command += [ '--read', OPTIONS['pandoc']['read'] ]
     command += ['--write', 'json', '--output', '-']
     command += OPTIONS['pandoc']['options']
     log('DEBUG', 'pandoc', ' '.join(command))
+    ast = pandoc_read_json(command)
+    current_doc = Document(ast)
+    log('DEBUG', 'panzer', '-'*20+'ORIGINAL METADATA'+'-'*20+'\n'+
+        json.dumps(current_doc.metadata, sort_keys=True, indent=1))
+    return current_doc
+
+def load_defaults():
+    """ Load panzer defaults file from support directory.
+
+    Returns:
+        Document containing parsed defaults file
+    """
+    filename = os.path.join(OPTIONS['panzer']['support'], 'defaults.yaml')
+    if os.path.exists(filename):
+        command = [ filename ]
+        command += ['--write', 'json', '--output', '-']
+        ast = pandoc_read_json(command)
+        default_doc = Document(ast)
+        log('DEBUG', 'panzer', '-'*20+'DEFAULTS METADATA'+'-'*20+'\n'+
+            json.dumps(default_doc.metadata, sort_keys=True, indent=1))
+        return default_doc
+    else:
+        log('ERROR', 'panzer', 'defaults file not found: %s' % filename)
+        return Document()
+
+def pandoc_read_json(command)
+    command = ['pandoc'] + command
     stderr = []
-    # 2. Use pandoc to convert input files to json
     try:
         p = subprocess.Popen(command,
                              stderr=subprocess.PIPE,
@@ -615,33 +640,12 @@ def load():
         log('ERROR', 'pandoc', error)
     finally:
         log_stderr(stderr)
-    # 3. Read json, and create a Document with it
     try:
         ast = json.loads(out_pipe)
     except ValueError:
         raise PanzerBadASTError('failed to receive valid'
                                 'json object from pandoc')
-    else:
-        current_doc = Document(ast)
-        log('DEBUG', 'panzer', '-'*20+'ORIGINAL METADATA'+'-'*20+'\n'+
-            json.dumps(current_doc.metadata, sort_keys=True, indent=1))
-        return current_doc
-
-def load_defaults():
-    """ Load panzer defaults file from support directory.
-
-    Returns:
-        Document containing parsed defaults file
-    """
-    filename = os.path.join(OPTIONS['panzer']['support'], 'defaults.yaml')
-    if os.path.exists(filename):
-        default_doc = load([filename])
-        log('DEBUG', 'panzer', '-'*20+'DEFAULTS METADATA'+'-'*20+'\n'+
-            json.dumps(default_doc.metadata, sort_keys=True, indent=1))
-        return default_doc
-    else:
-        log('ERROR', 'panzer', 'defaults file not found: %s' % filename)
-        return Document()
+    return ast
 
 
 # Filters and pre/post-flight scripts
