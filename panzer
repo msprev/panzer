@@ -626,7 +626,7 @@ def load_defaults():
         log('ERROR', 'panzer', 'defaults file not found: %s' % filename)
         return Document()
 
-def pandoc_read_json(command)
+def pandoc_read_json(command):
     command = ['pandoc'] + command
     stderr = []
     try:
