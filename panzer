@@ -126,9 +126,9 @@ class Document(object):
         """
         style = self.style
         if style:
-            log('INFO', 'panzer', 'style "%s"' % style)
+            log('DEBUG', 'panzer', 'style "%s"' % style)
         else:
-            log('INFO', 'panzer', 'no "style" key found')
+            log('DEBUG', 'panzer', 'no "style" key found')
         if style \
           and style not in self.metadata \
           and style not in defaults.metadata:
