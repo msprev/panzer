@@ -995,11 +995,11 @@ def check_support_directory():
             'panzer',
             'default panzer support directory "%s" not found'
             % DEFAULT_SUPPORT_DIR)
-        #if query_yes_no('would you like me to download and install an '
-        #                'example panzer support directory? (y/n)'):
-        #    log('INFO', 'panzer',
-        #        'Attempting to download support from %s'
-        #        % REMOTE_URL)
+        if query_yes_no('would you like me to download and install an '
+                        'example panzer support directory? (y/n)'):
+            log('INFO', 'panzer',
+                'installing example support directory in "%s"'
+                % DEFAULT_SUPPORT_DIR)
         #    return_code = subprocess.call(["git", "clone",
         #                                   REMOTE_URL,
         #                                   DEFAULT_SUPPORT_DIR])
