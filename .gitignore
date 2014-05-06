@@ -1,5 +1,6 @@
 # python stuff
 *.pyc
+__pycache__/
 /dist/
 build/
 venv/
