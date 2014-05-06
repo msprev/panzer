@@ -1,11 +1,18 @@
+---
+title  : "panzer user guide"
+author : Mark Sprevak
+date   : 6 May 2014
+style  : Notes
+...
+
 # Introduction
 
-[`pandoc`][pandoc] is a powerful and flexible document processing tool. 
+[pandoc][] is a powerful and flexible document processing tool. 
     The problem is that using pandoc is like sitting behind the flight deck of the Space Shuttle. 
     Millions of dials can be twiddled, and it is not easy to know which combinations to choose. 
     Often you want to take it for a reliable and familiar ride rather than a trip to uncharted space. 
 
-[`panzer`][panzer] can help. 
+[panzer][] can help. 
     It adds *styles* to pandoc.
     Styles are settings that govern the look and feel of your document in a predictable and reusable way. 
     More precisely, styles are combinations of templates, metadata settings, filters, postprocessers, and pre- and post-flight scripts. 
@@ -17,9 +24,7 @@ Instead of running `pandoc`, you run `panzer` on your document.
     By convention, styles take capitalized values. 
     For example:
 
-``` {.yaml}
-style: Notes
-```
+    style: Notes
 
 This one-line addition would activate the options relevant for the `Notes` style.
 
@@ -34,8 +39,8 @@ Styles are defined defined ether inside your document, or in panzer's `defaults.
 
 Requirements:
 
-* [pandoc]
-* [python 3]
+* [pandoc][]
+* [python 3][]
 
 `panzer` is a python script and it can be installed via the standard mechanism.
 
@@ -70,28 +75,24 @@ filters used by each style are describe below.
 Unless you want mess in your files, you can expect to spend some time populating `panzer`'s support directory with your own files.
 The default structure of the support directory is:
 
-```
-~/.panzer
-    defaults.yaml
-    cleanup/
-    filter/
-    postflight/
-    postprocess/
-    preflight/
-    shared/
-    template/
-```
+    ~/.panzer
+        defaults.yaml
+        cleanup/
+        filter/
+        postflight/
+        postprocess/
+        preflight/
+        shared/
+        template/
 
 `defaults.yaml` is the file that contains all default style definitions.
     You should customise this file for your own use.
 
 Each script directory will have 
 
-```
-postflight/
-    latexmk/
-        latexmk.py
-```
+    postflight/
+        latexmk/
+            latexmk.py
 
 The `shared` directory contains common scripts, libraries and modules, organised by language, which may be useful for script writers.
     By default `shared/python/panzertools.py`, which contains functions helpful to use in scripts.

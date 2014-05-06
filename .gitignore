@@ -12,7 +12,6 @@ tests/
 .tmp/
 panzer.log
 readme.pdf
-readme.tex
 
 # vim tags
 tags
