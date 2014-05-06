@@ -1,0 +1,144 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage{fixltx2e}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{txfonts}
+$if(Word.endnotes)$
+\usepackage{endnotes}
+\let\footnote=\endnote
+$endif$
+\usepackage[a4paper,vmargin=2.54cm,hmargin=3.17cm]{geometry}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage[british]{babel}
+\usepackage[autostyle]{csquotes}
+\usepackage[babel,verbose=silent]{microtype}
+
+
+% Force footnotes to stay on the same page
+\interfootnotelinepenalty=10000 	
+
+%% [natbib]: use natbib option for biblatex 
+$if(natbib)$
+\usepackage[useprefix,
+            authordate,
+            natbib,
+            sortcites,
+            backend=biber]{biblatex-chicago}    
+$if(biblio-files)$
+\addbibresource{$biblio-files$.bib}
+$endif$
+\setlength\bibitemsep{6pt}
+\defbibheading{bibliography}[\refname]{\section*{#1} \sectionmark{#1}}
+\defbibheading{references}[\refname]{\section*{#1} \sectionmark{#1}}
+$endif$
+
+% \usepackage[
+%   unicode    = true,
+%   breaklinks = true,
+%   bookmarks  = true,
+%   pdftitle   = {$title-meta$},
+%   colorlinks = true,
+%   citecolor  = purple_link,
+%   linkcolor  = purple_link,
+%   urlcolor   = purple_link]{hyperref}
+\usepackage{philosophy}		% Word-like typesetting
+
+$if(links-as-notes)$
+% Make links footnotes instead of hotlinks:
+\renewcommand{\href}[2]{#2\footnote{\url{#1}}}
+$endif$
+
+$if(tables)$
+\usepackage{longtable}
+$endif$
+
+$if(listings)$
+\usepackage{listings}
+$endif$
+
+$if(verbatim-in-note)$
+\usepackage{fancyvrb}
+$endif$
+
+$if(graphics)$
+\usepackage{graphicx}
+$endif$
+
+$if(numbersections)$
+\setcounter{secnumdepth}{5}
+$else$
+\setcounter{secnumdepth}{0}
+$endif$
+
+$if(verbatim-in-note)$
+\VerbatimFootnotes % allows verbatim text in footnotes
+$endif$
+
+$for(header-includes)$
+$header-includes$
+$endfor$
+
+$if(title)$
+\title{\textbf{$title$} \vspace{-1em}}
+$endif$
+
+$if(author)$
+$if(Word.anonymised)$
+$else$
+\author{$for(author)$$author$$sep$ \and $endfor$ \vspace{-1em}}
+$endif$
+$endif$
+
+$if(date)$
+\date{$date$ \vspace{-1em}}
+$endif$
+
+$if(Word.anonymised)$
+	% Remove the author and date fields and the space associated with them
+	% from the definition of maketitle!
+	\makeatletter
+	\renewcommand{\@maketitle}{
+	\newpage
+	 \null
+	 % \vskip 2em%
+	 \begin{center}%
+	  {\LARGE \@title \par  \vskip 3em}%
+	 \end{center}%
+	 \par} \makeatother
+$endif$
+\begin{document}
+
+$if(title)$
+\maketitle
+$endif$
+
+$for(include-before)$
+$include-before$
+$endfor$
+
+$if(toc)$
+\tableofcontents
+$endif$
+
+$body$
+
+$if(natbib)$
+\printbibliography$if(biblio-title)$[title=$biblio-title$]$endif$
+$endif$
+
+$for(include-after)$
+$include-after$
+$endfor$
+
+$if(Word.endnotes)$
+\newpage
+\begingroup
+\parindent 0pt
+\parskip 2ex
+\def\enotesize{\normalsize}
+\theendnotes
+\endgroup
+$endif$
+
+\end{document}

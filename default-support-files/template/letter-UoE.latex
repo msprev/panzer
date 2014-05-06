@@ -1,0 +1,126 @@
+\documentclass[LFCS,11pt]{infletr}
+\usepackage{fixltx2e}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{url,txfonts}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage[british]{babel}
+\usepackage[autostyle]{csquotes}
+\usepackage[babel,verbose=silent]{microtype}
+\usepackage{ellipsis}      %% must be loaded after hyperref
+
+%% Text can stretch a little into margins to avoid bad line-breaks
+\setlength{\emergencystretch}{3em}
+
+%% Footnotes: stay on the same page
+\interfootnotelinepenalty=10000
+
+$if(links-as-notes)$
+% Make links footnotes instead of hotlinks:
+\renewcommand{\href}[2]{#2\footnote{\url{#1}}}
+$endif$
+
+%% \signed{...}: flush right, newline when necessary
+%% usage: \signed{\citep{Lewis00}} 
+\def\signed #1{{\leavevmode\unskip\nobreak\hfil\penalty50\hskip2em
+  \hbox{}\nobreak\hfil#1%
+  \parfillskip=0pt \finalhyphendemerits=0 \endgraf}}
+
+%% \signedURL{...}: place URL flush right, newline when necessary
+\def\signedURL #1{{\signed{[\url{#1}]}  \vspace{0.5em}}}
+
+$if(tables)$
+\usepackage{longtable}
+$endif$
+
+$if(listings)$
+\usepackage{listings}
+$endif$
+$if(verbatim-in-note)$
+\usepackage{fancyvrb}
+$endif$
+$if(graphics)$
+\usepackage{graphicx}
+% Redefine \includegraphics so that, unless explicit options are
+% given, the image width will not exceed the width of the page.
+% Images get their normal width if they fit onto the page, but
+% are scaled down if they would overflow the margins.
+\makeatletter
+\def\ScaleIfNeeded{%
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+\let\Oldincludegraphics\includegraphics
+{%
+ \catcode`\@=11\relax%
+ \gdef\includegraphics{\@ifnextchar[{\Oldincludegraphics}{\Oldincludegraphics[width=\ScaleIfNeeded]}}%
+}%
+$endif$
+
+$if(numbersections)$
+\setcounter{secnumdepth}{5}
+$else$
+\setcounter{secnumdepth}{0}
+$endif$
+$if(verbatim-in-note)$
+\VerbatimFootnotes % allows verbatim text in footnotes
+$endif$
+
+$for(header-includes)$
+$header-includes$
+$endfor$
+
+\begin{document}
+
+\date{$date$}
+\phone{}
+\secy{650 1000} % Switchboard number
+\fax{650 3660}
+\email{mark.sprevak@ed.ac.uk}
+\href{http://sites.google.com/site/msprevak}
+\signature{$if(letter.hand-sign)$$else$\vspace{-4em}$endif$ $author$}
+
+\begin{letter}{}
+
+\opening{
+$if(title)$
+\begin{center}
+    \textbf{$title$} 
+\end{center}
+$endif$
+$if(letter.opening)$
+$letter.opening$
+$endif$
+}
+
+$for(include-before)$
+$include-before$
+$endfor$
+
+$body$
+
+$for(include-after)$
+$include-after$
+$endfor$
+
+\closing{
+$if(letter.closing)$
+$letter.closing$
+$else$
+Yours sincerely,
+$endif$
+$if(letter.hand-sign)$$else$$if(letter.signature)$
+\includegraphics{$letter.signature$}
+$else$\includegraphics{/Users/msprevak/Documents/Correspondence/Signature.png}$endif$$endif$}
+
+$if(letter.cc)$\cc{$letter.cc$}$endif$ 
+$if(letter.ps)$\ps{$letter.ps$}$endif$ 
+$if(letter.encl)$\encl{$letter.encl$}$endif$ 
+
+\end{letter}
+\end{document}

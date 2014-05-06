@@ -1,0 +1,76 @@
+\documentclass[manbib$if(thinmargins)$,thinmargins$endif$]{mds-article}
+
+$if(numbersections)$
+\setcounter{secnumdepth}{5}
+$else$
+\setcounter{secnumdepth}{0}
+$endif$
+
+$for(header-includes)$
+$header-includes$
+$endfor$
+
+$if(tables)$
+\usepackage{longtable}
+$endif$
+
+$if(natbib)$
+\usepackage[useprefix,
+            authordate,
+            natbib,
+            sortcites,
+            backend=biber]{biblatex-chicago}    
+$if(biblio-files)$
+\addbibresource{$biblio-files$.bib}
+$endif$
+\setlength\bibitemsep{6pt}
+\defbibheading{bibliography}[\refname]{\section*{#1} \sectionmark{#1}}
+\defbibheading{references}[\refname]{\section*{#1} \sectionmark{#1}}
+$endif$
+
+$if(title)$
+\title{$title$}
+$endif$
+
+$if(author)$
+\def\myauthor{$author$}
+$endif$
+$if(authorblock)$
+\authorblock{$authorblock$}
+$endif$
+$if(affiliation)$
+\def\myaffiliation{$affiliation$}
+$endif$
+$if(email)$
+\def\myemail{$email$}
+$endif$
+
+$if(article.published)$
+\published{$article.published$}
+$endif$
+$if(article.DOI)$
+\doi{$article.DOI$}
+$endif$
+$if(article.review)$
+\review{$article.review$}
+$endif$
+
+$if(date)$
+\date{$date$}
+$endif$
+
+\begin{document}
+$for(include-before)$
+  $include-before$
+$endfor$
+
+$body$
+
+$if(natbib)$
+\printbibliography$if(biblio-title)$[title=$biblio-title$]$endif$
+$endif$
+
+$for(include-after)$
+  $include-after$
+$endfor$
+\end{document}
