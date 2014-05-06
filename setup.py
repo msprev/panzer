@@ -5,7 +5,7 @@ def readme():
         return f.read()
 
 setup(name='panzer',
-      version='0.9',
+      version='0.9b',
       description='Adds styles to pandoc',
       long_description=readme(),
       url='https://github.com/msprev/panzer',
@@ -23,8 +23,8 @@ setup(name='panzer',
           'Topic :: Text Processing'
         ],
       entry_points = {
-          'console_scripts': [ 
+          'console_scripts': [
               'panzer = panzer.panzer:main'
           ]
-        }
+        },
       zip_safe=False)

@@ -1,3 +1,4 @@
 include README.md
-resursive-include support *
-resursive-include tests *
+include LICENSE.txt
+recursive-include support *
+recursive-include tests *
