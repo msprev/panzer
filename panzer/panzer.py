@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Panzer: pandoc with styles
+"""Panzer: pandoc with added styles
 
 Styles provide an easy interface to combinations of templates, metadata,
 filters, postprocessors, pre- and post-flight scripts for pandoc
@@ -840,7 +840,7 @@ def start_logger():
 def log(level_str, sender, message, submessage=str()):
     """ Send a log message with appropriate formatting. All log messages
     in panzer and its subprocesses are sent via this function. Do not
-    call the logging module functions directly.
+    call the `logging` module directly.
 
     Args:
         level_str       : string giving error level (see table below)
@@ -868,17 +868,17 @@ def log(level_str, sender, message, submessage=str()):
         'DEBUG'    : '         ',
         'NOTSET'   : '         '
     }
-    message        = str(message)
-    sender_str     = ''
-    message_str    = ''
+    message = str(message)
+    sender_str = ''
+    message_str = ''
     submessage_str = ''
     level = levels.get(level_str, levels['ERROR'])
     # - HTML output
     if OPTIONS['panzer']['html']:
-        sender_str     = '<span class="sender">%s</span>' % sender
-        message_str    = '<span class="message">%s</span>' % message
+        sender_str = '<span class="sender">%s</span>' % sender
+        message_str = '<span class="message">%s</span>' % message
         submessage_str = '<span class="submessage">%s</span>' % submessage
-        output =  '<div class="%s">' % level_str
+        output = '<div class="%s">' % level_str
         output += sender_str + message_str + submessage_str
         output += '</div>'
         my_logger.log(level, output)
