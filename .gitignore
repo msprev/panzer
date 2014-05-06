@@ -1,8 +1,17 @@
+# python stuff
+*.pyc
+/dist/
+build/
 venv/
+/*.egg-info
 tests/
-.tmp/
 .ropeproject/
+
+# panzer specific stuff
+.tmp/
 panzer.log
 readme.pdf
 readme.tex
+
+# vim tags
 tags
