@@ -1,18 +1,19 @@
 # Introduction
 
-[`pandoc`][pandoc] is an extremely powerful and flexible document processing tool. 
-    However, using it is like sitting behind the flight deck of the Space Shuttle. 
+[`pandoc`][pandoc] is a powerful and flexible document processing tool. 
+    The problem is that using pandoc is like sitting behind the flight deck of the Space Shuttle. 
     Millions of dials can be twiddled, and it is not easy to know which combinations to choose. 
-    Often you want to take it for a reliable and familiar ride rather than a trip to the moon. 
+    Often you want to take it for a reliable and familiar ride rather than a trip to uncharted space. 
 
-[`panzer`][panzer] can help by allowing you to drive pandoc with *styles*. 
-    Styles control the look and feel of your document in a simple and reusable way. 
-    Styles are combinations of templates, metadata settings, filters, postprocessers, and pre- and post-flight scripts. 
-    panzer wraps around pandoc and twiddles the dials appropriate for your chosen style. 
-    Instead of running `pandoc`, you run `panzer` on your document.
+[`panzer`][panzer] can help. 
+    It adds *styles* to pandoc.
+    Styles are settings that govern the look and feel of your document in a predictable and reusable way. 
+    More precisely, styles are combinations of templates, metadata settings, filters, postprocessers, and pre- and post-flight scripts. 
+    panzer twiddles the dials on pandoc appropriate for your chosen style. 
 
-Styles are invoked, customised, and created using pandoc's metadata format.
-    To use a style simply add the metadata key `style` to your pandoc document. 
+Instead of running `pandoc`, you run `panzer` on your document.
+    Styles are selected, created, and customised using pandoc's metadata.
+    To use a style simply add the metadata key `style` to your document. 
     By convention, styles take capitalized values. 
     For example:
 
@@ -20,20 +21,9 @@ Styles are invoked, customised, and created using pandoc's metadata format.
 style: Notes
 ```
 
-This one-line addition to a document could, for example, activate the options below for the latex writer:
+This one-line addition would activate the options relevant for the `Notes` style.
 
-``` {.yaml}
-Notes:
-    latex:
-        template:     notes.latex
-        default:
-            fontsize: 12pt
-            headings: sans-serif
-        filter:       
-            - run:    sortnotes.py
-```
-
-A style is defined inside the document(s) fed to panzer, or in panzer's defaults file.
+Styles are defined defined ether inside your document, or in panzer's `defaults.yaml` file.
 
 <!--Like pandoc, panzer expects all input to be encoded in utf-8, and yields-->
 <!--all output in utf-8. This also to all interactions between panzer and-->
