@@ -6,7 +6,7 @@ def readme():
 
 setup(name='panzer',
       version='0.9b',
-      description='Adds styles to pandoc',
+      description='pandoc with styles',
       long_description=readme(),
       url='https://github.com/msprev/panzer',
       author='Mark Sprevak',

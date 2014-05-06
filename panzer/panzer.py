@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
-"""Panzer: Adds styles to pandoc
+"""Panzer: pandoc with styles
 
 Styles provide an easy interface to combinations of templates, metadata,
 filters, postprocessors, pre- and post-flight scripts for pandoc
 documents. Styles can be invoked and customised on a per document basis.
 Panzer allows you to manage default styles via a configuration file in
 the support directory (default: "~./panzer/")
-
-Panzer-specific command line options (prefixed by triple dashes '---')
-are removed by panzer and all remaining command line options are passed
-transparently to pandoc.
 
 Author:     Mark Sprevak <mark.sprevak@ed.ac.uk>
 Copyright:  Copyright 2014, Mark Sprevak
@@ -27,7 +23,7 @@ import subprocess
 import sys
 import tempfile
 
-__version__ = "0.9"
+__version__ = "0.9b"
 
 REQUIRE_PANDOC_ATLEAST = "1.12.1"
 DEFAULT_SUPPORT_DIR = os.path.join(os.path.expanduser('~'), '.panzer')
@@ -1058,18 +1054,11 @@ def parse_cli_options():
     invocation of panzer.
     """
     panzer_description = '''
-    Panzer: A way to add styles to pandoc
+    Panzer-specific arguments are prefixed by triple dashes ('---').
+    All other arguments are passed to pandoc.
 
-    Styles are handy ways to use templates, metadata, filters,
-    postprocessors, pre- and post-flight scripts in pandoc documents.
-    Styles can be invoked and customised on a per document basis. Panzer
-    allows you to manage your defaults via a configuration file in the
-    support directory (default: "~./panzer/")
-
-    Panzer-specific command line options (prefixed by triple dashes '---')
-    are removed by panzer and remaining command line options are passed
-    transparently to the underlying instances of pandoc.
-    '''
+    Default support directory: "%s"
+    ''' % DEFAULT_SUPPORT_DIR
     panzer_epilog = '''
     Copyright (C) 2014 Mark Sprevak
     Web:  http://sites.google.com/site/msprevak
