@@ -27,7 +27,13 @@ import subprocess
 import sys
 import tempfile
 
-__version__ = "1.0"
+__version__ = "0.9"
+__status__ = "beta"
+__author__ = "Mark Sprevak"
+__email__ = "mark.sprevak@ed.ac.uk"
+__license__ = "BSD3"
+__copyright__ = "Copyright 2014, Mark Sprevak"
+
 REQUIRE_PANDOC_ATLEAST = "1.12.1"
 DEFAULT_SUPPORT_DIR = os.path.join(os.path.expanduser('~'), '.panzer')
 ENCODING = 'utf8'
