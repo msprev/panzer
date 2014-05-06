@@ -1,3 +1,3 @@
 include README.md
-include support/*
-include tests/*
+resursive-include support *
+resursive-include tests *
