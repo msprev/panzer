@@ -8,27 +8,30 @@ style  : Notes
 # Introduction
 
 [pandoc][] is a powerful and flexible document processing tool. 
-    The problem is that using pandoc is like sitting behind the flight deck of the Space Shuttle. 
-    Millions of dials can be twiddled, and it is not easy to know which combinations to choose. 
-    Often you want to take it for a reliable and familiar ride rather than a trip to uncharted space. 
+    The problem is that using pandoc presents a huge range of options for customisation of document output.
+    Millions of dials can be twiddled, and it is not easy to know which combinations to choose to quickly achieve your desired result.
+    Often you want to produce document output that fits certain formats, and this may involve the coordination of many elements, scripts and filters.
 
 [panzer][] can help. 
-    It adds *styles* to pandoc.
-    Styles are settings that govern the look and feel of your document in a predictable and reusable way. 
-    More precisely, styles are combinations of templates, metadata settings, filters, postprocessers, and pre- and post-flight scripts. 
-    panzer twiddles the dials on pandoc appropriate for your chosen style. 
+    panzer adds *styles* to pandoc.
+    Styles are metadata fields that govern the look and feel of your document in a convenient and reusable way. 
+    Styles are effectively canned combinations of templates, metadata settings, filters, postprocessers, and pre- and post-flight scripts. 
+    panzer remembers all this so that you don't have to.
+    Styles can be tweaked on a per document basis by adding the relevant metadata field.
 
-Instead of running `pandoc`, you run `panzer` on your document.
-    Styles are selected, created, and customised using pandoc's metadata.
-    To use a style simply add the metadata key `style` to your document. 
+How do I use panzer?
+    Instead of `pandoc`, you run `panzer` on your document.
+    panzer will drive pandoc and any associated scripts, and pass on the right information based on your style.
+    It is easy to create and customise styles.
+    This is done with YAML metadata.
+    To invoke a style in your document, add the field `style` to its metadata. 
     By convention, styles take capitalized values. 
     For example:
 
     style: Notes
 
-This one-line addition would activate the options relevant for the `Notes` style.
-
-Styles are defined defined ether inside your document, or in panzer's `defaults.yaml` file.
+This would activate the `Notes` style. 
+    This style would be defined in panzer's `defaults.yaml` file or inside the document.
 
 <!--Like pandoc, panzer expects all input to be encoded in utf-8, and yields-->
 <!--all output in utf-8. This also to all interactions between panzer and-->
@@ -37,13 +40,12 @@ Styles are defined defined ether inside your document, or in panzer's `defaults.
 
 # Installation
 
-Requirements:
+*Requirements:*
 
 * [pandoc][]
 * [python 3][]
 
-`panzer` is a python script and it can be installed via the standard mechanism.
-
+*Installation:*
 
 
 # Command line use
@@ -52,11 +54,155 @@ Requirements:
     panzer passes these arguments and options to the underlying instance of pandoc.
     panzer also has a few of its own command line options.
     These panzer-specific options are prefixed by triple dashes `---`.
-    Run the command `panzer -h` to see a list of these panzer-specific options.
+    Run the command `panzer -h` to see a list of panzer-specific options.
 
 The `panzer` command can be used as a drop-in replacement for the `pandoc` command.
 
 
+# Styles
+
+A style consists of the following elements:
+
+1. **Default metadata**: 
+    Any valid pandoc metadata can be set by the style.
+    This includes standard metadata fields (`author`, `numberedsections`),
+        or any custom metadata field you may create.
+2. **Template**:
+    A pandoc template associated with each writer for the style.
+3. **Pre-flight scripts**:
+    Executables run before the file(s) are processed by panzer.
+4. **Filters**:
+    pandoc [json filters][pandoc-filters].
+5. **Postprocessors**:
+    Text processing operations run on the output file from pandoc.
+6. **Post-flight scripts**:
+    Executables run after the output is written.
+7. **Cleanup scripts**:
+    Executables run after the output is written irrespective whether an error has occurred.
+    Guaranteed to be run before panzer finishes.
+
+
+Styles are defined in the `defaults.yaml` file in panzer's support directory (normally: `~/.panzer/`), or in your document's metadata.
+    Style definitions are hierarchically scoped by *style name* and *pandoc writer*.
+    There are two special values: `All` for style name, and `all` for name of writer.
+    The `All` style is applied to every document.
+    The `all` writer is applied for every writer for that style.
+
+Here is an example definition of the style `Notes`:
+
+
+    Notes:
+        all:                 
+            default:
+                numbersections: true
+        latex:
+            default:
+                lang: british
+                papersize: a4paper
+                fontsize: 12pt
+            preflight:
+                - run: tmp_out.py
+            filter:
+                 - run: smallcaps.py
+                 - run: optimise_bib.py
+            postprocess:
+                 - run: smallcaps.py
+            postflight:
+                - run: latexmk.py
+                - run: pplatex.py
+                - run: open_pdf.py
+            cleanup:
+                - run: tmp_back.py
+                - run: rmlatex.py
+
+The standard metadata field `numberedsections` is set to true by default by the style.
+    If the latex writer is being used, the language, papersize, and fontsize are automatically set.
+    These metafields are moved into global scope in the document unless otherwise overridden.
+    So apply this style and selecting the latex writer feeds pandoc a document containing:
+
+    ---
+    title: "My document"
+    author: Mark Sprevak
+    ...
+
+    Here is my text
+
+
+So apply this style and selecting the latex writer feeds pandoc a document containing:
+
+    ---
+    title: "My document"
+    author: Mark Sprevak
+    numbersections: true
+    lang: british
+    papersize: a4paper
+    fontsize: 12pt
+    preflight:
+        - run: tmp_out.py
+    filter:
+        - run: smallcaps.py
+        - run: optimise_bib.py
+    postprocess:
+        - run: smallcaps.py
+    postflight:
+        - run: latexmk.py
+        - run: pplatex.py
+        - run: open_pdf.py
+    cleanup:
+        - run: tmp_back.py
+        - run: rmlatex.py
+    ...
+    
+    Here is my text
+
+The first fields set metadata fields used by the template.
+The other fields are used by panzer to control its processing chain.
+These fields are accessible to the scripts and filters.
+
+## Combining styles
+
+Items in styles are combined with a union biased to the most specific named settings.
+    Items in the global scope take highest precedence (say, you place `template: mytemplate` in your document's metadata)
+    Items in the style definitions in document take precedence over items in the definitions in `defaults.yaml`
+    Items in the selected style take precedence over items in `All` and `all`.
+
+Items in styles are combined with a union biased to the highest ranked items below:
+
+1. Global scope in document
+2. Style definitions in document:
+    a. Current style, current writer
+    b. Current style, `all` writer
+    c. `All` style, current writer
+    d. `All` style, `all` writer
+7. Style definitions in `defaults.yaml`:
+    a. Current style, current writer
+    b. Current style, `all` writer
+    c. `All` style, current writer
+    d. `All` style, `all` writer
+
+If two items take different values (say, two different settings for `template`), then the item with the highest precedence above is used.
+
+The exception to this are *additive fields*: lists of filters, postprocessors, and scripts.
+    Here, the union above is non-destructive.
+    Items lower in precedence are simply added to the list after higher precedence items.
+    Items are added in the order that they appear in the style definition, first items run first.
+    To remove a previously added filter or script use the `kill` or `killall` field:
+
+    filter:
+        - kill: smallcap.py
+
+or 
+
+    filter:
+        - killall: true
+
+`kill` removes a named filter if already present. 
+    `killall` empties the filter list completely and starts from scratch.
+    Note `kill` or `killall` only affect items of lower precedence in the list above, or which occur before them in the currently list.
+    They do not prevent a filter or script being added by subsequent items or items with higher precedence.
+    If you want to be sure a filter is not added, place the relevant `kill` or `killall` command last in the relevant list in global scope in your document, so it has the highest precedence.
+
+If multiple documents are passed to panzer, their metadata is merged using pandoc's rules (left-biased union).
 
 # Creating your own style
 
@@ -167,12 +313,63 @@ The following metadata keys are reserved for use by `panzer` and should be avoid
 * `panzer_reserved`
 * `style`
 
-# Known limitations
+# Known issues
 
-* Calls to subprocesses (scripts, etc.) are blocking
+* panzer is slower than vanilla pandoc because it runs pandoc twice (once for a read phase, once for a write phase)
+* Calls to subprocesses (scripts, etc.) are currently blocking
+* Untested under Windows
 
 
 [pandoc]: http://johnmacfarlane.net/pandoc/index.html
 [panzer]: https://github.com/msprev
 [python 3]: https://www.python.org/download/releases/3.0
+[pandoc-filters]: http://johnmacfarlane.net/pandoc/scripting.html
+
+
+
+1. **Default metadata**: 
+    Any valid pandoc metadata can be set by the style.
+    This includes standard metadata fields (`author`, `numberedsections`),
+        or any custom metadata field you may create.
+
+2. **Template**:
+    A pandoc template associated with each writer for the style.
+
+3. **Pre-flight scripts**:
+    Executables run before the file(s) are processed by panzer.
+ 
+    * *command line arguments*: set by the `opt` field
+    * *stdin*: receives json string that includes all panzer and pandoc options, including a list of input and output files
+    * *sterr*: captured and parsed by panzer
+
+4. **Filters**:
+    pandoc [json filters][pandoc-filters].
+ 
+    * *command line arguments*: 1st argument is name of writer; other arguments set by the `opt` field
+    * *stdin*: json input with pandoc's abstract syntax tree
+    * *sterr*: captured and parsed by panzer
+    * *stout*: json output with pandoc's abstract syntax tree
+
+5. **Postprocessors**:
+    Text processing operations run on the output file from pandoc.
+ 
+    * *command line arguments*: set by the `opt` field in the style
+    * *stdin*: output file from pandoc
+    * *sterr*: captured and parsed by panzer
+    * *stout*: processed file sent back to panzer
+
+6. **Post-flight scripts**:
+    Executables run after the output is written.
+ 
+    * *command line arguments*: set by the `opt` field
+    * *stdin*: receives json string that includes all panzer and pandoc options, including a list of input and output files
+    * *sterr*: captured and parsed by panzer
+
+7. **Cleanup scripts**:
+    Executables run after the output is written irrespective whether an error has occurred.
+    Guaranteed to be run before panzer finishes.
+ 
+    * *command line arguments*: set by the `opt` field in the style
+    * *stdin*: receives json string that includes all panzer and pandoc options, including a list of input and output files
+    * *sterr*: captured and parsed by panzer
 
