@@ -581,10 +581,6 @@ def load():
     panzer uses pandoc to load its input by asking it to output a json object
     representing the concatenated files.
 
-    Args:
-        input_files : list of filenames to load
-        options : (optional) command line options passed to pandoc during loading
-
     Returns:
         Document containing parsed input_files concatenated
 
