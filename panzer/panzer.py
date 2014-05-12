@@ -711,40 +711,40 @@ def build_command(dictionary, key):
         command_raw = get_content(item_content, 'run', 'MetaInlines')
         command_str = pandocfilters.stringify(command_raw)
         command = [ resolve_path(command_str, key) ]
-        # options
-        options = []
-        if 'opt' in item_content:
-            if get_tag(item_content, 'opt') == 'MetaInlines':
-                # options are raw string
-                options_raw = get_content(item_content, 'opt', 'MetaInlines')
-                options_str = pandocfilters.stringify(options_raw)
-                options = shlex.split(options_str)
-            elif get_tag(item_content, 'opt') == 'MetaMap':
-                # options specified as MetaMap
-                options_dict = get_content(item_content, 'opt', 'MetaMap')
-                options = parse_command_options(options_dict)
-            command.extend(options)
+        # arguments
+        arguments = []
+        if 'arg' in item_content:
+            if get_tag(item_content, 'args') == 'MetaInlines':
+                # arguments are raw string
+                arguments_raw = get_content(item_content, 'arg', 'MetaInlines')
+                arguments_str = pandocfilters.stringify(arguments_raw)
+                arguments = shlex.split(arguments_str)
+            elif get_tag(item_content, 'args') == 'MetaList':
+                # arguments specified as MetaList
+                arguments_list = get_content(item_content, 'arg', 'MetaList')
+                arguments = parse_command_arguments(arguments_list)
+            command.extend(arguments)
         command_list.append(command)
     return command_list
 
-def parse_command_options(options_dict):
-    """docstring for parseOptions"""
-    options = []
-    for key in options_dict:
-        value_tag = get_tag(options_dict, key)
+def parse_command_arguments(arguments_list):
+    """docstring for parse_command_arguments"""
+    arguments = []
+    for field in arguments_list:
+        value_tag = get_tag(arguments_list, field)
         if value_tag == 'MetaBool' \
-          and get_content(options_dict, key, 'MetaBool') == True:
-            options.append('--' + key)
+          and get_content(arguments_list, field, 'MetaBool') == True:
+            arguments.append('--' + field)
         elif value_tag == 'MetaInlines':
-            value_raw = get_content(options_dict, key, 'MetaInlines')
+            value_raw = get_content(arguments_list, field, 'MetaInlines')
             value_str = pandocfilters.stringify(value_raw)
-            options.append('--%s="%s"' % (key, value_str))
+            arguments.append('--%s="%s"' % (field, value_str))
         else:
             log('ERROR',
                 'panzer',
-                'option values of type "%s" not' 'supported---"%s" ignored'
-                % (value_tag, key))
-    return options
+                'arguments of type "%s" not' 'supported---"%s" ignored'
+                % (value_tag, field))
+    return arguments
 
 def resolve_path(filename, key):
     """docstring for find_shell_filename
