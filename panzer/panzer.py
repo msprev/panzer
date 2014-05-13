@@ -372,10 +372,10 @@ def update_metadata(dictionary, new_data):
     Returns:
         dictionary updated with new_data
     """
-    # 1. Update with values in 'default' key
+    # 1. Update with values in 'metadata' key
     try:
-        dictionary.update(get_content(new_data, 'default', 'MetaMap'))
-        del new_data['default']
+        dictionary.update(get_content(new_data, 'metadata', 'MetaMap'))
+        del new_data['metadata']
     except (PanzerKeyError, KeyError):
         pass
     except PanzerTypeError as error:
