@@ -18,6 +18,7 @@ import shlex
 import subprocess
 import sys
 import tempfile
+
 __version__ = "1.0b"
 
 REQUIRE_PANDOC_ATLEAST = "1.12.1"
@@ -25,7 +26,11 @@ DEFAULT_SUPPORT_DIR = os.path.join(os.path.expanduser('~'), '.panzer')
 ENCODING = 'utf8'
 T = 't'
 C = 'c'
-ADDITIVE_FIELDS = ['preflight', 'filter', 'postprocess', 'postflight', 'cleanup']
+ADDITIVE_FIELDS = ['preflight',
+                   'filter',
+                   'postprocess',
+                   'postflight',
+                   'cleanup']
 
 # Document class
 
@@ -41,11 +46,11 @@ class Document(object):
     def __init__(self, ast=None):
         """ create new document """
         # 1. Defaults for new documents
-        self.ast      = []
+        self.ast = []
         self.metadata = {}
-        self.style    = None
+        self.style = None
         self.template = None
-        self.output   = None
+        self.output = None
         # - template : set after transform has been applied
         # - output   : set after pandoc has been applied
         if not ast:
@@ -87,14 +92,14 @@ class Document(object):
         writer = options['pandoc']['write']
         log('INFO', 'panzer', 'writer "%s"' % writer)
         work_list = [
-            ( defaults.metadata , ['All' , 'all']  , 'MetaMap' ) ,
-            ( defaults.metadata , ['All' , writer] , 'MetaMap' ) ,
-            ( defaults.metadata , [style , 'all']  , 'MetaMap' ) ,
-            ( defaults.metadata , [style , writer] , 'MetaMap' ) ,
-            ( self.metadata     , ['All' , 'all']  , 'MetaMap' ) ,
-            ( self.metadata     , ['All' , writer] , 'MetaMap' ) ,
-            ( self.metadata     , [style , 'all']  , 'MetaMap' ) ,
-            ( self.metadata     , [style , writer] , 'MetaMap' ) ]
+            (defaults.metadata, ['All', 'all'], 'MetaMap'),
+            (defaults.metadata, ['All', writer], 'MetaMap'),
+            (defaults.metadata, [style, 'all'], 'MetaMap'),
+            (defaults.metadata, [style, writer], 'MetaMap'),
+            (self.metadata, ['All', 'all'], 'MetaMap'),
+            (self.metadata, ['All', writer], 'MetaMap'),
+            (self.metadata, [style, 'all'], 'MetaMap'),
+            (self.metadata, [style, writer], 'MetaMap')]
         new_metadata = {}
         for item in work_list:
             update_metadata(new_metadata, get_nested_content(*item))
@@ -151,10 +156,11 @@ class Document(object):
         except PanzerKeyError:
             pass
         # - add it
-        data_out = [ { 'cli_options' : options,
-                       'run_lists'   : run_lists } ]
+        data_out = [{'cli_options' : options,
+                     'run_lists' : run_lists}]
         json_content = json.dumps(data_out)
-        field_content = [{"t":"CodeBlock", "c":[["",[],[]],json_content]}]
+        field_content = [{"t": "CodeBlock",
+                          "c": [["", [], []], json_content]}]
         set_content(self.metadata, 'panzer_reserved',
                     field_content, 'MetaBlocks')
         # - update document
@@ -196,9 +202,9 @@ class Document(object):
             stderr = ''
             try:
                 p = subprocess.Popen(command,
-                                    stderr = subprocess.PIPE,
-                                    stdin  = subprocess.PIPE,
-                                    stdout = subprocess.PIPE)
+                                     stderr=subprocess.PIPE,
+                                     stdin=subprocess.PIPE,
+                                     stdout=subprocess.PIPE)
                 in_pipe_bytes = in_pipe.encode(ENCODING)
                 out_pipe_bytes, stderr_bytes = p.communicate(input=in_pipe_bytes)
                 out_pipe = out_pipe_bytes.decode(ENCODING)
@@ -232,33 +238,33 @@ class Document(object):
         internal document not updated by pandoc.
         """
         # 1. Build pandoc command
-        command =  [ 'pandoc' ]
-        command += [ '-' ]
-        command += [ '--read', 'json' ]
-        command += [ '--write', options['pandoc']['write'] ]
+        command = ['pandoc']
+        command += ['-']
+        command += ['--read', 'json']
+        command += ['--write', options['pandoc']['write']]
         if options['pandoc']['pdf_output']:
-            command += [ '--output', options['pandoc']['output'] ]
+            command += ['--output', options['pandoc']['output']]
         else:
-            command += [ '--output', '-' ]
+            command += ['--output', '-']
         # - template specified on cli has precedence
         if options['pandoc']['template']:
-            command += [ '--template=%s' % options['pandoc']['template'] ]
+            command += ['--template=%s' % options['pandoc']['template']]
         elif self.template:
-            command += [ '--template=%s' % self.template ]
+            command += ['--template=%s' % self.template]
         # - remaining options
         command += options['pandoc']['options']
         # 2. Prefill input and output pipes
-        in_pipe  = json.dumps(self.ast)
+        in_pipe = json.dumps(self.ast)
         out_pipe = ''
-        stderr   = ''
+        stderr = ''
         # 3. Run pandoc command
         log('INFO', 'panzer', '-- pandoc --')
         log('INFO', 'panzer', 'run "%s"' % ' '.join(command))
         try:
             p = subprocess.Popen(command,
-                                 stderr = subprocess.PIPE,
-                                 stdin  = subprocess.PIPE,
-                                 stdout = subprocess.PIPE)
+                                 stderr=subprocess.PIPE,
+                                 stdin=subprocess.PIPE,
+                                 stdout=subprocess.PIPE)
             in_pipe_bytes = in_pipe.encode(ENCODING)
             out_pipe_bytes, stderr_bytes = p.communicate(input=in_pipe_bytes)
             out_pipe = out_pipe_bytes.decode(ENCODING)
@@ -285,8 +291,8 @@ class Document(object):
             sys.stdout.flush()
         # case 3: any other file as output
         else:
-            with open(options['pandoc']['output'], 'wt',
-                    encoding=ENCODING) as output_file:
+            with open(options['pandoc']['output'], 'w',
+                      encoding=ENCODING) as output_file:
                 output_file.write(self.output)
                 output_file.flush()
             log('INFO',
@@ -335,9 +341,9 @@ def apply_kill_rules(old_list):
     new_list = []
     for item in old_list:
         # 1. Sanity checks
-        check_C_and_T_exist(item)
+        check_c_and_t_exist(item)
         item_content = item[C]
-        item_type     = item[T]
+        item_type = item[T]
         if item_type != 'MetaMap':
             log('ERROR',
                 'panzer',
@@ -365,9 +371,9 @@ def apply_kill_rules(old_list):
             except PanzerTypeError as error:
                 log('WARNING', 'panzer', error)
                 continue
-            new_list = [ new_item for new_item in new_list if
-                         get_content(new_item[C], 'run', 'MetaInlines') !=
-                         to_be_killed ]
+            new_list = [new_item for new_item in new_list if
+                        get_content(new_item[C], 'run', 'MetaInlines') !=
+                        to_be_killed]
         elif 'killall' in item_content:
             try:
                 if get_content(item_content, 'killall', 'MetaBool') == True:
@@ -401,7 +407,9 @@ def get_nested_content(metadata, fields, expected_type_of_leaf=None):
         # If on a branch...
         if fields:
             next_content = get_content(metadata, current_field, 'MetaMap')
-            return get_nested_content(next_content, fields, expected_type_of_leaf)
+            return get_nested_content(next_content,
+                                      fields,
+                                      expected_type_of_leaf)
         # Else on a leaf...
         else:
             return get_content(metadata, current_field, expected_type_of_leaf)
@@ -417,7 +425,7 @@ def get_content(metadata, field, expected_type=None):
     """ return content of field """
     if field not in metadata:
         raise PanzerKeyError('field "%s" not found' % field)
-    check_C_and_T_exist(metadata[field])
+    check_c_and_t_exist(metadata[field])
     if expected_type:
         found_type = metadata[field][T]
         if found_type != expected_type:
@@ -430,14 +438,14 @@ def get_type(metadata, field):
     """ return type of field """
     if field not in metadata:
         raise PanzerKeyError('field "%s" not found' % field)
-    check_C_and_T_exist(metadata[field])
+    check_c_and_t_exist(metadata[field])
     return metadata[field][T]
 
 def set_content(metadata, field, content, content_type):
     """ set content and type of field in metadata """
     metadata[field] = {C: content, T: content_type}
 
-def check_C_and_T_exist(item):
+def check_c_and_t_exist(item):
     """ check item contains both C and T fields """
     if C not in item:
         message = 'Value of "%s" corrupt: "C" field missing' % repr(item)
@@ -454,7 +462,7 @@ def load(options):
     # 1. Build pandoc command
     command = options['pandoc']['input'].copy()
     if options['pandoc']['read']:
-        command += [ '--read', options['pandoc']['read'] ]
+        command += ['--read', options['pandoc']['read']]
     command += ['--write', 'json', '--output', '-']
     command += options['pandoc']['options']
     log('DEBUG', 'panzer', 'run pandoc "%s"' % ' '.join(command))
@@ -468,7 +476,7 @@ def load_defaults(options):
     """ return Document from loading defaults.md """
     filename = os.path.join(options['panzer']['support'], 'defaults.md')
     if os.path.exists(filename):
-        command = [ filename ]
+        command = [filename]
         command += ['--write', 'json', '--output', '-']
         ast = pandoc_read_json(command)
         default_doc = Document(ast)
@@ -520,8 +528,8 @@ def run_scripts(kind, run_lists, options, force_run=False):
                                  stdin=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
             # send panzer's options to scripts via stdin as a json
-            data_out = [ { 'cli_options' : options,
-                            'run_lists'  : run_lists } ]
+            data_out = [{'cli_options' : options,
+                         'run_lists' : run_lists}]
             in_pipe = json.dumps(data_out)
             in_pipe_bytes = in_pipe.encode(ENCODING)
             out_pipe_bytes, stderr_bytes = p.communicate(input=in_pipe_bytes)
@@ -553,30 +561,34 @@ def build_run_lists(metadata, run_lists, options):
         if field in metadata:
             run_list.extend(build_run_list(metadata, field, options))
         # pdf output: skip postprocess
-        if options['pandoc']['pdf_output'] and field == 'postprocess' and run_list:
+        if options['pandoc']['pdf_output'] \
+           and field == 'postprocess' \
+           and run_list:
             log('INFO', 'panzer', 'postprocess skipped --- since output is PDF')
             run_lists[field] = []
             continue
         run_lists[field] = run_list
         for (i, command) in enumerate(run_list):
-            log('INFO', 'panzer', '%s %d "%s"' % (field, i+1, " ".join(command)))
+            log('INFO',
+                'panzer',
+                '%s %d "%s"' % (field, i+1, " ".join(command)))
     return run_lists
 
 def build_run_list(metadata, field, options):
     """ return run list for field of metadata """
-    run_list = list()
+    run_list = []
     try:
         metadata_list = get_content(metadata, field, 'MetaList')
     except (PanzerTypeError, PanzerKeyError) as error:
         log('WARNING', 'panzer', error)
         return command
     for item in metadata_list:
-        check_C_and_T_exist(item)
+        check_c_and_t_exist(item)
         item_content = item[C]
         # command name
         command_raw = get_content(item_content, 'run', 'MetaInlines')
         command_str = pandocfilters.stringify(command_raw)
-        command = [ resolve_path(command_str, field, options) ]
+        command = [resolve_path(command_str, field, options)]
         # arguments
         arguments = []
         if 'args' in item_content:
@@ -682,7 +694,7 @@ def start_logger(options):
         },
         'loggers': {
             __name__: {
-                'handlers'   : [ 'console', 'log_file_handler' ],
+                'handlers'   : ['console', 'log_file_handler'],
                 'level'      : 'DEBUG',
                 'propagate'  : True
             }
@@ -693,7 +705,7 @@ def start_logger(options):
         config['loggers'][__name__]['handlers'].remove('log_file_handler')
         del config['handlers']['log_file_handler']
     # - set verbosity level
-    verbosity = [ 'CRITICAL', 'WARNING', 'INFO' ]
+    verbosity = ['CRITICAL', 'WARNING', 'INFO']
     index = options['panzer'].get('verbose', 1)
     try:
         verbosity_level = verbosity[index]
@@ -722,7 +734,7 @@ def log(level_str, sender, message):
     # - lookup table for internal strings to pretty output strings
     pretty_levels = {
         'CRITICAL' : 'FATAL:   ',
-        'ERROR'    : 'ERROR:   ' ,
+        'ERROR'    : 'ERROR:   ',
         'WARNING'  : 'WARNING: ',
         'INFO'     : '         ',
         'DEBUG'    : '         ',
@@ -761,7 +773,7 @@ def log_stderr(stderr, sender=str()):
         if not line:
             # - skip blank lines: no valid json or message to decode
             continue
-        incoming = dict()
+        incoming = {}
         try:
             incoming = json.loads(line)
         except ValueError:
@@ -769,12 +781,8 @@ def log_stderr(stderr, sender=str()):
             log('DEBUG',
                 'panzer',
                 'failed to decode json message from %s: "%s"' % (sender, line))
-            incoming = [ {'error_msg':
-                            {
-                              'level': 'ERROR',
-                              'message': '!' + line
-                            }
-                         } ]
+            incoming = [{'error_msg': {'level': 'ERROR',
+                                       'message': '!' + line}}]
         for item in incoming:
             level = item['error_msg']['level']
             message = item['error_msg']['message']
@@ -871,7 +879,7 @@ def parse_cli_options(options):
     warranty, not even for merchantability or fitness for a particular purpose.
     '''
     # Adapted from https://github.com/jgm/pandoc/blob/master/pandoc.hs#L841
-    pandoc_writer_mapping   = {
+    pandoc_writer_mapping = {
         ""          : "markdown",
         ".tex"      : "latex",
         ".latex"    : "latex",
@@ -911,10 +919,9 @@ def parse_cli_options(options):
         ".9"        : "man"
     }
     # 1. Parse options specific to panzer
-    panzer_parser = argparse.ArgumentParser(
-                                description=panzer_description,
-                                epilog=panzer_epilog,
-                                formatter_class=argparse.RawTextHelpFormatter)
+    panzer_parser = argparse.ArgumentParser(description=panzer_description,
+                                            epilog=panzer_epilog,
+                                            formatter_class=argparse.RawTextHelpFormatter)
     panzer_parser.add_argument("---panzer-support",
                                help='location of directory of support files')
     panzer_parser.add_argument("---debug",
@@ -923,9 +930,9 @@ def parse_cli_options(options):
     panzer_parser.add_argument("---verbose",
                                type=int,
                                help='verbosity of console messages\n'
-                                    ' 0: silent\n'
-                                    ' 1: only errors and warnings\n'
-                                    ' 2: full info (default)')
+                               ' 0: silent\n'
+                               ' 1: only errors and warnings\n'
+                               ' 2: full info (default)')
     panzer_parser.add_argument('---version',
                                action='version',
                                version=('%(prog)s ' + __version__))
@@ -1018,8 +1025,8 @@ def parse_cli_options(options):
     # - first line is output file, ignore it
     options['pandoc']['input'] = stdout_list[1:]
     # - remove input files from unknown
-    unknown = [ arg for arg in unknown
-                        if arg not in options['pandoc']['input'] ]
+    unknown = [arg for arg in unknown
+               if arg not in options['pandoc']['input']]
     # 7. Remaining options for pandoc
     options['pandoc']['options'] = unknown
     return options
@@ -1055,7 +1062,7 @@ class PanzerInternalError(PanzerError):
 
 def main():
     """ the main function """
-    options   = default_options()
+    options = default_options()
     run_lists = default_run_lists()
 
     try:
