@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
-"""Panzer: pandoc with added styles
+""" panzer: pandoc with styles
 
-Styles provide an easy interface to combinations of templates, metadata,
-filters, postprocessors, pre- and post-flight scripts for pandoc
-documents. Styles can be invoked and customised on a per document basis.
-Panzer allows you to manage default styles via a configuration file in
-the support directory (default: "~./panzer/")
+for more info: <https://github.com/msprev/panzer>
 
-Author:     Mark Sprevak <mark.sprevak@ed.ac.uk>
-Copyright:  Copyright 2014, Mark Sprevak
-License:    BSD3
+Author    : Mark Sprevak <mark.sprevak@ed.ac.uk>
+Copyright : Copyright 2014, Mark Sprevak
+License   : BSD3
 """
 
 import argparse
@@ -22,73 +18,36 @@ import shlex
 import subprocess
 import sys
 import tempfile
-
-__version__ = "0.9b"
+__version__ = "1.0b"
 
 REQUIRE_PANDOC_ATLEAST = "1.12.1"
 DEFAULT_SUPPORT_DIR = os.path.join(os.path.expanduser('~'), '.panzer')
 ENCODING = 'utf8'
 T = 't'
 C = 'c'
-ADDITIVE_KEYS = ['preflight', 'filter', 'postprocess', 'postflight', 'cleanup']
-OPTIONS = {
-    'panzer': {
-        'support'         : DEFAULT_SUPPORT_DIR,
-        'debug'           : False,
-        'verbose'         : 2,
-        'html'            : False,
-        'stdin_temp_file' : ''
-    },
-    'pandoc': {
-        'input'      : '',
-        'output'     : '-',
-        'pdf_output' : False,
-        'read'       : '',
-        'write'      : '',
-        'template'   : '',
-        'filter'     : [],
-        'options'    : []
-    }
-}
+ADDITIVE_FIELDS = ['preflight', 'filter', 'postprocess', 'postflight', 'cleanup']
 
 # Document class
 
 class Document(object):
-    """
+    """ representation of pandoc documents
 
-    panzer's representation of pandoc documents
-
-    Attributes:
-        - ast      : list giving input abstract syntax tree (taken from
-        pandoc's json representation)
-        - metadata : dict giving metadata branch of ast
-        - style    : string style for document
-        - template : string template for document
-        - output   : string filled by pandoc's writer once run on ast
-
-    Important methods:
-        - transform    : transform document's metadata using panzer styles
-        - pipe    : filter a document based on an external command
-        - pandoc   : invoke pandoc, populating self.output
-        - write : write self.output based on cli options
-
+    - ast      : abstract syntax tree
+    - metadata : metadata branch of ast
+    - style    : style for document
+    - template : template for document
+    - output   : filled with output when processing is complete
     """
     def __init__(self, ast=None):
-        """
-
-        Create a new document.
-
-        Args:
-            - ast : (optional) input ast (as taken from pandoc's json
-            representation)
-
-        """
+        """ create new document """
         # 1. Defaults for new documents
         self.ast      = []
         self.metadata = {}
         self.style    = None
         self.template = None
         self.output   = None
+        # - template : set after transform has been applied
+        # - output   : set after pandoc has been applied
         if not ast:
             return
         # 2. Apply passed values to set up document
@@ -104,28 +63,17 @@ class Document(object):
             style_raw = get_content(self.metadata, 'style', 'MetaInlines')
             self.style = pandocfilters.stringify(style_raw)
         except PanzerKeyError:
-            log('DEBUG', 'panzer', 'no style key found')
+            log('DEBUG', 'panzer', 'no style field found')
         except PanzerTypeError as error:
             log('WARNING', 'panzer', error)
-        # - template : set after transform has been applied
-        # - output   : set after pandoc has been applied
 
-    def transform(self, defaults):
-        """
-
-        Transforms document using panzer's styles.
-
-        Modify metadata of document based on a style and writer.
-
-        Args:
-            - defaults : dict of metadata defaults
-
-        """
+    def transform(self, defaults, options):
+        """ transform using style """
         style = self.style
         if style:
-            log('DEBUG', 'panzer', 'style "%s"' % style)
+            log('INFO', 'panzer', 'style "%s"' % style)
         else:
-            log('DEBUG', 'panzer', 'no "style" key found')
+            log('INFO', 'panzer', 'no "style" field found')
         if style \
           and style not in self.metadata \
           and style not in defaults.metadata:
@@ -136,7 +84,8 @@ class Document(object):
         # - start with blank metadata
         # - add global defaults one by one
         # - then add defaults specified in document
-        writer = OPTIONS['pandoc']['write']
+        writer = options['pandoc']['write']
+        log('INFO', 'panzer', 'writer "%s"' % writer)
         work_list = [
             ( defaults.metadata , ['All' , 'all']  , 'MetaMap' ) ,
             ( defaults.metadata , ['All' , writer] , 'MetaMap' ) ,
@@ -152,42 +101,26 @@ class Document(object):
         # - finally, add metadata settings of document
         new_metadata.update(self.metadata)
         # 2. Apply kill rules to trim lists
-        for key in ADDITIVE_KEYS:
+        for field in ADDITIVE_FIELDS:
             try:
-                original_list = get_content(new_metadata, key, 'MetaList')
+                original_list = get_content(new_metadata, field, 'MetaList')
                 trimmed_list = apply_kill_rules(original_list)
                 if trimmed_list:
-                    set_content(new_metadata, key, trimmed_list, 'MetaList')
+                    set_content(new_metadata, field, trimmed_list, 'MetaList')
                 else:
-                    # if all items killed, delete key
-                    del new_metadata[key]
+                    # if all items killed, delete field
+                    del new_metadata[field]
             except PanzerKeyError:
                 continue
             except PanzerTypeError as error:
                 log('WARNING', 'panzer', error)
                 continue
         # 3. Tidy up after transform
-        # - remove now unneeded style keys from document's metadata
+        # - remove now unneeded style fields from document's metadata
         if 'All' in new_metadata:
             del new_metadata['All']
         if style in new_metadata:
             del new_metadata[style]
-        # 4. Add special panzer_reserved field to pass OPTIONS
-        # - check if already exists
-        try:
-            get_content(new_metadata, 'panzer_reserved')
-            log('ERROR',
-                'panzer',
-                'special key "panzer_reserved" already in metadata'
-                '---overwriting it')
-        except PanzerKeyError:
-            pass
-        # - add it
-        data_out = [ { 'cli_options': OPTIONS } ]
-        json_content = json.dumps(data_out)
-        field_content = [{"t":"CodeBlock", "c":[["",[],[]],json_content]}]
-        set_content(new_metadata, 'panzer_reserved',
-                    field_content, 'MetaBlocks')
         # 4. Update document
         # - ast
         try:
@@ -200,42 +133,49 @@ class Document(object):
         try:
             template_raw = get_content(new_metadata, 'template', 'MetaInlines')
             template_str = pandocfilters.stringify(template_raw)
-            self.template = resolve_path(template_str, 'template')
+            self.template = resolve_path(template_str, 'template', options)
         except (PanzerKeyError, PanzerTypeError) as error:
             log('DEBUG', 'panzer', error)
-        log('DEBUG', 'panzer', 'template: %s' % self.template)
+        if self.template:
+            log('INFO', 'panzer', 'template "%s"' % self.template)
+
+    def inject_panzer_reserved_field(self, run_lists, options):
+        """ add panzer_reserved field to document """
+        # - check if already exists
+        try:
+            get_content(self.metadata, 'panzer_reserved')
+            log('ERROR',
+                'panzer',
+                'special field "panzer_reserved" already in metadata'
+                '---overwriting it')
+        except PanzerKeyError:
+            pass
+        # - add it
+        data_out = [ { 'cli_options' : options,
+                       'run_lists'   : run_lists } ]
+        json_content = json.dumps(data_out)
+        field_content = [{"t":"CodeBlock", "c":[["",[],[]],json_content]}]
+        set_content(self.metadata, 'panzer_reserved',
+                    field_content, 'MetaBlocks')
+        # - update document
+        try:
+            self.ast[0]['unMeta'] = self.metadata
+        except (IndexError, KeyError):
+            self.ast = [{'unMeta': self.metadata}, []]
+        # - log new metadata
         log('DEBUG', 'panzer', '-'*20+'NEW METADATA'+'-'*20+'\n'+
             json.dumps(self.metadata, sort_keys=True, indent=1))
 
-    def pipe(self, kind, commands):
-        """ Pass document through an external command.
-
-        This method is used to run filters and postprocessors on
-        document.
-
-        Args:
-            commands : list of commands to run. Commands are run from
-                    first to last. Standard output of one is fed into
-                    the standard input of next. Commands must be given
-                    in format of subprocess.Popen.
-            kind     : string type of command. Values can be:
-                'filter'      --- command is json filter
-                'postprocess' --- command is postprocessor
-
-        Raises:
-            PanzerInternalError : if called with unknown kind setting
-        """
-        # - if no commands of this kind to run, then return
-        if kind not in commands:
+    def pipe_through(self, kind, run_lists, options):
+        """ pipe through external command """
+        # - if no run list of this kind to run, then return
+        if kind not in run_lists or not run_lists[kind]:
             return
+        log('INFO', 'panzer', '-- %s --' % kind)
         # 1. Set up incoming pipe
         if kind == 'filter':
             in_pipe = json.dumps(self.ast)
         elif kind == 'postprocess':
-            # pdf output: skip postprocess
-            if OPTIONS['pandoc']['pdf_output']:
-                log('INFO', kind, 'skipping since output is PDF')
-                return
             in_pipe = self.output
         else:
             raise PanzerInternalError('illegal invocation of'
@@ -243,15 +183,15 @@ class Document(object):
         # 2. Set up outgoing pipe in case of failure
         out_pipe = in_pipe
         # 3. Run commands
-        for command in commands[kind]:
+        for command in run_lists[kind]:
             # - pandoc requires filters be passed writer as 1st argument
             if kind == 'filter':
-                command.insert(1, OPTIONS['pandoc']['write'])
+                command.insert(1, options['pandoc']['write'])
             # - add debugging info
             command_name = os.path.basename(command[0])
             command_path = ' '.join(command).replace(os.path.expanduser('~'),
                                                      '~')
-            log('DEBUG', kind, command_name, submessage=command_path)
+            log('INFO', 'panzer', 'run "%s"' % command_path)
             # - run the command and log any errors
             stderr = ''
             try:
@@ -283,40 +223,37 @@ class Document(object):
         elif kind == 'postprocess':
             self.output = out_pipe
 
-    def pandoc(self):
-        """ Run pandoc on the document.
+    def pandoc(self, options):
+        """ run pandoc on document
 
-        This method uses the options set in OPTIONS['pandoc'] as the cli
-        settings for the pandoc command.
-
-        Normally, input to pandoc is passed via stdin in json format and
-        output is received via stout in the writer format. The exception
-        is when the output file has a .pdf extension. Here, the output
-        is simply a pdf file that panzer does not process further, and
-        the internal document is not updated by pandoc.
+        Normally, input to pandoc is passed via stdin and output received via
+        stout. Exception is when the output file has .pdf extension. Then,
+        output is simply pdf file that panzer does not process further, and
+        internal document not updated by pandoc.
         """
         # 1. Build pandoc command
         command =  [ 'pandoc' ]
         command += [ '-' ]
         command += [ '--read', 'json' ]
-        command += [ '--write', OPTIONS['pandoc']['write'] ]
-        if OPTIONS['pandoc']['pdf_output']:
-            command += [ '--output', OPTIONS['pandoc']['output'] ]
+        command += [ '--write', options['pandoc']['write'] ]
+        if options['pandoc']['pdf_output']:
+            command += [ '--output', options['pandoc']['output'] ]
         else:
             command += [ '--output', '-' ]
         # - template specified on cli has precedence
-        if OPTIONS['pandoc']['template']:
-            command += [ '--template=%s' % OPTIONS['pandoc']['template'] ]
+        if options['pandoc']['template']:
+            command += [ '--template=%s' % options['pandoc']['template'] ]
         elif self.template:
             command += [ '--template=%s' % self.template ]
         # - remaining options
-        command += OPTIONS['pandoc']['options']
+        command += options['pandoc']['options']
         # 2. Prefill input and output pipes
         in_pipe  = json.dumps(self.ast)
         out_pipe = ''
         stderr   = ''
         # 3. Run pandoc command
-        log('DEBUG', 'pandoc', ' '.join(command))
+        log('INFO', 'panzer', '-- pandoc --')
+        log('INFO', 'panzer', 'run "%s"' % ' '.join(command))
         try:
             p = subprocess.Popen(command,
                                  stderr = subprocess.PIPE,
@@ -331,101 +268,80 @@ class Document(object):
         finally:
             log_stderr(stderr)
         # 4. Deal with output of pandoc
-        if OPTIONS['pandoc']['pdf_output']:
+        if options['pandoc']['pdf_output']:
             # do nothing with a pdf
             pass
         else:
             self.output = out_pipe
 
-    def write(self):
-        """ Writes the document in the requested format.
-
-        The format is specified by OPTIONS['pandoc'].
-        """
+    def write(self, options):
+        """ write document """
         # case 1: pdf as output file
-        if OPTIONS['pandoc']['pdf_output']:
-            pass
+        if options['pandoc']['pdf_output']:
+            return
         # case 2: stdout as output
-        if OPTIONS['pandoc']['output'] == '-':
+        if options['pandoc']['output'] == '-':
             sys.stdout.buffer.write(self.output.encode(ENCODING))
             sys.stdout.flush()
         # case 3: any other file as output
         else:
-            with open(OPTIONS['pandoc']['output'], 'wt',
+            with open(options['pandoc']['output'], 'wt',
                     encoding=ENCODING) as output_file:
                 output_file.write(self.output)
                 output_file.flush()
             log('INFO',
                 'panzer',
-                'output written to "%s"' % OPTIONS['pandoc']['output'])
+                'output written to "%s"' % options['pandoc']['output'])
 
 # Functions for manipulating metadata
 
-def update_metadata(dictionary, new_data):
-    """ This updates dictionary with new metadata. The update is done
-    respecting panzer's rules on additive lists, killing, etc.
-
-    Args:
-        dictionary : dictionary metadata to be updated
-        new_data   : dictionary new metadata to be used for update
-
-    Returns:
-        dictionary updated with new_data
-    """
-    # 1. Update with values in 'metadata' key
+def update_metadata(old, new):
+    """ return old updated with new metadata """
+    # 1. Update with values in 'metadata' field
     try:
-        dictionary.update(get_content(new_data, 'metadata', 'MetaMap'))
-        del new_data['metadata']
+        old.update(get_content(new, 'metadata', 'MetaMap'))
+        del new['metadata']
     except (PanzerKeyError, KeyError):
         pass
     except PanzerTypeError as error:
         log('WARNING', 'panzer', error)
-    # 2. Update with values in keys for additive lists
-    for key in ADDITIVE_KEYS:
+    # 2. Update with values in fields for additive lists
+    for field in ADDITIVE_FIELDS:
         try:
             try:
-                new_list = get_content(new_data, key, 'MetaList')
+                new_list = get_content(new, field, 'MetaList')
             except PanzerKeyError:
-                # key not in incoming metadata, move to next list
+                # field not in incoming metadata, move to next list
                 continue
             try:
-                old_list = get_content(dictionary, key, 'MetaList')
+                old_list = get_content(old, field, 'MetaList')
             except PanzerKeyError:
-                # key not in old metadata, start with an empty list
+                # field not in old metadata, start with an empty list
                 old_list = []
         except PanzerTypeError as error:
-            # wrong type of value under key, skip to next list
+            # wrong type of value under field, skip to next list
             log('WARNING', 'panzer', error)
             continue
         old_list.extend(new_list)
-        set_content(dictionary, key, old_list, 'MetaList')
-        del new_data[key]
-    # 3. Update with values of all remaining keys
-    # - includes 'template' key
-    dictionary.update(new_data)
-    return dictionary
+        set_content(old, field, old_list, 'MetaList')
+        del new[field]
+    # 3. Update with values of all remaining fields
+    # - includes 'template' field
+    old.update(new)
+    return old
 
 def apply_kill_rules(old_list):
-    """ Apply panzer's rules on killing to additive lists. 'kill' and
-    'killall' fields remove previous items in the list (either
-    selectively or indiscriminately).
-
-    Args:
-        old_list : list to be processed according to kill rules
-
-    Returns:
-        list after kill rules applied
-    """
+    """ return old_list after applying kill rules """
     new_list = []
     for item in old_list:
         # 1. Sanity checks
         check_C_and_T_exist(item)
         item_content = item[C]
-        item_tag     = item[T]
-        if item_tag != 'MetaMap':
+        item_type     = item[T]
+        if item_type != 'MetaMap':
             log('ERROR',
                 'panzer',
-                'keys "' + '", "'.join(ADDITIVE_KEYS) + '" '
+                'fields "' + '", "'.join(ADDITIVE_FIELDS) + '" '
                 'value must be of type "MetaMap"---ignoring 1 item')
             continue
         if len(item_content.keys() & {'run', 'kill', 'killall'}) != 1:
@@ -436,7 +352,7 @@ def apply_kill_rules(old_list):
             continue
         # 2. Now operate on content
         if 'run' in item_content:
-            if get_tag(item_content, 'run') != 'MetaInlines':
+            if get_type(item_content, 'run') != 'MetaInlines':
                 log('ERROR',
                     'panzer',
                     '"run" value must be of type "MetaInlines"'
@@ -464,149 +380,93 @@ def apply_kill_rules(old_list):
             continue
     return new_list
 
-def get_nested_content(dictionary, keys, expected_type_of_leaf=None):
-    """ Returns content of key by traversing a list of MetaMaps.
+def get_nested_content(metadata, fields, expected_type_of_leaf=None):
+    """ return content of field by traversing a list of MetaMaps
 
-    Args:
-        dictionary : dictionary to traverse
-        keys       : list of keys to traverse in dictionary from
-        shallowest to deepest. Content of every key, except the last,
-        must be type 'MetaMap' (otherwise keys could not be traversed).
-        The content of final key in the list is returned.
-        expected_type_of_leaf : (optional) expected type of final key's
+    args:
+        metadata : dictionary to traverse
+        fields       : list of fields to traverse in dictionary from
+        shallowest to deepest. Content of every field, except the last,
+        must be type 'MetaMap' (otherwise fields could not be traversed).
+        The content of final field in the list is returned.
+        expected_type_of_leaf : (optional) expected type of final field's
         content
 
     Returns:
-        content of final key in list, or the empty dict ({}) if key of
+        content of final field in list, or the empty dict ({}) if field of
         expected type is not found
     """
-    current_key = keys.pop(0)
+    current_field = fields.pop(0)
     try:
         # If on a branch...
-        if keys:
-            next_content = get_content(dictionary, current_key, 'MetaMap')
-            return get_nested_content(next_content, keys, expected_type_of_leaf)
+        if fields:
+            next_content = get_content(metadata, current_field, 'MetaMap')
+            return get_nested_content(next_content, fields, expected_type_of_leaf)
         # Else on a leaf...
         else:
-            return get_content(dictionary, current_key, expected_type_of_leaf)
+            return get_content(metadata, current_field, expected_type_of_leaf)
     except PanzerKeyError:
-        # current_key not found, return {}: nothing to update
+        # current_field not found, return {}: nothing to update
         return {}
     except PanzerTypeError as error:
         log('WARNING', 'panzer', error)
         # wrong type found, return {}: nothing to update
         return {}
 
-def get_content(dictionary, key, expected_type=None):
-    """ Returns content of key from metadata dictionary.
-
-    Args:
-        dictionary : dictionary source
-        key        : key to retrieve
-        expected_type : (optional) expected type of content
-
-    Returns:
-        content of key
-
-    Raises:
-        PanzerKeyError if key not found
-        PanzerTypeError if content not of expected type
-    """
-    if key not in dictionary:
-        raise PanzerKeyError('key "%s" not found' % key)
-
-    check_C_and_T_exist(dictionary[key])
-
+def get_content(metadata, field, expected_type=None):
+    """ return content of field """
+    if field not in metadata:
+        raise PanzerKeyError('field "%s" not found' % field)
+    check_C_and_T_exist(metadata[field])
     if expected_type:
-        found_type = dictionary[key][T]
+        found_type = metadata[field][T]
         if found_type != expected_type:
             raise PanzerTypeError('value of "%s": expecting type "%s", '
                                   'but found type "%s"'
-                                  % (key, expected_type, found_type))
-    return dictionary[key][C]
+                                  % (field, expected_type, found_type))
+    return metadata[field][C]
 
-def get_tag(dictionary, key):
-    """ Returns type of key from metadata dictionary.
+def get_type(metadata, field):
+    """ return type of field """
+    if field not in metadata:
+        raise PanzerKeyError('field "%s" not found' % field)
+    check_C_and_T_exist(metadata[field])
+    return metadata[field][T]
 
-    Args:
-        dictionary : dictionary source
-        key        : key to retrieve
-
-    Returns:
-        type of key
-
-    Raises:
-        PanzerKeyError if key not found
-    """
-    if key not in dictionary:
-        raise PanzerKeyError('key "%s" not found' % key)
-
-    check_C_and_T_exist(dictionary[key])
-
-    return dictionary[key][T]
-
-def set_content(dictionary, key, content, tag):
-    """Sets the content and type of key in a dictionary
-
-    Args:
-        dictionary : dict where key is to be set
-        key        : key of dict
-        content    : content of key
-        tag        : tag (pandoc type) of key
-    """
-    dictionary[key] = {C: content, T: tag}
+def set_content(metadata, field, content, content_type):
+    """ set content and type of field in metadata """
+    metadata[field] = {C: content, T: content_type}
 
 def check_C_and_T_exist(item):
-    """Syntax check dict contains both C and T keys.
-
-    Args:
-        item : dict to be checked
-
-    Raises:
-        PanzerBadASTError : Either C or T keys missing
-    """
+    """ check item contains both C and T fields """
     if C not in item:
-        message = 'Value of "%s" corrupt: "C" key missing' % repr(item)
+        message = 'Value of "%s" corrupt: "C" field missing' % repr(item)
         raise PanzerBadASTError(message)
     if T not in item:
-        message = 'Value of "%s" corrupt: "T" key missing' % repr(item)
+        message = 'Value of "%s" corrupt: "T" field missing' % repr(item)
         raise PanzerBadASTError(message)
 
 
 # Load documents
 
-def load():
-    """ Load input files and return a Document
-
-    panzer uses pandoc to load its input by asking it to output a json object
-    representing the concatenated files.
-
-    Returns:
-        Document containing parsed input_files concatenated
-
-    Raises:
-        PanzerBadASTError : if pandoc cannot pass a valid json object back
-    """
+def load(options):
+    """ return Document from running pandoc on options """
     # 1. Build pandoc command
-    command = OPTIONS['pandoc']['input']
-    if OPTIONS['pandoc']['read']:
-        command += [ '--read', OPTIONS['pandoc']['read'] ]
+    command = options['pandoc']['input'].copy()
+    if options['pandoc']['read']:
+        command += [ '--read', options['pandoc']['read'] ]
     command += ['--write', 'json', '--output', '-']
-    command += OPTIONS['pandoc']['options']
-    log('DEBUG', 'pandoc', ' '.join(command))
+    command += options['pandoc']['options']
+    log('DEBUG', 'panzer', 'run pandoc "%s"' % ' '.join(command))
     ast = pandoc_read_json(command)
     current_doc = Document(ast)
     log('DEBUG', 'panzer', '-'*20+'ORIGINAL METADATA'+'-'*20+'\n'+
         json.dumps(current_doc.metadata, sort_keys=True, indent=1))
     return current_doc
 
-def load_defaults():
-    """ Load panzer defaults file from support directory.
-
-    Returns:
-        Document containing parsed defaults file
-    """
-    filename = os.path.join(OPTIONS['panzer']['support'], 'defaults.yaml')
+def load_defaults(options):
+    """ return Document from loading defaults.md """
+    filename = os.path.join(options['panzer']['support'], 'defaults.md')
     if os.path.exists(filename):
         command = [ filename ]
         command += ['--write', 'json', '--output', '-']
@@ -620,6 +480,7 @@ def load_defaults():
         return Document()
 
 def pandoc_read_json(command):
+    """ return json from output of pandoc command """
     command = ['pandoc'] + command
     stderr = []
     try:
@@ -643,23 +504,25 @@ def pandoc_read_json(command):
 
 # Filters and pre/post-flight scripts
 
-def run_scripts(kind, commands, force_run=False):
-    """docstring for run_preflight"""
-    # - if no commands to run, then return
-    if kind not in commands:
+def run_scripts(kind, run_lists, options, force_run=False):
+    """ execute commands of kind listed in run_lists """
+    # - if no run list to run, then return
+    if kind not in run_lists or not run_lists[kind]:
         return
-    for command in commands[kind]:
+    log('INFO', 'panzer', '-- %s --' % kind)
+    for command in run_lists[kind]:
         filename = os.path.basename(command[0])
         fullpath = ' '.join(command).replace(os.path.expanduser('~'), '~')
-        log('DEBUG', kind, filename, submessage=fullpath)
+        log('INFO', 'panzer', 'run "%s"' % fullpath)
         stderr = out_pipe = str()
         try:
             p = subprocess.Popen(command,
                                  stdin=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
-            # send panzer's OPTIONS to scripts via stdin as a json
-            message_out = [ { 'cli_options': OPTIONS } ]
-            in_pipe = json.dumps(message_out)
+            # send panzer's options to scripts via stdin as a json
+            data_out = [ { 'cli_options' : options,
+                            'run_lists'  : run_lists } ]
+            in_pipe = json.dumps(data_out)
             in_pipe_bytes = in_pipe.encode(ENCODING)
             out_pipe_bytes, stderr_bytes = p.communicate(input=in_pipe_bytes)
             if out_pipe_bytes:
@@ -679,94 +542,106 @@ def run_scripts(kind, commands, force_run=False):
         finally:
             log_stderr(stderr, filename)
 
-def build_commands(dictionary):
-    """docstring for buildCommands"""
-    commands = dict()
-    for key in ADDITIVE_KEYS:
-        command_list = list()
-        # add filter list specified on command line
-        if key == 'filter' and OPTIONS['pandoc']['filter']:
-            command_list = [list(f) for f in OPTIONS['pandoc']['filter']]
-        # add commands specified in metadata
-        if key in dictionary:
-            command_list.extend(build_command(dictionary, key))
-        if command_list:
-            commands[key] = command_list
-    log('DEBUG', 'panzer', '-'*20+'COMMANDS'+'-'*20+'\n'+
-        json.dumps(commands, sort_keys=True, indent=1))
-    return commands
+def build_run_lists(metadata, run_lists, options):
+    """ return run lists updated with metadata """
+    for field in ADDITIVE_FIELDS:
+        run_list = run_lists[field]
+        # - if 'filter', add filter list specified on command line
+        if field == 'filter' and options['pandoc']['filter']:
+            run_list = [list(f) for f in options['pandoc']['filter']]
+        #  - add commands specified in metadata
+        if field in metadata:
+            run_list.extend(build_run_list(metadata, field, options))
+        # pdf output: skip postprocess
+        if options['pandoc']['pdf_output'] and field == 'postprocess' and run_list:
+            log('INFO', 'panzer', 'postprocess skipped --- since output is PDF')
+            run_lists[field] = []
+            continue
+        run_lists[field] = run_list
+        for (i, command) in enumerate(run_list):
+            log('INFO', 'panzer', '%s %d "%s"' % (field, i+1, " ".join(command)))
+    return run_lists
 
-def build_command(dictionary, key):
-    """docstring for buildCommand"""
-    command_list  = list()
+def build_run_list(metadata, field, options):
+    """ return run list for field of metadata """
+    run_list = list()
     try:
-        metadata_list = get_content(dictionary, key, 'MetaList')
+        metadata_list = get_content(metadata, field, 'MetaList')
     except (PanzerTypeError, PanzerKeyError) as error:
         log('WARNING', 'panzer', error)
-        return command_list
+        return command
     for item in metadata_list:
         check_C_and_T_exist(item)
         item_content = item[C]
         # command name
         command_raw = get_content(item_content, 'run', 'MetaInlines')
         command_str = pandocfilters.stringify(command_raw)
-        command = [ resolve_path(command_str, key) ]
+        command = [ resolve_path(command_str, field, options) ]
         # arguments
         arguments = []
-        if 'arg' in item_content:
-            if get_tag(item_content, 'args') == 'MetaInlines':
+        if 'args' in item_content:
+            if get_type(item_content, 'args') == 'MetaInlines':
                 # arguments are raw string
-                arguments_raw = get_content(item_content, 'arg', 'MetaInlines')
+                arguments_raw = get_content(item_content, 'args', 'MetaInlines')
                 arguments_str = pandocfilters.stringify(arguments_raw)
                 arguments = shlex.split(arguments_str)
-            elif get_tag(item_content, 'args') == 'MetaList':
+            elif get_type(item_content, 'args') == 'MetaList':
                 # arguments specified as MetaList
-                arguments_list = get_content(item_content, 'arg', 'MetaList')
-                arguments = parse_command_arguments(arguments_list)
+                arguments_list = get_content(item_content, 'args', 'MetaList')
+                arguments = parse_args_metalist(arguments_list)
             command.extend(arguments)
-        command_list.append(command)
-    return command_list
+        run_list.append(command)
+    return run_list
 
-def parse_command_arguments(arguments_list):
-    """docstring for parse_command_arguments"""
+def parse_args_metalist(arguments_list):
+    """ return list of arguments from metadata list """
     arguments = []
-    for field in arguments_list:
-        value_tag = get_tag(arguments_list, field)
-        if value_tag == 'MetaBool' \
-          and get_content(arguments_list, field, 'MetaBool') == True:
-            arguments.append('--' + field)
-        elif value_tag == 'MetaInlines':
-            value_raw = get_content(arguments_list, field, 'MetaInlines')
-            value_str = pandocfilters.stringify(value_raw)
-            arguments.append('--%s="%s"' % (field, value_str))
+    for item in arguments_list:
+        if item[T] != 'MetaMap':
+            log('ERROR',
+                'panzer',
+                '"args" list should have fields of type "MetaMap"')
+            continue
+        fields = item[C]
+        if len(fields) != 1:
+            log('ERROR',
+                'panzer',
+                '"args" list should have exactly one field per item')
+            continue
+        field_name = "".join(fields.keys())
+        field_type = get_type(fields, field_name)
+        field_value = get_content(fields, field_name, field_type)
+        if field_type == 'MetaBool':
+            arguments.append('--' + field_name)
+        elif field_type == 'MetaInlines':
+            value_str = pandocfilters.stringify(field_value)
+            arguments.append('--%s="%s"' % (field_name, value_str))
         else:
             log('ERROR',
                 'panzer',
                 'arguments of type "%s" not' 'supported---"%s" ignored'
-                % (value_tag, field))
+                % (field_type, field_name))
     return arguments
 
-def resolve_path(filename, key):
-    """docstring for find_shell_filename
-
-    when looking for file 'foo.py' of kind 'key', look in the following places:
-        1) ./foo.py
-        2) ./key/foo.py
-        3) ./key/foo/foo.py
-        4) OPTIONS['panzer']['support']/key/foo.py
-        5) OPTIONS['panzer']['support']/key/foo/foo.py
-    If 'filename' not found, assume it is otherwise reachable in system's path
-        i.e. return 'filename' as is, and hope for best
-    """
+def resolve_path(filename, field, options):
+    """ return path to filename of kind field """
     basename = os.path.splitext(filename)[0]
     paths = []
     paths.append(filename)
-    paths.append(os.path.join(key, filename))
-    paths.append(os.path.join(key, basename, filename))
-    paths.append(os.path.join(OPTIONS['panzer']['support'],
-                              key, filename))
-    paths.append(os.path.join(OPTIONS['panzer']['support'],
-                              key, basename, filename))
+    paths.append(os.path.join('panzer',
+                              field,
+                              filename))
+    paths.append(os.path.join('panzer',
+                              field,
+                              basename,
+                              filename))
+    paths.append(os.path.join(options['panzer']['support'],
+                              field,
+                              filename))
+    paths.append(os.path.join(options['panzer']['support'],
+                              field,
+                              basename,
+                              filename))
     for path in paths:
         if os.path.exists(path):
             return path
@@ -775,15 +650,14 @@ def resolve_path(filename, key):
 
 # Support functions for non-core operations
 
-def start_logger():
-    """ Set up the logger for panzer and its subprocesses.
-    """
+def start_logger(options):
+    """ start the logger """
     config = {
         'version'                  : 1,
         'disable_existing_loggers' : False,
         'formatters': {
             'detailed': {
-                'format': '%(relativeCreated)d - %(message)s'
+                'format': '%(asctime)s - %(message)s'
             },
             'mimimal': {
                 'format': '%(message)s'
@@ -815,12 +689,12 @@ def start_logger():
         }
     }
     # - check debug flag
-    if not OPTIONS['panzer']['debug']:
+    if not options['panzer']['debug']:
         config['loggers'][__name__]['handlers'].remove('log_file_handler')
         del config['handlers']['log_file_handler']
     # - set verbosity level
     verbosity = [ 'CRITICAL', 'WARNING', 'INFO' ]
-    index = OPTIONS['panzer'].get('verbose', 2)
+    index = options['panzer'].get('verbose', 1)
     try:
         verbosity_level = verbosity[index]
     except IndexError:
@@ -830,21 +704,11 @@ def start_logger():
     # - send configuration to logger
     logging.config.dictConfig(config)
     log('DEBUG', 'panzer', '>>>>> panzer starts <<<<<')
-    log('DEBUG', 'panzer', '-'*20+'OPTIONS'+'-'*20+'\n'+
-        json.dumps(OPTIONS, indent=1))
+    log('DEBUG', 'panzer', '-'*20+'options'+'-'*20+'\n'+
+        json.dumps(options, indent=1))
 
-def log(level_str, sender, message, submessage=str()):
-    """ Send a log message with appropriate formatting. All log messages
-    in panzer and its subprocesses are sent via this function. Do not
-    call the `logging` module directly.
-
-    Args:
-        level_str       : string giving error level (see table below)
-        sender          : string giving name of process sending message
-        message         : string or list of characters
-        submessage      : (optional) additional information to be displayed in
-                          more minor role
-    """
+def log(level_str, sender, message):
+    """ send a log message """
     my_logger = logging.getLogger(__name__)
     # - lookup table for internal strings to logging levels
     levels = {
@@ -857,9 +721,9 @@ def log(level_str, sender, message, submessage=str()):
     }
     # - lookup table for internal strings to pretty output strings
     pretty_levels = {
-        'CRITICAL' : 'fatal:   ',
-        'ERROR'    : 'error:   ',
-        'WARNING'  : 'warning: ',
+        'CRITICAL' : 'FATAL:   ',
+        'ERROR'    : 'ERROR:   ' ,
+        'WARNING'  : 'WARNING: ',
         'INFO'     : '         ',
         'DEBUG'    : '         ',
         'NOTSET'   : '         '
@@ -867,54 +731,22 @@ def log(level_str, sender, message, submessage=str()):
     message = str(message)
     sender_str = ''
     message_str = ''
-    submessage_str = ''
     level = levels.get(level_str, levels['ERROR'])
-    # - HTML output
-    if OPTIONS['panzer']['html']:
-        sender_str = '<span class="sender">%s</span>' % sender
-        message_str = '<span class="message">%s</span>' % message
-        submessage_str = '<span class="submessage">%s</span>' % submessage
-        output = '<div class="%s">' % level_str
-        output += sender_str + message_str + submessage_str
-        output += '</div>'
-        my_logger.log(level, output)
-        return
-    # - normal output
     # -- level
     pretty_level_str = pretty_levels.get(level_str, pretty_levels['ERROR'])
     # -- sender - right justify name if less than 8 chars long
-    if len(sender) < 8:
-        sender_str = sender[:8].rjust(8)
-    else:
-        sender_str = sender
+    if sender != 'panzer':
+        sender_str = sender + ': '
     # -- message
     message_str = message
-    # -- submessage
-    if submessage:
-        submessage_str = ' (%s)' % submessage
     output = ''
     output += pretty_level_str
-    output += sender_str + ': '
+    output += sender_str
     output += message_str
-    output += submessage_str
     my_logger.log(level, output)
 
 def log_stderr(stderr, sender=str()):
-    """
-
-    Handle messages from subprocesses sent via stderr and pass them on
-    to the log function.
-
-    Messages from subprocesses are sent in a json format that specifies
-    the error level and message text.
-
-    New lines in stderr indicate a new message.
-
-    Args:
-        - stderr : string returned from the stderr of subprocess
-        - sender : name of process sending message
-
-    """
+    """ send a log from external executable """
     # 1. check for blank input
     if not stderr:
         # - nothing to do
@@ -949,7 +781,7 @@ def log_stderr(stderr, sender=str()):
             log(level, sender, message)
 
 def check_pandoc_exists():
-    """docstring for check_pandoc_exists"""
+    """ check pandoc exists """
     try:
         stdout_bytes = subprocess.check_output(["pandoc", "--version"])
         stdout = stdout_bytes.decode(ENCODING)
@@ -966,89 +798,66 @@ def check_pandoc_exists():
                                % (REQUIRE_PANDOC_ATLEAST, pandoc_version))
 
 def versiontuple(version_string):
+    """ return tuple of version_string """
     return tuple(map(int, (version_string.split("."))))
 
-def check_support_directory():
-    """docstring for create_default_data_directory"""
-
-    if OPTIONS['panzer']['support'] != DEFAULT_SUPPORT_DIR:
+def check_support_directory(options):
+    """ check support directory exists """
+    if options['panzer']['support'] != DEFAULT_SUPPORT_DIR:
         if not os.path.exists(support):
             log('ERROR',
                 'panzer',
                 'panzer support directory "%s" not found'
-                % OPTIONS['panzer']['support'])
+                % options['panzer']['support'])
             log('WARNING',
                 'panzer',
                 'using default panzer support directory: %s'
                 % DEFAULT_SUPPORT_DIR)
-            OPTIONS['panzer']['support'] = DEFAULT_SUPPORT_DIR
+            options['panzer']['support'] = DEFAULT_SUPPORT_DIR
 
     if not os.path.exists(DEFAULT_SUPPORT_DIR):
         log('WARNING',
             'panzer',
             'default panzer support directory "%s" not found'
             % DEFAULT_SUPPORT_DIR)
-        if query_yes_no('would you like me to download and install an '
-                        'example panzer support directory? (y/n)'):
-            log('INFO', 'panzer',
-                'installing example support directory in "%s"'
-                % DEFAULT_SUPPORT_DIR)
-        #    return_code = subprocess.call(["git", "clone",
-        #                                   REMOTE_URL,
-        #                                   DEFAULT_SUPPORT_DIR])
-        #    if return_code == 0:
-        #        log('INFO', 'panzer',
-        #            'successfully cloned using git to: %s'
-        #            % DEFAULT_SUPPORT_DIR)
-        #    else:
-        #        log('ERROR', 'panzer',
-        #            'failed to clone using git to: %s'
-        #            % DEFAULT_SUPPORT_DIR)
-        #        return
-    os.environ['PANZER_SHARED'] = os.path.join(OPTIONS['panzer']['support'],
+    os.environ['PANZER_SHARED'] = os.path.join(options['panzer']['support'],
                                                'shared')
 
-def query_yes_no(question, default="yes"):
-    """Ask a yes/no question via raw_input() and return their answer.
+def default_options():
+    """ return default options """
+    options = {
+        'panzer': {
+            'support'         : DEFAULT_SUPPORT_DIR,
+            'debug'           : False,
+            'verbose'         : 1,
+            'stdin_temp_file' : ''
+        },
+        'pandoc': {
+            'input'      : [],
+            'output'     : '-',
+            'pdf_output' : False,
+            'read'       : '',
+            'write'      : '',
+            'template'   : '',
+            'filter'     : [],
+            'options'    : []
+        }
+    }
+    return options
 
-    "question" is a string that is presented to the user.
-    "default" is the presumed answer if the user just hits <Enter>.
-        It must be "yes" (the default), "no" or None (meaning
-        an answer is required of the user).
+def default_run_lists():
+    """ return default run lists """
+    run_lists = {
+        'preflight'   : [],
+        'filter'      : [],
+        'postprocess' : [],
+        'postflight'  : [],
+        'cleanup'     : []
+    }
+    return run_lists
 
-    The "answer" return value is one of "yes" or "no".
-    """
-    valid = {"yes":True,   "y":True,  "ye":True,
-             "no":False,   "n":False}
-    if default == None:
-        prompt = " [y/n] "
-    elif default == "yes":
-        prompt = " [Y/n] "
-    elif default == "no":
-        prompt = " [y/N] "
-    else:
-        raise ValueError("invalid default answer: '%s'" % default)
-
-    while True:
-        stdout = question + prompt
-        sys.stdout.buffer.write(stdout.encode(ENCODING))
-        choice = input().lower()
-        if default is not None and choice == '':
-            return valid[default]
-        elif choice in valid:
-            return valid[choice]
-        else:
-            sys.stdout.buffer.write("Please respond with 'yes' or 'no'"
-                                    "(or 'y' or 'n').\n".encode(ENCODING))
-
-def parse_cli_options():
-    """Parse the command line options passed to panzer, and print help text
-
-    Sets the global variable `OPTIONS`.
-
-    `OPTIONS` is a dict that holds all the options that apply to this
-    invocation of panzer.
-    """
+def parse_cli_options(options):
+    """ parse command line options """
     panzer_description = '''
     Panzer-specific arguments are prefixed by triple dashes ('---').
     All other arguments are passed to pandoc.
@@ -1113,24 +922,21 @@ def parse_cli_options():
                                help='write debug info to panzer.log')
     panzer_parser.add_argument("---verbose",
                                type=int,
-                               help='detail of console messages\n'
+                               help='verbosity of console messages\n'
                                     ' 0: silent\n'
                                     ' 1: only errors and warnings\n'
                                     ' 2: full info (default)')
-    panzer_parser.add_argument("---html",
-                               action="store_true",
-                               help='format console messages in HTML')
     panzer_parser.add_argument('---version',
                                action='version',
                                version=('%(prog)s ' + __version__))
     panzer_known_raw, unknown = panzer_parser.parse_known_args()
     panzer_known = vars(panzer_known_raw)
 
-    # 2. Update OPTIONS with panzer-specific values
-    for key in panzer_known:
-        value = panzer_known[key]
+    # 2. Update options with panzer-specific values
+    for field in panzer_known:
+        value = panzer_known[field]
         if value:
-            OPTIONS['panzer'][key] = value
+            options['panzer'][field] = value
 
     # 3. Parse options specific to pandoc
     pandoc_parser = argparse.ArgumentParser(prog='pandoc')
@@ -1157,32 +963,32 @@ def parse_cli_options():
     pandoc_known_raw, unknown = pandoc_parser.parse_known_args(unknown)
     pandoc_known = vars(pandoc_known_raw)
 
-    # 2. Update OPTIONS with pandoc-specific values
-    for key in pandoc_known:
-        value = pandoc_known[key]
+    # 2. Update options with pandoc-specific values
+    for field in pandoc_known:
+        value = pandoc_known[field]
         if value:
-            OPTIONS['pandoc'][key] = value
+            options['pandoc'][field] = value
 
     # 3. Check for pandoc output being pdf
-    if os.path.splitext(OPTIONS['pandoc']['output'])[1].lower() == '.pdf':
-        OPTIONS['pandoc']['pdf_output'] = True
+    if os.path.splitext(options['pandoc']['output'])[1].lower() == '.pdf':
+        options['pandoc']['pdf_output'] = True
 
     # 4. Detect pandoc's writer
     # - first case: writer explicitly specified by cli option
-    if OPTIONS['pandoc']['write']:
+    if options['pandoc']['write']:
         pass
     # - second case: html default writer for stdout
-    elif OPTIONS['pandoc']['output'] == '-':
-        OPTIONS['pandoc']['write'] = 'html'
+    elif options['pandoc']['output'] == '-':
+        options['pandoc']['write'] = 'html'
     # - third case: writer set via output filename extension
     else:
-        ext = os.path.splitext(OPTIONS['pandoc']['output'])[1].lower()
+        ext = os.path.splitext(options['pandoc']['output'])[1].lower()
         implicit_writer = pandoc_writer_mapping.get(ext)
         if implicit_writer is not None:
-            OPTIONS['pandoc']['write'] = implicit_writer
+            options['pandoc']['write'] = implicit_writer
         else:
             # - html is default writer for unrecognised extensions
-            OPTIONS['pandoc']['write'] = 'html'
+            options['pandoc']['write'] = 'html'
 
     # 5. Input from stdin
     # - if one of the inputs is stdin then read from stdin now into
@@ -1195,13 +1001,13 @@ def parse_cli_options():
                                          dir=os.getcwd(),
                                          delete=False) as temp_file:
             temp_filename = os.path.join(os.getcwd(), temp_file.name)
-            OPTIONS['panzer']['stdin_temp_file'] = temp_filename
+            options['panzer']['stdin_temp_file'] = temp_filename
             temp_file.write(stdin_bytes)
             temp_file.flush()
         # Replace all reference to stdin in pandoc cli with temp file
         for index, value in enumerate(unknown):
             if value == '-':
-                unknown[index] = OPTIONS['panzer']['stdin_temp_file']
+                unknown[index] = options['panzer']['stdin_temp_file']
 
     # 6. Other input files
     # - detect input files by using `pandoc --dump-args`
@@ -1210,61 +1016,64 @@ def parse_cli_options():
     stdout = stdout_bytes.decode(ENCODING)
     stdout_list = stdout.splitlines()
     # - first line is output file, ignore it
-    OPTIONS['pandoc']['input'] = stdout_list[1:]
+    options['pandoc']['input'] = stdout_list[1:]
     # - remove input files from unknown
     unknown = [ arg for arg in unknown
-                        if arg not in OPTIONS['pandoc']['input'] ]
+                        if arg not in options['pandoc']['input'] ]
     # 7. Remaining options for pandoc
-    OPTIONS['pandoc']['options'] = unknown
+    options['pandoc']['options'] = unknown
+    return options
 
 # Exception classes
 
 class PanzerError(Exception):
-    """Base class for all panzer exceptions"""
+    """ base class for all panzer exceptions """
     pass
 
 class PanzerSetupError(PanzerError):
-    """Error in the setup phase"""
+    """ error in the setup phase """
     pass
 
 class PanzerBadASTError(PanzerError):
-    """Malformatted AST encountered (e.g. C or T keys missing)"""
+    """ malformatted AST encountered (e.g. C or T fields missing) """
     pass
 
 class PanzerKeyError(PanzerError):
-    """Looked for key, did not find it"""
+    """ looked for metadata field, did not find it """
     pass
 
 class PanzerTypeError(PanzerError):
-    """Looked for value of a type, encountered different type"""
+    """ looked for value of a type, encountered different type """
     pass
 
 class PanzerInternalError(PanzerError):
-    """Panzer function invoked with invalid parameters"""
+    """ function invoked with invalid parameters """
     pass
 
 
 # Main function
 
 def main():
-    """The main function"""
-    commands = dict()
+    """ the main function """
+    options   = default_options()
+    run_lists = default_run_lists()
 
     try:
         check_pandoc_exists()
-        parse_cli_options()
-        start_logger()
-        check_support_directory()
-        default_doc = load_defaults()
-        current_doc = load()
-        current_doc.transform(default_doc)
-        commands = build_commands(current_doc.metadata)
-        run_scripts('preflight', commands)
-        current_doc.pipe('filter', commands)
-        current_doc.pandoc()
-        current_doc.pipe('postprocess', commands)
-        current_doc.write()
-        run_scripts('postflight', commands)
+        options = parse_cli_options(options)
+        start_logger(options)
+        check_support_directory(options)
+        default_doc = load_defaults(options)
+        current_doc = load(options)
+        current_doc.transform(default_doc, options)
+        run_lists = build_run_lists(current_doc.metadata, run_lists, options)
+        current_doc.inject_panzer_reserved_field(run_lists, options)
+        run_scripts('preflight', run_lists, options)
+        current_doc.pipe_through('filter', run_lists, options)
+        current_doc.pandoc(options)
+        current_doc.pipe_through('postprocess', run_lists, options)
+        current_doc.write(options)
+        run_scripts('postflight', run_lists, options)
 
     except PanzerSetupError as error:
         # - errors that occur before logging starts
@@ -1284,18 +1093,17 @@ def main():
         log('CRITICAL', 'panzer', error)
         sys.exit(1)
     finally:
-        run_scripts('cleanup', commands, force_run=True)
+        run_scripts('cleanup', run_lists, options, force_run=True)
         # - if temp file created in setup, remove it
-        if OPTIONS['panzer']['stdin_temp_file']:
-            os.remove(OPTIONS['panzer']['stdin_temp_file'])
+        if options['panzer']['stdin_temp_file']:
+            os.remove(options['panzer']['stdin_temp_file'])
             log('DEBUG',
                 'panzer',
                 'deleted temp file: %s'
-                % OPTIONS['panzer']['stdin_temp_file'])
+                % options['panzer']['stdin_temp_file'])
         log('DEBUG', 'panzer', '>>>>> panzer quits <<<<<')
-    # 11. Successful exit
+    # - successful exit
     sys.exit(0)
 
-# Standard boilerplate to call the main() function to begin the program.
 if __name__ == '__main__':
     main()
