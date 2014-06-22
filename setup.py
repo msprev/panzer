@@ -1,7 +1,8 @@
 from setuptools import setup
+import panzer._version
 
 setup(name='panzer',
-      version='0.9.1b',
+      version=panzer._version.__version__,
       description='pandoc with style',
       long_description=open('README.rst').read(),
       url='https://github.com/msprev/panzer',
