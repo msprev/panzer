@@ -1,0 +1,2 @@
+panzer README.md -o ../readme.md -t markdown_github
+panzer README.md -o ../readme.rst -t rst
