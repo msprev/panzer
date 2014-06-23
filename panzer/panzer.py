@@ -144,7 +144,7 @@ class Document(object):
         if self.template:
             log('INFO', 'panzer', 'template "%s"' % self.template)
 
-    def inject_panzer_reserved_field(self, run_lists, options):
+    def inject_panzer_reserved_field(self, json_message):
         """ add panzer_reserved field to document """
         # - check if already exists
         try:
@@ -156,11 +156,8 @@ class Document(object):
         except PanzerKeyError:
             pass
         # - add it
-        data_out = [{'cli_options' : options,
-                     'run_lists' : run_lists}]
-        json_content = json.dumps(data_out)
         field_content = [{"t": "CodeBlock",
-                          "c": [["", [], []], json_content]}]
+                          "c": [["", [], []], json_message]}]
         set_content(self.metadata, 'panzer_reserved',
                     field_content, 'MetaBlocks')
         # - update document
@@ -172,7 +169,7 @@ class Document(object):
         log('DEBUG', 'panzer', '-'*20+'NEW METADATA'+'-'*20+'\n'+
             json.dumps(self.metadata, sort_keys=True, indent=1))
 
-    def pipe_through(self, kind, run_lists, options):
+    def pipe_through(self, kind, run_lists):
         """ pipe through external command """
         # - if no run list of this kind to run, then return
         if kind not in run_lists or not run_lists[kind]:
@@ -190,9 +187,6 @@ class Document(object):
         out_pipe = in_pipe
         # 3. Run commands
         for command in run_lists[kind]:
-            # - pandoc requires filters be passed writer as 1st argument
-            if kind == 'filter':
-                command.insert(1, options['pandoc']['write'])
             # - add debugging info
             command_name = os.path.basename(command[0])
             command_path = ' '.join(command).replace(os.path.expanduser('~'),
@@ -454,6 +448,14 @@ def check_c_and_t_exist(item):
         message = 'Value of "%s" corrupt: "T" field missing' % repr(item)
         raise PanzerBadASTError(message)
 
+def make_json_message(document, run_lists, options):
+    """ return json message to pass to executables """
+    data = [{'cli_options' : options,
+             'run_lists' : run_lists,
+             'metadata' : document.metadata}]
+    json_message = json.dumps(data)
+    return json_message
+
 
 # Load documents
 
@@ -512,7 +514,7 @@ def pandoc_read_json(command):
 
 # Filters and pre/post-flight scripts
 
-def run_scripts(kind, run_lists, options, force_run=False):
+def run_scripts(kind, run_lists, json_message, force_run=False):
     """ execute commands of kind listed in run_lists """
     # - if no run list to run, then return
     if kind not in run_lists or not run_lists[kind]:
@@ -527,10 +529,8 @@ def run_scripts(kind, run_lists, options, force_run=False):
             p = subprocess.Popen(command,
                                  stdin=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
-            # send panzer's options to scripts via stdin as a json
-            data_out = [{'cli_options' : options,
-                         'run_lists' : run_lists}]
-            in_pipe = json.dumps(data_out)
+            # send panzer's json message to scripts via stdin
+            in_pipe = json_message
             in_pipe_bytes = in_pipe.encode(ENCODING)
             out_pipe_bytes, stderr_bytes = p.communicate(input=in_pipe_bytes)
             if out_pipe_bytes:
@@ -567,6 +567,10 @@ def build_run_lists(metadata, run_lists, options):
             log('INFO', 'panzer', 'postprocess skipped --- since output is PDF')
             run_lists[field] = []
             continue
+        # - filter be passed writer as 1st argument
+        if field == 'filter':
+            for command in run_list:
+                command.insert(1, options['pandoc']['write'])
         run_lists[field] = run_list
         for (i, command) in enumerate(run_list):
             log('INFO',
@@ -1066,13 +1070,15 @@ def main():
         current_doc = load(options)
         current_doc.transform(default_doc, options)
         run_lists = build_run_lists(current_doc.metadata, run_lists, options)
-        current_doc.inject_panzer_reserved_field(run_lists, options)
-        run_scripts('preflight', run_lists, options)
-        current_doc.pipe_through('filter', run_lists, options)
+        json_message = make_json_message(current_doc, run_lists, options)
+        current_doc.inject_panzer_reserved_field(json_message)
+        run_scripts('preflight', run_lists, json_message)
+        current_doc.pipe_through('filter', run_lists)
         current_doc.pandoc(options)
-        current_doc.pipe_through('postprocess', run_lists, options)
+        current_doc.pipe_through('postprocess', run_lists)
         current_doc.write(options)
-        run_scripts('postflight', run_lists, options)
+        run_scripts('postflight', run_lists, json_message)
+
     except PanzerSetupError as error:
         # - errors that occur before logging starts
         print(error, file=sys.stderr)
@@ -1091,7 +1097,7 @@ def main():
         log('CRITICAL', 'panzer', error)
         sys.exit(1)
     finally:
-        run_scripts('cleanup', run_lists, options, force_run=True)
+        run_scripts('cleanup', run_lists, json_message, force_run=True)
         # - if temp file created in setup, remove it
         if options['panzer']['stdin_temp_file']:
             os.remove(options['panzer']['stdin_temp_file'])
