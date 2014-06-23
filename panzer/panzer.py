@@ -938,13 +938,11 @@ def parse_cli_options(options):
                                version=('%(prog)s ' + __version__))
     panzer_known_raw, unknown = panzer_parser.parse_known_args()
     panzer_known = vars(panzer_known_raw)
-
     # 2. Update options with panzer-specific values
     for field in panzer_known:
         value = panzer_known[field]
         if value:
             options['panzer'][field] = value
-
     # 3. Parse options specific to pandoc
     pandoc_parser = argparse.ArgumentParser(prog='pandoc')
     pandoc_parser.add_argument("--read",
@@ -969,17 +967,14 @@ def parse_cli_options(options):
                                help='filter')
     pandoc_known_raw, unknown = pandoc_parser.parse_known_args(unknown)
     pandoc_known = vars(pandoc_known_raw)
-
     # 2. Update options with pandoc-specific values
     for field in pandoc_known:
         value = pandoc_known[field]
         if value:
             options['pandoc'][field] = value
-
     # 3. Check for pandoc output being pdf
     if os.path.splitext(options['pandoc']['output'])[1].lower() == '.pdf':
         options['pandoc']['pdf_output'] = True
-
     # 4. Detect pandoc's writer
     # - first case: writer explicitly specified by cli option
     if options['pandoc']['write']:
@@ -996,7 +991,6 @@ def parse_cli_options(options):
         else:
             # - html is default writer for unrecognised extensions
             options['pandoc']['write'] = 'html'
-
     # 5. Input from stdin
     # - if one of the inputs is stdin then read from stdin now into
     # - temp file, then replace '-'s in input filelist with reference to file
@@ -1015,7 +1009,6 @@ def parse_cli_options(options):
         for index, value in enumerate(unknown):
             if value == '-':
                 unknown[index] = options['panzer']['stdin_temp_file']
-
     # 6. Other input files
     # - detect input files by using `pandoc --dump-args`
     command = ['pandoc', '--dump-args'] + unknown
@@ -1064,7 +1057,6 @@ def main():
     """ the main function """
     options = default_options()
     run_lists = default_run_lists()
-
     try:
         check_pandoc_exists()
         options = parse_cli_options(options)
@@ -1081,7 +1073,6 @@ def main():
         current_doc.pipe_through('postprocess', run_lists, options)
         current_doc.write(options)
         run_scripts('postflight', run_lists, options)
-
     except PanzerSetupError as error:
         # - errors that occur before logging starts
         print(error, file=sys.stderr)
