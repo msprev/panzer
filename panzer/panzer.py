@@ -1060,6 +1060,7 @@ def main():
     """ the main function """
     options = default_options()
     run_lists = default_run_lists()
+    json_message = make_json_message(Document(), run_lists, options)
     try:
         check_pandoc_exists()
         options = parse_cli_options(options)
