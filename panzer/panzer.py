@@ -180,7 +180,7 @@ class Document(object):
         elif kind == 'postprocess':
             in_pipe = self.output
         else:
-            raise PanzerInternalError('illegal invocation of'
+            raise PanzerInternalError('illegal invocation of '
                                       '"pipe" in panzer.py')
         # 2. Set up outgoing pipe in case of failure
         out_pipe = in_pipe
@@ -449,9 +449,9 @@ def check_c_and_t_exist(item):
 
 def make_json_message(document, run_lists, options):
     """ return json message to pass to executables """
-    data = [{'cli_options' : options,
+    data = [{'metadata' : document.metadata,
              'run_lists' : run_lists,
-             'metadata' : document.metadata}]
+             'cli_options' : options}]
     json_message = json.dumps(data)
     return json_message
 
@@ -506,7 +506,7 @@ def pandoc_read_json(command):
     try:
         ast = json.loads(out_pipe)
     except ValueError:
-        raise PanzerBadASTError('failed to receive valid'
+        raise PanzerBadASTError('failed to receive valid '
                                 'json object from pandoc')
     return ast
 
