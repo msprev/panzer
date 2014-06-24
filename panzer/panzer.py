@@ -18,8 +18,7 @@ import shlex
 import subprocess
 import sys
 import tempfile
-
-__version__ = "1.0b"
+from ._version import __version__ 
 
 REQUIRE_PANDOC_ATLEAST = "1.12.1"
 DEFAULT_SUPPORT_DIR = os.path.join(os.path.expanduser('~'), '.panzer')
