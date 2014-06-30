@@ -1,10 +1,13 @@
 from setuptools import setup
 from panzer._version import __version__
 
+with open('README.rst') as file:
+    readme_text = file.read()
+
 setup(name='panzer',
       version=__version__,
       description='pandoc with styles',
-      long_description=open('README.rst').read(),
+      long_description=readme_text,
       url='https://github.com/msprev/panzer',
       author='Mark Sprevak',
       author_email='mark.sprevak@ed.ac.uk',
