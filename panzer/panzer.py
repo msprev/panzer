@@ -71,7 +71,7 @@ class Document(object):
         except PanzerTypeError as error:
             log('WARNING', 'panzer', error)
 
-    def transform(self, defaults, options):
+    def transform(self, styles, options):
         """ transform using style """
         style = self.style
         if style:
@@ -83,25 +83,25 @@ class Document(object):
             return
         if style \
           and style not in self.metadata \
-          and style not in defaults.metadata:
+          and style not in styles.metadata:
             log('ERROR',
                 'panzer',
                 'style definition for "%s" not found.' % style)
         # 1. Do transform
         # - start with blank metadata
-        # - add global defaults one by one
-        # - then add defaults specified in document
+        # - add default styles one by one
+        # - then add styles specified in document
         writer = options['pandoc']['write']
         log('INFO', 'panzer', 'writer "%s"' % writer)
         work_list = [
-            (defaults.metadata, ['All', 'all'], 'MetaMap'),
-            (defaults.metadata, ['All', writer], 'MetaMap'),
-            (defaults.metadata, [style, 'all'], 'MetaMap'),
-            (defaults.metadata, [style, writer], 'MetaMap'),
-            (self.metadata, ['All', 'all'], 'MetaMap'),
-            (self.metadata, ['All', writer], 'MetaMap'),
-            (self.metadata, [style, 'all'], 'MetaMap'),
-            (self.metadata, [style, writer], 'MetaMap')]
+            (styles.metadata, ['Base', 'default'], 'MetaMap'),
+            (styles.metadata, ['Base', writer],    'MetaMap'),
+            (styles.metadata, [style,  'default'], 'MetaMap'),
+            (styles.metadata, [style,  writer],    'MetaMap'),
+            (self.metadata,   ['Base', 'default'], 'MetaMap'),
+            (self.metadata,   ['Base', writer],    'MetaMap'),
+            (self.metadata,   [style,  'default'], 'MetaMap'),
+            (self.metadata,   [style,  writer],    'MetaMap')]
         new_metadata = {}
         for item in work_list:
             update_metadata(new_metadata, get_nested_content(*item))
@@ -124,8 +124,8 @@ class Document(object):
                 continue
         # 3. Tidy up after transform
         # - remove now unneeded style fields from document's metadata
-        if 'All' in new_metadata:
-            del new_metadata['All']
+        if 'Base' in new_metadata:
+            del new_metadata['Base']
         if style in new_metadata:
             del new_metadata[style]
         # 4. Update document
@@ -476,19 +476,19 @@ def load(options):
         json.dumps(current_doc.metadata, sort_keys=True, indent=1))
     return current_doc
 
-def load_defaults(options):
-    """ return Document from loading defaults.md """
-    filename = os.path.join(options['panzer']['support'], 'defaults.md')
+def load_styles(options):
+    """ return Document from loading styles.md """
+    filename = os.path.join(options['panzer']['support'], 'styles.md')
     if os.path.exists(filename):
         command = [filename]
         command += ['--write', 'json', '--output', '-']
         ast = pandoc_read_json(command)
         default_doc = Document(ast)
-        log('DEBUG', 'panzer', '-'*20+'DEFAULTS METADATA'+'-'*20+'\n'+
+        log('DEBUG', 'panzer', '-'*20+'STYLES METADATA'+'-'*20+'\n'+
             json.dumps(default_doc.metadata, sort_keys=True, indent=1))
         return default_doc
     else:
-        log('ERROR', 'panzer', 'defaults file not found: %s' % filename)
+        log('ERROR', 'panzer', 'default styles file not found: %s' % filename)
         return Document()
 
 def pandoc_read_json(command):
@@ -1069,7 +1069,7 @@ def main():
         options = parse_cli_options(options)
         start_logger(options)
         check_support_directory(options)
-        default_doc = load_defaults(options)
+        default_doc = load_styles(options)
         current_doc = load(options)
         current_doc.transform(default_doc, options)
         run_lists = build_run_lists(current_doc.metadata, run_lists, options)
