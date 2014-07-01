@@ -18,7 +18,7 @@ import shlex
 import subprocess
 import sys
 import tempfile
-from ._version import __version__ 
+from ._version import __version__
 
 REQUIRE_PANDOC_ATLEAST = "1.12.1"
 DEFAULT_SUPPORT_DIR = os.path.join(os.path.expanduser('~'), '.panzer')
@@ -77,8 +77,8 @@ class Document(object):
         if style:
             log('INFO', 'panzer', 'style "%s"' % style)
         else:
-            log('INFO', 
-                'panzer', 
+            log('INFO',
+                'panzer',
                 'no "style" field found, will just run pandoc')
             return
         if style \
@@ -587,7 +587,7 @@ def build_run_list(metadata, field, options):
         metadata_list = get_content(metadata, field, 'MetaList')
     except (PanzerTypeError, PanzerKeyError) as error:
         log('WARNING', 'panzer', error)
-        return command
+        return run_list
     for item in metadata_list:
         check_c_and_t_exist(item)
         item_content = item[C]
@@ -818,7 +818,7 @@ def versiontuple(version_string):
 def check_support_directory(options):
     """ check support directory exists """
     if options['panzer']['support'] != DEFAULT_SUPPORT_DIR:
-        if not os.path.exists(support):
+        if not os.path.exists(options['panzer']['support']):
             log('ERROR',
                 'panzer',
                 'panzer support directory "%s" not found'
