@@ -18,7 +18,8 @@ import shlex
 import subprocess
 import sys
 import tempfile
-from ._version import __version__
+# from ._version import __version__
+__version__ = "1.1a"
 
 REQUIRE_PANDOC_ATLEAST = "1.12.1"
 DEFAULT_SUPPORT_DIR = os.path.join(os.path.expanduser('~'), '.panzer')
@@ -38,7 +39,7 @@ class Document(object):
 
     - ast      : abstract syntax tree
     - metadata : metadata branch of ast
-    - style    : style for document
+    - styles   : list of styles for document
     - template : template for document
     - output   : filled with output when processing is complete
     """
@@ -47,7 +48,7 @@ class Document(object):
         # 1. Defaults for new documents
         self.ast = []
         self.metadata = {}
-        self.style = None
+        self.styles = []
         self.template = None
         self.output = None
         # - template : set after transform has been applied
@@ -64,40 +65,57 @@ class Document(object):
             log('WARNING', 'panzer', 'no metadata found in source documents')
         # - style
         try:
-            style_raw = get_content(self.metadata, 'style', 'MetaInlines')
-            self.style = pandocfilters.stringify(style_raw)
+            style_type = get_type(self.metadata, 'style')
+            if style_type == 'MetaInlines':
+                style_raw = get_content(self.metadata, 'style', 'MetaInlines')
+                self.styles = [ pandocfilters.stringify(style_raw) ]
+            elif style_type == 'MetaList':
+                for style_raw in get_content(self.metadata, 'style', 'MetaList'):
+                    self.styles.append(pandocfilters.stringify(style_raw))
+            else:
+                raise PanzerTypeError('"style" value must be of type "MetaInlines" or "MetaList"')
         except PanzerKeyError:
             log('DEBUG', 'panzer', 'no style field found')
         except PanzerTypeError as error:
-            log('WARNING', 'panzer', error)
+            log('ERROR', 'panzer', error)
 
-    def transform(self, styles, options):
+    def transform(self, default_styles, options):
         """ transform using style """
-        style = self.style
-        if style:
-            log('INFO', 'panzer', 'style "%s"' % style)
+        styles = self.styles
+        # - quit if there is no style
+        if styles:
+            log('INFO', 
+                'panzer', 
+                'style "%s"' % ", ".join(styles))
         else:
             log('INFO',
                 'panzer',
                 'no "style" field found, will just run pandoc')
             return
-        if style \
-          and style not in self.metadata \
-          and style not in styles.metadata:
-            log('ERROR',
-                'panzer',
-                'style definition for "%s" not found.' % style)
+        # - delete any styles without definitions
+        for style in styles:
+            if style not in self.metadata \
+              and style not in default_styles.metadata:
+                log('ERROR',
+                    'panzer',
+                    'style definition for "%s" not found.' % style)
+        styles = [s for s in styles if style in self.metadata 
+                                    or style in default_styles.metadata]
+        if not styles:
+            return
+
         # 1. Do transform
         # - start with blank metadata
         # - add default styles one by one
         # - then add styles specified in document
         writer = options['pandoc']['write']
         log('INFO', 'panzer', 'writer "%s"' % writer)
+        style = styles[0]
         work_list = [
-            (styles.metadata, ['Base', 'default'], 'MetaMap'),
-            (styles.metadata, ['Base', writer],    'MetaMap'),
-            (styles.metadata, [style,  'default'], 'MetaMap'),
-            (styles.metadata, [style,  writer],    'MetaMap'),
+            (default_styles.metadata, ['Base', 'default'], 'MetaMap'),
+            (default_styles.metadata, ['Base', writer],    'MetaMap'),
+            (default_styles.metadata, [style,  'default'], 'MetaMap'),
+            (default_styles.metadata, [style,  writer],    'MetaMap'),
             (self.metadata,   ['Base', 'default'], 'MetaMap'),
             (self.metadata,   ['Base', writer],    'MetaMap'),
             (self.metadata,   [style,  'default'], 'MetaMap'),
@@ -476,15 +494,15 @@ def load(options):
         json.dumps(current_doc.metadata, sort_keys=True, indent=1))
     return current_doc
 
-def load_styles(options):
-    """ return Document from loading styles.md """
-    filename = os.path.join(options['panzer']['support'], 'styles.md')
+def load_default_styles(options):
+    """ return Document from loading styles.yaml """
+    filename = os.path.join(options['panzer']['support'], 'styles2.md')
     if os.path.exists(filename):
         command = [filename]
         command += ['--write', 'json', '--output', '-']
         ast = pandoc_read_json(command)
         default_doc = Document(ast)
-        log('DEBUG', 'panzer', '-'*20+'STYLES METADATA'+'-'*20+'\n'+
+        log('DEBUG', 'panzer', '-'*20+'DEFAULT STYLES METADATA'+'-'*20+'\n'+
             json.dumps(default_doc.metadata, sort_keys=True, indent=1))
         return default_doc
     else:
@@ -1069,7 +1087,7 @@ def main():
         options = parse_cli_options(options)
         start_logger(options)
         check_support_directory(options)
-        default_doc = load_styles(options)
+        default_doc = load_default_styles(options)
         current_doc = load(options)
         current_doc.transform(default_doc, options)
         run_lists = build_run_lists(current_doc.metadata, run_lists, options)
