@@ -2,6 +2,7 @@
 title  : "panzer user guide"
 author : Mark Sprevak
 date   : 11 May 2014
+style  : Notes
 ...
 
 # Introduction
@@ -28,7 +29,8 @@ Instead of running `pandoc`, you run `panzer` on your document.
     style: Notes
 
 This would select the `Notes` style. 
-    This style should be defined in panzer's `defaults.md` file or inside your document itself using the YAML syntax below.
+    This style should be defined in panzer's `styles.md` file or inside your document itself using the YAML syntax below.
+    If a document lacks a `style` field, panzer is equivalent to pandoc.
 
 panzer can be used as a lightweight alternative to makefiles, or in conjunction with makefiles.
 
@@ -45,6 +47,7 @@ Why is Python 3 required?
 
 *Installation:*
 
+    pip3 install panzer
 
 # Command line use
 
@@ -64,7 +67,7 @@ Like pandoc, panzer expects all I/O to be encoded in utf-8.
 
 A style consists of the following elements, which can be set on a per writer basis:
 
-1. Default metadata fields 
+1. Default metadata
 2. Template
 3. Pre-flight scripts
 4. Filters
@@ -82,9 +85,8 @@ Style definitions are structured by *style name* and *writer*.
     Both are fields are of type `MetaMap`.
     Style names by convention are capitalized (`Notes`).
     Writer names are the same as corresponding pandoc writers (e.g. `latex`, `html`, `docx`, etc.)
-    There is a special style name, `All`, whose settings applies to all styles.
-        The `All` style applies also to documents that omit a `style` field.
-    There is special writer, `all`, whose settings apply to all writers of the style.
+    There is a special style, `Base`, whose settings applies to all documents with styles.
+    There is special writer for each style, `default`, whose settings apply to all writers of the style.
 
 Under a writer field, the following metadata fields may appear:
 
@@ -138,7 +140,7 @@ Under a writer field, the following metadata fields may appear:
 
 Styles can be defined either in: 
 
-1. The `defaults.md` file in panzer's support directory (normally, `~/.panzer/`)
+1. The `styles.md` file in panzer's support directory (normally, `~/.panzer/`)
 2. The metadata of the input document(s).
 
 ### Run lists
@@ -205,7 +207,7 @@ Either style for the `args` field may be used in the same file.
 Here is a definition for the `Notes` style:
 
     Notes:
-        all:                 
+        default:                 
             metadata:
                 numbersections: false
         latex:
@@ -267,8 +269,8 @@ panzer would run pandoc with the following document:
 
 Individual items in styles are combined with a union biased to the most specific named settings.
     Items in the global scope take highest precedence (say, you place `template: new_one` in your document's metadata, this would override any setting by the style).
-    Items in the style definitions that appear inside the document take precedence over items that appear in the style definitions in `defaults.md`
-    Items in the currently selected style take precedence over items in `All` and `all`.
+    Items in the style definitions that appear inside the document take precedence over items that appear in the style definitions in `styles.md`
+    Items in the currently selected style take precedence over items in `Base` and `default`.
     This allows for a flexible and commonsensical way for style fields to be overrided.
 
 Items in styles are combined with a union biased to the highest ranked items below:
@@ -276,14 +278,14 @@ Items in styles are combined with a union biased to the highest ranked items bel
 1. Metadata fields in document
 2. Style definitions in document:
     a. Current style, current writer
-    b. Current style, `all` writer
-    c. `All` style, current writer
-    d. `All` style, `all` writer
-7. Style definitions in `defaults.md`:
+    b. Current style, `default` writer
+    c. `Base` style, current writer
+    d. `Base` style, `default` writer
+7. Style definitions in `styles.md`:
     a. Current style, current writer
-    b. Current style, `all` writer
-    c. `All` style, current writer
-    d. `All` style, `all` writer
+    b. Current style, `default` writer
+    c. `Base` style, current writer
+    d. `Base` style, `default` writer
 
 ### Non-additive fields
 
@@ -306,7 +308,7 @@ Exceptions are lists of filters, post-processors, and scripts.
     A killed filter will be enabled again if a higher-precedence item invokes it again with `run`. 
     If you want to be sure to kill a filter, place the relevant `kill` as the last item in the list in your document's metadata.
 
-Any text outside the metadata block in `defaults.md` is ignored.
+Any text outside the metadata block in `styles.md` is ignored.
 
 ### Command line options
 
@@ -332,14 +334,14 @@ If panzer is passed input via stdin, it stores this in a temporary file in the c
 
 # Writing your own style
 
-Styles can be defined in your document's metadata or in panzer's `defaults.md` file.
+Styles can be defined in your document's metadata or in panzer's `styles.md` file.
 
 ## panzer support directory
 
-panzer's style definition file `defaults.md` lives in panzer's support directory (default: `~/.panzer`).
+panzer's style definition file `styles.md` lives in panzer's support directory (default: `~/.panzer`).
 
     .panzer/
-        defaults.md
+        styles.md
         cleanup/
         filter/
         postflight/
@@ -347,7 +349,7 @@ panzer's style definition file `defaults.md` lives in panzer's support directory
         preflight/
         template/
 
-`defaults.md` is the file that contains all default style definitions.
+`styles.md` is the file that contains all default style definitions.
     Templates, scripts and filters live in their own subdirectories with corresponding names.
 
 A recommended structure for each executable's directory:
@@ -375,12 +377,13 @@ The same rules apply for templates.
 
 subprocess     arguments              stdin                      stdout                     stderr
 ---------      -------------------    -----------                ---------                  --------------
-preflight      set by `args` field    json string                to screen                  error messages
-postflight     "                      "                          "                          "
+preflight      set by `args` field    json message               to screen                  error messages
+postflight     "                      json message               "                          "
 postflight     "                      "                          "                          "
 cleanup        "                      "                          "                          "
 postprocessor  "                      output text                output text                "
-filter         1st arg is writer      json string of document    json string of document    "
+filter         writer 1st arg;        json string of document    json string of document    "
+               others, set by `args`
 
 ### Passing messages to scripts {#passing_messages}
 
@@ -389,7 +392,9 @@ Scripts need to know about the command line options passed to panzer.
     Scripts are passed this information via stdin by a utf8-encoded json message.
     The json message received on stdin by scripts is as follows:
 
-    [ { 'cli_options': OPTIONS } ]
+    [ { 'cli_options' : OPTIONS,
+        'run_lists'   : RUN_LISTS,
+        'metadata'    : METADATA   } ]
 
 `OPTIONS` is a json dictionary with the relevant information.
     It is divided into two dictionaries that concern `panzer` and `pandoc` respectively.
@@ -398,25 +403,31 @@ Scripts need to know about the command line options passed to panzer.
         'panzer': {
             'support'         : DEFAULT_SUPPORT_DIR,   # panzer support directory
             'debug'           : False,                 # panzer ---debug option
-            'verbose'         : 2,                     # panzer ---verbose option
-            'html'            : False,                 # panzer ---html option
+            'verbose'         : 1,                     # panzer ---verbose option
             'stdin_temp_file' : ''                     # name of temporary file used to store stdin input
         },
         'pandoc': {
-            'input'      : [],                         # list of input files
-            'output'     : '-',                        # name of output file ('-' means stdout)
-            'pdf_output' : False,                      # pandoc to write pdf directly
-            'read'       : '',                         # name of pandoc reader
-            'write'      : '',                         # name of pandoc writer
-            'template'   : '',                         # name of template set on command line
-            'filter'     : [],                         # list of filters set on command line
-            'options'    : []                          # list of remaining pandoc command line options
+            'input'      : [],                         # input files
+            'output'     : '-',                        # output file ('-' means stdout)
+            'pdf_output' : False,                      # write pdf directly?
+            'read'       : '',                         # pandoc reader
+            'write'      : '',                         # pandoc writer
+            'template'   : '',                         # template set on command line
+            'filter'     : [],                         # filters set on command line
+            'options'    : []                          # remaining pandoc command line options
         }
     }
 
-The `filter` and `template` fields above specify filters and templates set on the command line (via the command line `--filter` and `--template` options)
+The `filter` and `template` fields specify filters and templates set on the command line (via `--filter` and `--template`)
     These fields do *not* contain any filters or the template specified in the metadata or style.
 
+    RUN_LISTS = {
+        'preflight'   : [],
+        'filter'      : [],
+        'postprocess' : [],
+        'postflight'  : [],
+        'cleanup'     : []
+    }
 
 ### Passing messages to filters {#passing_messages_filters}
 
@@ -455,9 +466,9 @@ Why not encode every item of `OPTIONS` individually as a pandoc metadata field?
 
 There is currently no mechanism for passing a similar json message to postprocessors.
 
-## Error messages
+## Passing messages back to panzer
 
-panzer captures stderr output from all scripts and filters and it attempts to parse.
+panzer captures stderr output from all executables.
     Scripts/filters that are aware of panzer should send correctly formatted info and error messages to stderr for pretty printing according to panzer's preferences.
     If a message is sent to stderr that is not correctly formatted, panzer will forward it print it verbatim prefixed by a '!'.
     This means that panzer can be used with generic (non-panzer-aware) scripts and filters.
@@ -487,7 +498,7 @@ The following metadata fields are reserved for use by panzer and should be avoid
     Using these fields in ways other than described above in your document will result in unpredictable results.
 
 * `panzer_reserved`
-* `All`
+* `Base`
 * `style`
 * Field with name same as the value of `style` field. 
     Style names should be capitalized (`Notes`) to prevent name collision with other fields of the same name (`notes`).
@@ -506,7 +517,7 @@ panzer extends pandoc's existing use of filters by:
 # Known issues
 
 * Calls to subprocesses (scripts, filters, etc.) are blocking
-* Run lists are not passed to executables.
+* Incompatible with Python 2 (pull requests welcome)
 * panzer is not the fastest; a Haskell version is in the works and it should be much faster.
 
 
