@@ -77,7 +77,10 @@ class Document(object):
         if style:
             log('INFO', 'panzer', 'style "%s"' % style)
         else:
-            log('INFO', 'panzer', 'no "style" field found')
+            log('INFO', 
+                'panzer', 
+                'no "style" field found, will just run pandoc')
+            return
         if style \
           and style not in self.metadata \
           and style not in defaults.metadata:
