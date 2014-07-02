@@ -92,6 +92,7 @@ Under a writer field, the following metadata fields may appear:
 
   field           value                                                            value type
   --------------- ---------------------------------------------------------------- ---------------
+  `parent`        styles that it inherits                                          `MetaInlines` or `MetaList`
   `metadata`      default metadata fields                                          `MetaMap`
   `template`      pandoc template                                                  `MetaInlines`
   `preflight`     list of executables to run/kill before input doc is processed    `MetaList`
@@ -275,17 +276,32 @@ Individual items in styles are combined with a union biased to the most specific
 
 Items in styles are combined with a union biased to the highest ranked items below:
 
-1. Metadata fields in document
-2. Style definitions in document:
-    a. Current style, current writer
-    b. Current style, `default` writer
-    c. `Base` style, current writer
-    d. `Base` style, `default` writer
-7. Style definitions in `styles.md`:
-    a. Current style, current writer
-    b. Current style, `default` writer
-    c. `Base` style, current writer
-    d. `Base` style, `default` writer
+1. Options specified on command line trump everything
+2. Raw metadata fields in document (i.e. outside a style definition) clobber any set by styles
+3. Style definitions inside the document's own metadata definitions inside `styles.yaml`
+4. Current writer trumps `default` writer 
+5. Children trump their parents
+6. Later parents (listed later under `parent`) trump earlier parents
+7. Later styles (listed later in `style` field) trump earlier styles
+
+The 'trumping' relation is one in which settings 
+
+This sounds complex, but it is actually pretty natural and fits roughly with one's expectations on how styles should behave.
+
+Here are some examples:
+
+    style: Notes
+    Notes: 
+        default:
+            metadata:
+                name: Notey
+        latex:
+            metadata:
+                name: Latexy
+    name: MyName
+
+As it stands, the `name` gets set to `MyName`. 
+
 
 ### Non-additive fields
 
@@ -498,7 +514,6 @@ The following metadata fields are reserved for use by panzer and should be avoid
     Using these fields in ways other than described above in your document will result in unpredictable results.
 
 * `panzer_reserved`
-* `Base`
 * `style`
 * Field with name same as the value of `style` field. 
     Style names should be capitalized (`Notes`) to prevent name collision with other fields of the same name (`notes`).

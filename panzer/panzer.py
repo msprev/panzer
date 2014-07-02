@@ -79,51 +79,34 @@ class Document(object):
         except PanzerTypeError as error:
             log('ERROR', 'panzer', error)
 
-    def transform(self, default_styles, options):
-        """ transform using style """
+    def transform(self, options):
+        """ transform using styles """
         styles = self.styles
-        # - quit if there is no style
-        if styles:
-            log('INFO', 
-                'panzer', 
-                'style "%s"' % ", ".join(styles))
-        else:
-            log('INFO',
-                'panzer',
-                'no "style" field found, will just run pandoc')
+        # - quit if no style
+        if not styles:
+            log('INFO', 'panzer', 'no "style" field found, will just run pandoc')
             return
-        # - delete any styles without definitions
+        log('INFO', 'panzer', 'style "%s"' % ", ".join(styles))
+        writer = options['pandoc']['write']
+        log('INFO', 'panzer', 'writer "%s"' % writer)
+        # - expand style list to include ancestors of each selected style
+        expanded_style_list = expand_style_list(styles, self.metadata)
+        # - skip styles without definitions
         for style in styles:
-            if style not in self.metadata \
-              and style not in default_styles.metadata:
-                log('ERROR',
-                    'panzer',
-                    'style definition for "%s" not found.' % style)
-        styles = [s for s in styles if style in self.metadata 
-                                    or style in default_styles.metadata]
+            if style not in self.metadata:
+                log('ERROR', 'panzer', 'style definition for "%s" not found.' % style)
+        styles = [s for s in styles if style in self.metadata]
         if not styles:
             return
-
         # 1. Do transform
         # - start with blank metadata
         # - add default styles one by one
         # - then add styles specified in document
-        writer = options['pandoc']['write']
-        log('INFO', 'panzer', 'writer "%s"' % writer)
-        style = styles[0]
-        work_list = [
-            (default_styles.metadata, ['Base', 'default'], 'MetaMap'),
-            (default_styles.metadata, ['Base', writer],    'MetaMap'),
-            (default_styles.metadata, [style,  'default'], 'MetaMap'),
-            (default_styles.metadata, [style,  writer],    'MetaMap'),
-            (self.metadata,   ['Base', 'default'], 'MetaMap'),
-            (self.metadata,   ['Base', writer],    'MetaMap'),
-            (self.metadata,   [style,  'default'], 'MetaMap'),
-            (self.metadata,   [style,  writer],    'MetaMap')]
         new_metadata = {}
-        for item in work_list:
-            update_metadata(new_metadata, get_nested_content(*item))
-        # - finally, add metadata settings of document
+        for style in expanded_style_list:
+            update_metadata(new_metadata, self.metadata, [style, 'default'], 'Metamap')
+            update_metadata(new_metadata, self.metadata, [style, writer], 'Metamap')
+        # - finally, add raw metadata settings of new_metadata
         new_metadata.update(self.metadata)
         # 2. Apply kill rules to trim lists
         for field in ADDITIVE_FIELDS:
@@ -140,12 +123,6 @@ class Document(object):
             except PanzerTypeError as error:
                 log('WARNING', 'panzer', error)
                 continue
-        # 3. Tidy up after transform
-        # - remove now unneeded style fields from document's metadata
-        if 'Base' in new_metadata:
-            del new_metadata['Base']
-        if style in new_metadata:
-            del new_metadata[style]
         # 4. Update document
         # - ast
         try:
@@ -315,6 +292,42 @@ class Document(object):
 
 # Functions for manipulating metadata
 
+def return_parents(styles, metadata):
+    """@todo: Docstring for build_work_list.
+
+    :styles: @todo
+    :metadata: @todo
+    :default_styles: @todo
+    :returns: @todo
+
+    """
+    log('INFO', 'panzer', '-- building work list --')
+    full_family = []
+    for child in styles:
+        try:
+            parents = []
+            value = get_content(source, child, 'MetaMap')
+            parent_type = get_type(value, 'parent')
+            if parent_type == 'MetaList':
+                parents_raw = get_content(value, 'parent', 'MetaList')
+                parents = [pandocfilters.stringify(i) for i in parents_raw]
+            elif parent_type == 'MetaInlines':
+                parents_raw = get_content(value, 'parent', 'MetaInlines')
+                parents = [pandocfilters.stringify(parents_raw)]
+            else:
+                raise PanzerTypeError('"parent" value must be of type "MetaInlines" or "MetaList"')
+                continue
+            if parents:
+                log('INFO', 
+                    'panzer',
+                    '"%s" has "%s" as parents' % (child, ", ".join(parents)))
+                if any of parents is in full_family:
+                    raise PanzerInheritanceError("")
+                full_family.append(return_parents(parents, metadata))
+            full_family.append(child)
+        except (PanzerKeyError, PanzerTypeError):
+            continue
+
 def update_metadata(old, new):
     """ return old updated with new metadata """
     # 1. Update with values in 'metadata' field
@@ -481,21 +494,7 @@ def make_json_message(document, run_lists, options):
 
 def load(options):
     """ return Document from running pandoc on options """
-    # 1. Build pandoc command
-    command = options['pandoc']['input'].copy()
-    if options['pandoc']['read']:
-        command += ['--read', options['pandoc']['read']]
-    command += ['--write', 'json', '--output', '-']
-    command += options['pandoc']['options']
-    log('DEBUG', 'panzer', 'run pandoc "%s"' % ' '.join(command))
-    ast = pandoc_read_json(command)
-    current_doc = Document(ast)
-    log('DEBUG', 'panzer', '-'*20+'ORIGINAL METADATA'+'-'*20+'\n'+
-        json.dumps(current_doc.metadata, sort_keys=True, indent=1))
-    return current_doc
-
-def load_default_styles(options):
-    """ return Document from loading styles.yaml """
+    # check defaults
     filename = os.path.join(options['panzer']['support'], 'styles2.md')
     if os.path.exists(filename):
         command = [filename]
@@ -508,6 +507,18 @@ def load_default_styles(options):
     else:
         log('ERROR', 'panzer', 'default styles file not found: %s' % filename)
         return Document()
+    # 1. Build pandoc command
+    command = options['pandoc']['input'].copy()
+    if options['pandoc']['read']:
+        command += ['--read', options['pandoc']['read']]
+    command += ['--write', 'json', '--output', '-']
+    command += options['pandoc']['options']
+    log('DEBUG', 'panzer', 'run pandoc "%s"' % ' '.join(command))
+    ast = pandoc_read_json(command)
+    current_doc = Document(ast)
+    log('DEBUG', 'panzer', '-'*20+'ORIGINAL METADATA'+'-'*20+'\n'+
+        json.dumps(current_doc.metadata, sort_keys=True, indent=1))
+    return current_doc
 
 def pandoc_read_json(command):
     """ return json from output of pandoc command """
@@ -1087,9 +1098,8 @@ def main():
         options = parse_cli_options(options)
         start_logger(options)
         check_support_directory(options)
-        default_doc = load_default_styles(options)
         current_doc = load(options)
-        current_doc.transform(default_doc, options)
+        current_doc.transform(options)
         run_lists = build_run_lists(current_doc.metadata, run_lists, options)
         json_message = make_json_message(current_doc, run_lists, options)
         current_doc.inject_panzer_reserved_field(json_message)
