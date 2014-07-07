@@ -7,28 +7,28 @@ style  : Notes
 
 # Introduction
 
-[pandoc][] is a powerful and flexible document processing tool. 
+[pandoc][] is a powerful and flexible document processing tool.
     pandoc presents a huge range of options for customisation of document output.
     Millions of dials can be twiddled, and it is not easy to know which combinations to choose to quickly achieve your desired result.
     Often you want to produce output with a defined look, and this may involve the coordination of many elements, scripts and filters.
 
-[panzer][] can help. 
+[panzer][] can help.
     panzer adds *styles* to pandoc.
-    Styles are metadata fields that govern the look and feel of your document in a convenient and reusable way. 
-    Styles are combinations of templates, metadata settings, filters, post-processors, and pre- and post-flight scripts. 
+    Styles are metadata fields that govern the look and feel of your document in a convenient and reusable way.
+    Styles are combinations of templates, metadata settings, filters, post-processors, and pre- and post-flight scripts.
     panzer remembers the options for a style so that you don't have to.
     Styles are written and selected using YAML metadata.
     Styles can be customised on a per document and per writer basis.
 
 Instead of running `pandoc`, you run `panzer` on your document.
     panzer will run pandoc plus any associated scripts, and it will pass on information based on your style.
-    To select a style in your document, add the field `style` to its metadata. 
-    By convention, styles take capitalized values. 
+    To select a style in your document, add the field `style` to its metadata.
+    By convention, styles have MixedCase values.
     For example:
 
     style: Notes
 
-This would select the `Notes` style. 
+This would select the `Notes` style.
     This style should be defined in panzer's `styles.md` file or inside your document itself using the YAML syntax below.
     If a document lacks a `style` field, panzer is equivalent to pandoc.
 
@@ -42,7 +42,7 @@ panzer can be used as a lightweight alternative to makefiles, or in conjunction 
 * [pandoc][]
 * [Python 3][]
 
-Why is Python 3 required? 
+Why is Python 3 required?
     Python 3 provides sane unicode handling.
 
 *Installation:*
@@ -101,13 +101,13 @@ Under a writer field, the following metadata fields may appear:
   `postflight`    list of executables to run/kill after output file written        `MetaList`
   `cleanup`       list of executables to run/kill on exit irrespective of errors   `MetaList`
 
-**Default metadata** can be set by the style. 
+**Default metadata** can be set by the style.
     Any metadata field that can appear in a pandoc document can be defined as default metadata.
     This includes standard pandoc metadata fields, e.g. `numbersections`, `toc`.
     However, panzer comes into its own when one defines new default metadata fields for a style.
     New default fields allow the style's templates to employ new variables, the values of which can be overriden by the user on a per document basis.
 
-**Templates** are pandoc [templates][]. 
+**Templates** are pandoc [templates][].
     Templates typically are more useful in panzer than in vanilla pandoc because templates can safely employ new variables defined in the style's default metadata.
     For example, if a style defines `copyright_notice` in default metadata, then the style's templates can safely use `$copyright_notice$`.
 
@@ -116,7 +116,7 @@ Under a writer field, the following metadata fields may appear:
     Note that this means that if preflight scripts modify the input document files this will not be reflected in panzer's output.
 
 **Filters** are pandoc [json filters][].
-    Filters gain two news powers from panzer. 
+    Filters gain two news powers from panzer.
         First, filters can be passed [more than one](#cli_options_executables) command line argument.
         The first command line argument is still reserved for the writer's name to maintain backwards compatibility with pandoc's filters.
         Second, panzer injects a special metadata field, `panzer_reserved`, into the document which filters see.
@@ -134,12 +134,12 @@ Under a writer field, the following metadata fields may appear:
     Postflight scripts are not run if a fatal error occurs earlier in the processing chain.
 
 **Cleanup scripts** are executables that are run before panzer exits.
-    Cleanup scripts run irrespective of whether an error has occurred earlier. 
-    Cleanup scripts are run after postflight scripts.    
+    Cleanup scripts run irrespective of whether an error has occurred earlier.
+    Cleanup scripts are run after postflight scripts.
 
 ### Style definition locations
 
-Styles can be defined either in: 
+Styles can be defined either in:
 
 1. The `styles.md` file in panzer's support directory (normally, `~/.panzer/`)
 2. The metadata of the input document(s).
@@ -168,7 +168,7 @@ Executables (scripts, filters, postprocessors) are specified using a *run list*.
         - run: ...
           args: ...
         - kill: ...
-        - killall: [true|false] 
+        - killall: [true|false]
 ```
 
 ### Passing command line arguments to executables {#cli_options_executables}
@@ -208,7 +208,7 @@ Either style for the `args` field may be used in the same file.
 Here is a definition for the `Notes` style:
 
     Notes:
-        default:                 
+        default:
             metadata:
                 numbersections: false
         latex:
@@ -279,19 +279,19 @@ Items in styles are combined with a union biased to the highest ranked items bel
 1. Options specified on command line trump everything
 2. Raw metadata fields in document (i.e. outside a style definition) clobber any set by styles
 3. Style definitions inside the document's own metadata definitions inside `styles.yaml`
-4. Current writer trumps `default` writer 
+4. Current writer trumps `default` writer
 5. Children trump their parents
 6. Later parents (listed later under `parent`) trump earlier parents
 7. Later styles (listed later in `style` field) trump earlier styles
 
-The 'trumping' relation is one in which settings 
+The 'trumping' relation is one in which settings
 
 This sounds complex, but it is actually pretty natural and fits roughly with one's expectations on how styles should behave.
 
 Here are some examples:
 
     style: Notes
-    Notes: 
+    Notes:
         default:
             metadata:
                 name: Notey
@@ -300,7 +300,7 @@ Here are some examples:
                 name: Latexy
     name: MyName
 
-As it stands, the `name` gets set to `MyName`. 
+As it stands, the `name` gets set to `MyName`.
 
 
 ### Non-additive fields
@@ -317,11 +317,11 @@ Exceptions are lists of filters, post-processors, and scripts.
     filter:
         - kill: smallcap.py
 
-`kill` removes a filter/script if it is already present. 
+`kill` removes a filter/script if it is already present.
     `- killall: true` empties the entire list and starts from scratch.
     Note that `kill` or `killall` only affect items of lower precedence.
     They do not prevent a filter or script being added afterwards.
-    A killed filter will be enabled again if a higher-precedence item invokes it again with `run`. 
+    A killed filter will be enabled again if a higher-precedence item invokes it again with `run`.
     If you want to be sure to kill a filter, place the relevant `kill` as the last item in the list in your document's metadata.
 
 Any text outside the metadata block in `styles.md` is ignored.
@@ -341,7 +341,7 @@ If multiple input files are given to panzer on the command line, panzer's uses p
     Metadata fields (including style definitions and items in global scope) are merged using pandoc's rules (left-biased union).
     Note that this means that if fields in multiple files have fields with the same name (e.g. `filter`) they will clobber each other, rather than follow the rules on additive union above.
 
-If panzer is passed input via stdin, it stores this in a temporary file in the current working directory. 
+If panzer is passed input via stdin, it stores this in a temporary file in the current working directory.
     This is necessary because scripts may wish to inspect and modify this data.
     See section on [passing messages to scripts](#passing_messages) to see how they can access this information.
     The temporary file is always removed when panzer exits, irrespective of whether any errors have occurred.
@@ -497,11 +497,11 @@ The message format for stderr that panzer expects is a newline-separated sequenc
 `LEVEL` is a string that sets the error level; it can take one of the following values:
 
     'CRITICAL'
-    'ERROR'   
-    'WARNING' 
-    'INFO'    
-    'DEBUG'   
-    'NOTSET'  
+    'ERROR'
+    'WARNING'
+    'INFO'
+    'DEBUG'
+    'NOTSET'
 
 `MESSAGE` is your error message.
 
@@ -510,12 +510,12 @@ The Python module `panzertools` provides a `log` function to scripts/filters to 
 
 # Reserved metadata fields
 
-The following metadata fields are reserved for use by panzer and should be avoided. 
+The following metadata fields are reserved for use by panzer and should be avoided.
     Using these fields in ways other than described above in your document will result in unpredictable results.
 
 * `panzer_reserved`
 * `style`
-* Field with name same as the value of `style` field. 
+* Field with name same as the value of `style` field.
     Style names should be capitalized (`Notes`) to prevent name collision with other fields of the same name (`notes`).
 
 # Compatibility with pandoc {#pandoc_compatibility}
