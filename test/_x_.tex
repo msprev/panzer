@@ -1,0 +1,138 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage{fixltx2e}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper]{geometry}
+\geometry{
+  top=2.5cm,
+  bottom=3.5cm    
+ }
+\usepackage[opticals,fullfamily,mathlf,minionint,footnotefigures]{MinionPro}
+\usepackage[pagestyles]{titlesec}
+\usepackage[scaled=0.85]{inconsolata}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{gitinfo}
+\usepackage[british,orig,cleanlook]{isodate}
+\usepackage[british]{babel}
+\usepackage[autostyle]{csquotes}
+\usepackage[babel,verbose=silent]{microtype}
+
+\DeclareFontShape{T1}{MinionPro-OsF}{mb}{n}{ 
+  <-> MinionPro-Medium-osf-t1 
+}{} 
+\DeclareFontShape{T1}{MinionPro-OsF}{mb}{it}{ 
+  <-> MinionPro-MediumIt-osf-t1 
+}{} 
+\renewcommand*{\bfdefault}{eb}   
+\def\medw#1{{\fontseries{mb}\selectfont #1}} 
+\def\ebold#1{{\fontseries{eb}\selectfont #1}} 
+\def\semib#1{{\fontseries{sb}\selectfont #1}} 
+
+%% [natbib]: use natbib option for biblatex 
+
+%% Git date and commit hash: print if set, otherwise do nothing
+\ifnum\pdfstrcmp{\gitAuthorDate}{(None)}=0 
+    \def\gitstamp{\relax}
+\else
+	\def\gitstamp{\flushright{\scriptsize \texttt{\gitAbbrevHash\ on \gitAuthorDate}}}
+\fi
+
+% %% Right footer of first page: email address 
+% \renewpagestyle{empty}{
+%   \setfoot{\hfill}{\hfill}{\footnotesize \href{mailto:mark.sprevak@ed.ac.uk}{\texttt{mark.sprevak@ed.ac.uk}}}
+% }
+
+%% Subsection title format: small bold sans, no spacing
+\titleformat{\section}
+  {\normalfont\large\fontseries{sb}\selectfont}{\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\normalsize\fontseries{sb}\selectfont}{\thesubsection}{1em}{}
+
+%% Text can stretch a little into margins to avoid bad line-breaks
+\setlength{\emergencystretch}{3em}
+
+%% Footnotes: stay on the same page
+\interfootnotelinepenalty=10000
+
+%% Dark purple for hyperlinks
+\definecolor{purple_link}{RGB}{76, 64, 133}
+
+\usepackage[
+  unicode    = true,
+  breaklinks = true,
+  bookmarks  = true,
+  pdfauthor  = {Mark Sprevak},
+  pdftitle   = {test},
+  colorlinks = true,
+  citecolor  = purple_link,
+  linkcolor  = purple_link,
+  urlcolor   = purple_link]{hyperref}
+\usepackage{ellipsis}      %% must be loaded after hyperref
+
+
+%% Description labels: bold, small caps, and enforced lowercase
+\renewcommand{\descriptionlabel}[1]{\hspace*{\labelsep}\textsc{\textbf{\MakeLowercase{#1}}}}
+
+%% Title in bold sans. Code taken from savetrees.
+\makeatletter
+\def\@maketitle{%
+  \newpage
+  \null
+  \begin{center}%
+    \let \footnote \thanks
+    {\Large\semib{\textssc{\@title}}\par}
+        \vskip 0.1\baselineskip
+    \begin{tabular}[t]{c}%
+    \@author
+  \end{tabular}\par
+               \vskip 0.1\baselineskip
+        \@date
+            \end{center}%
+\par
+\vskip \baselineskip
+}
+\makeatother
+
+%% \signed{...}: flush right, newline when necessary
+%% usage: \signed{\citep{Lewis00}} 
+\def\signed #1{{\leavevmode\unskip\nobreak\hfil\penalty50\hskip2em
+  \hbox{}\nobreak\hfil#1%
+  \parfillskip=0pt \finalhyphendemerits=0 \endgraf}}
+
+%% \signedURL{...}: place URL flush right, newline when necessary
+% \def\signedURL #1{{\signed{[\url{#1}]}  \vspace{0.5em}}}
+\def\signedURL #1{{\signed{[\url{#1}]}}}
+
+
+
+%% Typesetting defaults for rest of document
+%% Paragraphs: don't indent first line
+%% Paragraphs: add small space to separate paragraphs
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+
+\setcounter{secnumdepth}{0}
+
+
+\title{test}
+\author{Mark Sprevak}
+
+%% Date
+
+        \date{1 July 2014}
+    
+\begin{document}
+
+\maketitle
+
+\thispagestyle{empty}
+
+
+test
+
+
+
+
+\end{document}

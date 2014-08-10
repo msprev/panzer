@@ -78,14 +78,14 @@ class Document(object):
             log('INFO', 'panzer', 'global definitions:')
             for line in msg:
                 log('INFO', 'panzer', '    ' + line)
-            self.styledef = global_styledef
+            self.styledef = dict(global_styledef)
         else:
             log('INFO', 'panzer', 'no global definitions loaded')
         # - add local style definitions
         local_styledef = {}
         try:
             local_styledef = get_content(self.get_metadata(), 'styledef', 'MetaMap')
-            self.styledef.update(local_styledef)
+            (self.styledef).update(local_styledef)
             msg = debug_pretty_keys(local_styledef)
             log('INFO', 'panzer', 'local definitions:')
             for line in msg:
@@ -131,9 +131,9 @@ class Document(object):
     def purge_styles(self):
         """ remove metadata fields specific to panzer """
         kill_list = ADDITIVE_FIELDS
-        kill_list += 'style'
-        kill_list += 'styledef'
-        kill_list += 'template'
+        kill_list += ['style']
+        kill_list += ['styledef']
+        kill_list += ['template']
         metadata = self.get_metadata()
         new_metadata = { key: metadata[key]
                          for key in metadata
@@ -188,12 +188,6 @@ class Document(object):
         # 4. Update document
         # - ast
         self.set_metadata(new_metadata)
-        try:
-            self.ast[0]['unMeta'] = new_metadata
-        except (IndexError, KeyError):
-            self.ast = [{'unMeta': new_metadata}, []]
-        # - metadata
-        self.metadata = new_metadata
         # - template
         try:
             template_raw = get_content(new_metadata, 'template', 'MetaInlines')
@@ -245,7 +239,7 @@ class Document(object):
             command_name = os.path.basename(command[0])
             command_path = ' '.join(command).replace(os.path.expanduser('~'),
                                                      '~')
-            log('INFO', 'panzer', 'run "%s"' % command_path)
+            log('INFO', 'panzer', '-> "%s"' % command_path)
             # - run the command and log any errors
             stderr = ''
             try:
@@ -307,7 +301,7 @@ class Document(object):
         stderr = ''
         # 3. Run pandoc command
         log('INFO', 'panzer', '-- pandoc --')
-        log('INFO', 'panzer', 'run "%s"' % ' '.join(command))
+        log('INFO', 'panzer', '"%s"' % ' '.join(command))
         try:
             p = subprocess.Popen(command,
                                  stderr=subprocess.PIPE,
@@ -548,7 +542,7 @@ def load(options):
         command += ['--read', options['pandoc']['read']]
     command += ['--write', 'json', '--output', '-']
     command += options['pandoc']['options']
-    log('DEBUG', 'panzer', 'run pandoc "%s"' % ' '.join(command))
+    log('DEBUG', 'panzer', 'pandoc %s' % ' '.join(command))
     command = ['pandoc'] + command
     out_pipe = ''
     stderr = ''
@@ -573,10 +567,10 @@ def load(options):
 
 def load_yaml_styledef(options):
     """ return metadata branch of styles.yaml as dict """
-    filename = os.path.join(options['panzer']['support'], 'styles.yaml')
+    filename = os.path.join(options['panzer']['panzer_support'], 'styles.yaml')
     if not os.path.exists(filename):
         log('ERROR', 'panzer', 'default styles file not found: %s' % filename)
-        return Document()
+        return {}
     # - slurp styles.yaml
     data = []
     with open(filename, 'r', encoding=ENCODING) as styles_file:
@@ -592,7 +586,7 @@ def load_yaml_styledef(options):
     command += ['-']
     command += ['--write', 'json']
     command += ['--output', '-']
-    log('DEBUG', 'panzer', 'run pandoc "%s"' % ' '.join(command))
+    log('DEBUG', 'panzer', 'pandoc %s' % ' '.join(command))
     # - send to pandoc to convert to json
     in_pipe = data_string
     out_pipe = ''
@@ -634,7 +628,7 @@ def run_scripts(kind, run_lists, json_message, force_run=False):
     for command in run_lists[kind]:
         filename = os.path.basename(command[0])
         fullpath = ' '.join(command).replace(os.path.expanduser('~'), '~')
-        log('INFO', 'panzer', 'run "%s"' % fullpath)
+        log('INFO', 'panzer', '-> "%s"' % fullpath)
         stderr = out_pipe = str()
         try:
             p = subprocess.Popen(command,
@@ -663,6 +657,8 @@ def run_scripts(kind, run_lists, json_message, force_run=False):
 
 def build_run_lists(metadata, run_lists, options):
     """ return run lists updated with metadata """
+    log('INFO', 'panzer', '-- run list --')
+    count = 0
     for field in ADDITIVE_FIELDS:
         run_list = run_lists[field]
         # - if 'filter', add filter list specified on command line
@@ -683,10 +679,11 @@ def build_run_lists(metadata, run_lists, options):
             for command in run_list:
                 command.insert(1, options['pandoc']['write'])
         run_lists[field] = run_list
-        for (i, command) in enumerate(run_list):
-            log('INFO',
-                'panzer',
-                '%s %d "%s"' % (field, i+1, " ".join(command)))
+        for command in run_list:
+            count = count + 1
+            log('INFO', 'panzer',
+                '%s %s "%s"'
+                % (str(count).rjust(2), field.ljust(11), " ".join(command)))
     return run_lists
 
 def build_run_list(metadata, field, options):
@@ -762,10 +759,10 @@ def resolve_path(filename, field, options):
                               field,
                               basename,
                               filename))
-    paths.append(os.path.join(options['panzer']['support'],
+    paths.append(os.path.join(options['panzer']['panzer_support'],
                               field,
                               filename))
-    paths.append(os.path.join(options['panzer']['support'],
+    paths.append(os.path.join(options['panzer']['panzer_support'],
                               field,
                               basename,
                               filename))
@@ -905,6 +902,8 @@ def log_stderr(stderr, sender=str()):
 
 def debug_pretty_keys(dictionary):
     """ return pretty printed list of dictionary keys """
+    if not dictionary:
+        return []
     # - number of keys printed per line
     N = 5
     # - turn into sorted list
@@ -959,31 +958,30 @@ def versiontuple(version_string):
 
 def check_support_directory(options):
     """ check support directory exists """
-    if options['panzer']['support'] != DEFAULT_SUPPORT_DIR:
-        if not os.path.exists(options['panzer']['support']):
+    if options['panzer']['panzer_support'] != DEFAULT_SUPPORT_DIR:
+        if not os.path.exists(options['panzer']['panzer_support']):
             log('ERROR',
                 'panzer',
                 'panzer support directory "%s" not found'
-                % options['panzer']['support'])
+                % options['panzer']['panzer_support'])
             log('WARNING',
                 'panzer',
                 'using default panzer support directory: %s'
                 % DEFAULT_SUPPORT_DIR)
-            options['panzer']['support'] = DEFAULT_SUPPORT_DIR
-
+            options['panzer']['panzer_support'] = DEFAULT_SUPPORT_DIR
     if not os.path.exists(DEFAULT_SUPPORT_DIR):
         log('WARNING',
             'panzer',
             'default panzer support directory "%s" not found'
             % DEFAULT_SUPPORT_DIR)
-    os.environ['PANZER_SHARED'] = os.path.join(options['panzer']['support'],
+    os.environ['PANZER_SHARED'] = os.path.join(options['panzer']['panzer_support'],
                                                'shared')
 
 def default_options():
     """ return default options """
     options = {
         'panzer': {
-            'support'         : DEFAULT_SUPPORT_DIR,
+            'panzer_support'  : DEFAULT_SUPPORT_DIR,
             'debug'           : False,
             'verbose'         : 1,
             'stdin_temp_file' : ''
