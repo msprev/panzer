@@ -39,8 +39,11 @@ class Document(object):
     - ast      : pandoc abstract syntax tree of document
     - style    : list of styles for document
     - styledef : style definitions
+    - runlist  : run lists for document
+    - options  : cli options for document
     - template : template for document
     - output   : string filled with output when processing complete
+    - json_msg : json message passed to scripts
     """
     def __init__(self):
         """ new blank document """
@@ -49,8 +52,11 @@ class Document(object):
         self.ast = empty
         self.style = []
         self.styledef = {}
+        self.run_list = default_run_lists()
+        self.options = default_options()
         self.template = None
         self.output = None
+        self.update_json_msg()
 
     def populate(self, ast, global_styledef):
         """ populate document with data """
@@ -124,6 +130,48 @@ class Document(object):
         self.style = [ key for key in self.style
                        if key not in missing ]
 
+    def build_run_list(self):
+        """ populate run_list with metadata """
+        log('INFO', 'panzer', '-- run list --')
+        count = 0
+        metadata = self.get_metadata()
+        for field in ADDITIVE_FIELDS:
+            run_list = run_lists[field]
+            # - if 'filter', add filter list specified on command line
+            if field == 'filter' and self.options['pandoc']['filter']:
+                run_list = [list(f) for f in self.options['pandoc']['filter']]
+            #  - add commands specified in metadata
+            if field in metadata:
+                run_list.extend(get_run_list(metadata, field, self.options))
+            # pdf output: skip postprocess
+            if self.options['pandoc']['pdf_output'] \
+               and field == 'postprocess' \
+               and run_list:
+                log('INFO', 'panzer', 'postprocess skipped --- since output is PDF')
+                run_lists[field] = []
+                continue
+            # - filter be passed writer as 1st argument
+            if field == 'filter':
+                for command in run_list:
+                    command.insert(1, self.options['pandoc']['write'])
+            run_lists[field] = run_list
+            for command in run_list:
+                count = count + 1
+                log('INFO', 'panzer',
+                    '%s %s "%s"'
+                    % (str(count).rjust(2), field.ljust(11), " ".join(command)))
+        self.run_list = run_lists
+
+    def update_json_msg(self):
+        """ return json message to pass to executables """
+        data = [{'metadata'    : self.get_metadata(),
+                 'styledef'    : self.styledef,
+                 'template'    : self.template,
+                 'style'       : self.style,
+                 'run_lists'   : self.run_list,
+                 'cli_options' : self.options}]
+        self.json_msg = json.dumps(data)
+
     def expand_style(self):
         """ expand style field to include all parent styles """
         pass
@@ -151,9 +199,9 @@ class Document(object):
         except (IndexError, KeyError):
             self.ast = [{'unMeta': new_metadata}, []]
 
-    def transform(self, options):
+    def transform(self):
         """ transform using style """
-        writer = options['pandoc']['write']
+        writer = self.options['pandoc']['write']
         log('INFO', 'panzer', 'writer "%s"' % writer)
         # - quit if no style
         if not self.style:
@@ -192,20 +240,20 @@ class Document(object):
         try:
             template_raw = get_content(new_metadata, 'template', 'MetaInlines')
             template_str = pandocfilters.stringify(template_raw)
-            self.template = resolve_path(template_str, 'template', options)
+            self.template = resolve_path(template_str, 'template', self.options)
         except (PanzerKeyError, PanzerTypeError) as error:
             log('DEBUG', 'panzer', error)
         if self.template:
             log('INFO', 'panzer', 'template "%s"' % self.template)
 
-    def inject_panzer_reserved_field(self, json_message):
+    def inject_panzer_reserved_field(self):
         """ add panzer_reserved field to document """
+        json_message = self.json_msg
         # - check if already exists
         metadata = self.get_metadata()
         try:
             get_content(metadata, 'panzer_reserved')
-            log('ERROR',
-                'panzer',
+            log('ERROR', 'panzer',
                 'special field "panzer_reserved" already in metadata'
                 '---overwriting it')
         except PanzerKeyError:
@@ -217,10 +265,46 @@ class Document(object):
         # - update document
         self.set_metadata(metadata)
 
-    def pipe_through(self, kind, run_lists):
+    def run_scripts(kind, force_run=False):
+        """ execute commands of kind listed in run_list """
+        # - if no run list to run, then return
+        if kind not in self.run_list or not self.run_list[kind]:
+            return
+        log('INFO', 'panzer', '-- %s --' % kind)
+        for command in self.run_list[kind]:
+            filename = os.path.basename(command[0])
+            fullpath = ' '.join(command).replace(os.path.expanduser('~'), '~')
+            log('INFO', 'panzer', '-> "%s"' % fullpath)
+            stderr = out_pipe = str()
+            try:
+                p = subprocess.Popen(command,
+                                     stdin=subprocess.PIPE,
+                                     stderr=subprocess.PIPE)
+                # send panzer's json message to scripts via stdin
+                in_pipe = json_message
+                in_pipe_bytes = in_pipe.encode(ENCODING)
+                out_pipe_bytes, stderr_bytes = p.communicate(input=in_pipe_bytes)
+                if out_pipe_bytes:
+                    out_pipe = out_pipe_bytes.decode(ENCODING)
+                if stderr_bytes:
+                    stderr = stderr_bytes.decode(ENCODING)
+            except OSError as error:
+                log('ERROR', filename, error)
+                continue
+            except Exception as error:
+                # if force_run: always run next script
+                if force_run:
+                    log('ERROR', filename, error)
+                    continue
+                else:
+                    raise
+            finally:
+                log_stderr(stderr, filename)
+
+    def pipe_through(self, kind):
         """ pipe through external command """
         # - if no run list of this kind to run, then return
-        if kind not in run_lists or not run_lists[kind]:
+        if kind not in self.run_list or not self.run_list[kind]:
             return
         log('INFO', 'panzer', '-- %s --' % kind)
         # 1. Set up incoming pipe
@@ -234,7 +318,7 @@ class Document(object):
         # 2. Set up outgoing pipe in case of failure
         out_pipe = in_pipe
         # 3. Run commands
-        for command in run_lists[kind]:
+        for command in self.run_list[kind]:
             # - add debugging info
             command_name = os.path.basename(command[0])
             command_path = ' '.join(command).replace(os.path.expanduser('~'),
@@ -271,7 +355,7 @@ class Document(object):
         elif kind == 'postprocess':
             self.output = out_pipe
 
-    def pandoc(self, options):
+    def pandoc(self):
         """ run pandoc on document
 
         Normally, input to pandoc is passed via stdin and output received via
@@ -283,18 +367,18 @@ class Document(object):
         command = ['pandoc']
         command += ['-']
         command += ['--read', 'json']
-        command += ['--write', options['pandoc']['write']]
-        if options['pandoc']['pdf_output']:
-            command += ['--output', options['pandoc']['output']]
+        command += ['--write', self.options['pandoc']['write']]
+        if self.options['pandoc']['pdf_output']:
+            command += ['--output', self.options['pandoc']['output']]
         else:
             command += ['--output', '-']
         # - template specified on cli has precedence
-        if options['pandoc']['template']:
-            command += ['--template=%s' % options['pandoc']['template']]
+        if self.options['pandoc']['template']:
+            command += ['--template=%s' % self.options['pandoc']['template']]
         elif self.template:
             command += ['--template=%s' % self.template]
         # - remaining options
-        command += options['pandoc']['options']
+        command += self.options['pandoc']['options']
         # 2. Prefill input and output pipes
         in_pipe = json.dumps(self.ast)
         out_pipe = ''
@@ -316,30 +400,30 @@ class Document(object):
         finally:
             log_stderr(stderr)
         # 4. Deal with output of pandoc
-        if options['pandoc']['pdf_output']:
+        if self.options['pandoc']['pdf_output']:
             # do nothing with a pdf
             pass
         else:
             self.output = out_pipe
 
-    def write(self, options):
+    def write(self):
         """ write document """
         # case 1: pdf as output file
-        if options['pandoc']['pdf_output']:
+        if self.options['pandoc']['pdf_output']:
             return
         # case 2: stdout as output
-        if options['pandoc']['output'] == '-':
+        if self.options['pandoc']['output'] == '-':
             sys.stdout.buffer.write(self.output.encode(ENCODING))
             sys.stdout.flush()
         # case 3: any other file as output
         else:
-            with open(options['pandoc']['output'], 'w',
+            with open(self.options['pandoc']['output'], 'w',
                       encoding=ENCODING) as output_file:
                 output_file.write(self.output)
                 output_file.flush()
             log('INFO',
                 'panzer',
-                'output written to "%s"' % options['pandoc']['output'])
+                'output written to "%s"' % self.options['pandoc']['output'])
 
 # Functions for manipulating metadata
 
@@ -511,6 +595,67 @@ def get_metadata(ast):
         metadata = {}
     return metadata
 
+def get_run_list(metadata, field, options):
+    """ return run list for field of metadata """
+    run_list = []
+    try:
+        metadata_list = get_content(metadata, field, 'MetaList')
+    except (PanzerTypeError, PanzerKeyError) as error:
+        log('WARNING', 'panzer', error)
+        return run_list
+    for item in metadata_list:
+        check_c_and_t_exist(item)
+        item_content = item[C]
+        # command name
+        command_raw = get_content(item_content, 'run', 'MetaInlines')
+        command_str = pandocfilters.stringify(command_raw)
+        command = [resolve_path(command_str, field, options)]
+        # arguments
+        arguments = []
+        if 'args' in item_content:
+            if get_type(item_content, 'args') == 'MetaInlines':
+                # arguments are raw string
+                arguments_raw = get_content(item_content, 'args', 'MetaInlines')
+                arguments_str = pandocfilters.stringify(arguments_raw)
+                arguments = shlex.split(arguments_str)
+            elif get_type(item_content, 'args') == 'MetaList':
+                # arguments specified as MetaList
+                arguments_list = get_content(item_content, 'args', 'MetaList')
+                arguments = get_run_list_args(arguments_list)
+            command.extend(arguments)
+        run_list.append(command)
+    return run_list
+
+def get_run_list_args(arguments_list):
+    """ return list of arguments from metadata list """
+    arguments = []
+    for item in arguments_list:
+        if item[T] != 'MetaMap':
+            log('ERROR',
+                'panzer',
+                '"args" list should have fields of type "MetaMap"')
+            continue
+        fields = item[C]
+        if len(fields) != 1:
+            log('ERROR',
+                'panzer',
+                '"args" list should have exactly one field per item')
+            continue
+        field_name = "".join(fields.keys())
+        field_type = get_type(fields, field_name)
+        field_value = get_content(fields, field_name, field_type)
+        if field_type == 'MetaBool':
+            arguments.append('--' + field_name)
+        elif field_type == 'MetaInlines':
+            value_str = pandocfilters.stringify(field_value)
+            arguments.append('--%s="%s"' % (field_name, value_str))
+        else:
+            log('ERROR',
+                'panzer',
+                'arguments of type "%s" not' 'supported---"%s" ignored'
+                % (field_type, field_name))
+    return arguments
+
 def check_c_and_t_exist(item):
     """ check item contains both C and T fields """
     if C not in item:
@@ -520,17 +665,38 @@ def check_c_and_t_exist(item):
         message = 'Value of "%s" corrupt: "T" field missing' % repr(item)
         raise PanzerBadASTError(message)
 
-def make_json_message(document, run_lists, options):
-    """ return json message to pass to executables """
-    data = [{'metadata' : document.get_metadata(),
-             'styledef' : document.styledef,
-             'template' : document.template,
-             'style' : document.style,
-             'run_lists' : run_lists,
-             'cli_options' : options}]
-    json_message = json.dumps(data)
-    return json_message
+def default_options():
+    """ return default options """
+    options = {
+        'panzer': {
+            'panzer_support'  : DEFAULT_SUPPORT_DIR,
+            'debug'           : False,
+            'verbose'         : 1,
+            'stdin_temp_file' : ''
+        },
+        'pandoc': {
+            'input'      : [],
+            'output'     : '-',
+            'pdf_output' : False,
+            'read'       : '',
+            'write'      : '',
+            'template'   : '',
+            'filter'     : [],
+            'options'    : []
+        }
+    }
+    return options
 
+def default_run_lists():
+    """ return default run lists """
+    run_lists = {
+        'preflight'   : [],
+        'filter'      : [],
+        'postprocess' : [],
+        'postflight'  : [],
+        'cleanup'     : []
+    }
+    return run_lists
 
 # Load documents
 
@@ -565,7 +731,7 @@ def load(options):
                                 'json object from pandoc')
     return ast
 
-def load_yaml_styledef(options):
+def load_styledef(options):
     """ return metadata branch of styles.yaml as dict """
     filename = os.path.join(options['panzer']['panzer_support'], 'styles.yaml')
     if not os.path.exists(filename):
@@ -618,134 +784,6 @@ def load_yaml_styledef(options):
         return get_metadata(ast)
 
 # Filters and pre/post-flight scripts
-
-def run_scripts(kind, run_lists, json_message, force_run=False):
-    """ execute commands of kind listed in run_lists """
-    # - if no run list to run, then return
-    if kind not in run_lists or not run_lists[kind]:
-        return
-    log('INFO', 'panzer', '-- %s --' % kind)
-    for command in run_lists[kind]:
-        filename = os.path.basename(command[0])
-        fullpath = ' '.join(command).replace(os.path.expanduser('~'), '~')
-        log('INFO', 'panzer', '-> "%s"' % fullpath)
-        stderr = out_pipe = str()
-        try:
-            p = subprocess.Popen(command,
-                                 stdin=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
-            # send panzer's json message to scripts via stdin
-            in_pipe = json_message
-            in_pipe_bytes = in_pipe.encode(ENCODING)
-            out_pipe_bytes, stderr_bytes = p.communicate(input=in_pipe_bytes)
-            if out_pipe_bytes:
-                out_pipe = out_pipe_bytes.decode(ENCODING)
-            if stderr_bytes:
-                stderr = stderr_bytes.decode(ENCODING)
-        except OSError as error:
-            log('ERROR', filename, error)
-            continue
-        except Exception as error:
-            # if force_run: always run next script
-            if force_run:
-                log('ERROR', filename, error)
-                continue
-            else:
-                raise
-        finally:
-            log_stderr(stderr, filename)
-
-def build_run_lists(metadata, run_lists, options):
-    """ return run lists updated with metadata """
-    log('INFO', 'panzer', '-- run list --')
-    count = 0
-    for field in ADDITIVE_FIELDS:
-        run_list = run_lists[field]
-        # - if 'filter', add filter list specified on command line
-        if field == 'filter' and options['pandoc']['filter']:
-            run_list = [list(f) for f in options['pandoc']['filter']]
-        #  - add commands specified in metadata
-        if field in metadata:
-            run_list.extend(build_run_list(metadata, field, options))
-        # pdf output: skip postprocess
-        if options['pandoc']['pdf_output'] \
-           and field == 'postprocess' \
-           and run_list:
-            log('INFO', 'panzer', 'postprocess skipped --- since output is PDF')
-            run_lists[field] = []
-            continue
-        # - filter be passed writer as 1st argument
-        if field == 'filter':
-            for command in run_list:
-                command.insert(1, options['pandoc']['write'])
-        run_lists[field] = run_list
-        for command in run_list:
-            count = count + 1
-            log('INFO', 'panzer',
-                '%s %s "%s"'
-                % (str(count).rjust(2), field.ljust(11), " ".join(command)))
-    return run_lists
-
-def build_run_list(metadata, field, options):
-    """ return run list for field of metadata """
-    run_list = []
-    try:
-        metadata_list = get_content(metadata, field, 'MetaList')
-    except (PanzerTypeError, PanzerKeyError) as error:
-        log('WARNING', 'panzer', error)
-        return run_list
-    for item in metadata_list:
-        check_c_and_t_exist(item)
-        item_content = item[C]
-        # command name
-        command_raw = get_content(item_content, 'run', 'MetaInlines')
-        command_str = pandocfilters.stringify(command_raw)
-        command = [resolve_path(command_str, field, options)]
-        # arguments
-        arguments = []
-        if 'args' in item_content:
-            if get_type(item_content, 'args') == 'MetaInlines':
-                # arguments are raw string
-                arguments_raw = get_content(item_content, 'args', 'MetaInlines')
-                arguments_str = pandocfilters.stringify(arguments_raw)
-                arguments = shlex.split(arguments_str)
-            elif get_type(item_content, 'args') == 'MetaList':
-                # arguments specified as MetaList
-                arguments_list = get_content(item_content, 'args', 'MetaList')
-                arguments = parse_args_metalist(arguments_list)
-            command.extend(arguments)
-        run_list.append(command)
-    return run_list
-
-def parse_args_metalist(arguments_list):
-    """ return list of arguments from metadata list """
-    arguments = []
-    for item in arguments_list:
-        if item[T] != 'MetaMap':
-            log('ERROR',
-                'panzer',
-                '"args" list should have fields of type "MetaMap"')
-            continue
-        fields = item[C]
-        if len(fields) != 1:
-            log('ERROR',
-                'panzer',
-                '"args" list should have exactly one field per item')
-            continue
-        field_name = "".join(fields.keys())
-        field_type = get_type(fields, field_name)
-        field_value = get_content(fields, field_name, field_type)
-        if field_type == 'MetaBool':
-            arguments.append('--' + field_name)
-        elif field_type == 'MetaInlines':
-            value_str = pandocfilters.stringify(field_value)
-            arguments.append('--%s="%s"' % (field_name, value_str))
-        else:
-            log('ERROR',
-                'panzer',
-                'arguments of type "%s" not' 'supported---"%s" ignored'
-                % (field_type, field_name))
-    return arguments
 
 def resolve_path(filename, field, options):
     """ return path to filename of kind field """
@@ -977,39 +1015,6 @@ def check_support_directory(options):
     os.environ['PANZER_SHARED'] = os.path.join(options['panzer']['panzer_support'],
                                                'shared')
 
-def default_options():
-    """ return default options """
-    options = {
-        'panzer': {
-            'panzer_support'  : DEFAULT_SUPPORT_DIR,
-            'debug'           : False,
-            'verbose'         : 1,
-            'stdin_temp_file' : ''
-        },
-        'pandoc': {
-            'input'      : [],
-            'output'     : '-',
-            'pdf_output' : False,
-            'read'       : '',
-            'write'      : '',
-            'template'   : '',
-            'filter'     : [],
-            'options'    : []
-        }
-    }
-    return options
-
-def default_run_lists():
-    """ return default run lists """
-    run_lists = {
-        'preflight'   : [],
-        'filter'      : [],
-        'postprocess' : [],
-        'postflight'  : [],
-        'cleanup'     : []
-    }
-    return run_lists
-
 def parse_cli_options(options):
     """ parse command line options """
     panzer_description = '''
@@ -1201,36 +1206,33 @@ class PanzerInternalError(PanzerError):
 
 def main():
     """ the main function """
-    options = default_options()
-    run_lists = default_run_lists()
-    json_message = make_json_message(Document(), run_lists, options)
+    # - create a blank document
+    doc = Document()
     try:
         check_pandoc_exists()
-        options = parse_cli_options(options)
-        start_logger(options)
-        check_support_directory(options)
-        ast = load(options)
-        global_styledef = load_yaml_styledef(options)
-        doc = Document()
+        doc.options = parse_cli_options(options)
+        start_logger(doc.options)
+        check_support_directory(doc.options)
+        global_styledef = load_styledef(doc.options)
+        ast = load(doc.options)
         doc.populate(ast, global_styledef)
-        doc.transform(options)
-        run_lists = build_run_lists(doc.get_metadata(), run_lists, options)
+        doc.transform()
+        doc.build_run_list()
         doc.purge_styles()
-        json_message = make_json_message(doc, run_lists, options)
-        doc.inject_panzer_reserved_field(json_message)
-        run_scripts('preflight', run_lists, json_message)
-        doc.pipe_through('filter', run_lists)
-        doc.pandoc(options)
-        doc.pipe_through('postprocess', run_lists)
-        doc.write(options)
-        run_scripts('postflight', run_lists, json_message)
+        doc.update_json_msg()
+        doc.inject_panzer_reserved_field()
+        doc.run_scripts('preflight')
+        doc.pipe_through('filter')
+        doc.pandoc()
+        doc.pipe_through('postprocess')
+        doc.write()
+        doc.run_scripts('postflight')
     except PanzerSetupError as error:
         # - errors that occur before logging starts
         print(error, file=sys.stderr)
         sys.exit(1)
     except subprocess.CalledProcessError:
-        log('CRITICAL',
-            'panzer',
+        log('CRITICAL', 'panzer',
             'cannot continue because of fatal error')
         sys.exit(1)
     except (KeyError,
@@ -1242,14 +1244,13 @@ def main():
         log('CRITICAL', 'panzer', error)
         sys.exit(1)
     finally:
-        run_scripts('cleanup', run_lists, json_message, force_run=True)
+        doc.run_scripts('cleanup', force_run=True)
         # - if temp file created in setup, remove it
-        if options['panzer']['stdin_temp_file']:
-            os.remove(options['panzer']['stdin_temp_file'])
-            log('DEBUG',
-                'panzer',
+        if doc.options['panzer']['stdin_temp_file']:
+            os.remove(doc.options['panzer']['stdin_temp_file'])
+            log('DEBUG', 'panzer',
                 'deleted temp file: %s'
-                % options['panzer']['stdin_temp_file'])
+                % doc.options['panzer']['stdin_temp_file'])
         log('DEBUG', 'panzer', '>>>>> panzer quits <<<<<')
     # - successful exit
     sys.exit(0)
