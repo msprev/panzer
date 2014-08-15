@@ -10,14 +10,15 @@ from .constants import *
 
 class Document(object):
     """ representation of pandoc/panzer documents
-    - ast      : pandoc abstract syntax tree of document
-    - style    : list of styles for document
-    - styledef : style definitions
-    - runlist  : run lists for document
-    - running  : list of executables being run
-    - options  : cli options for document
-    - template : template for document
-    - output   : string filled with output when processing complete
+    - ast       : pandoc abstract syntax tree of document
+    - style     : list of styles for document
+    - fullstyle : full list of styles including all parents
+    - styledef  : style definitions
+    - runlist   : run lists for document
+    - running   : list of executables being run
+    - options   : cli options for document
+    - template  : template for document
+    - output    : string filled with output when processing complete
     """
     def __init__(self):
         """ new blank document """
@@ -25,6 +26,7 @@ class Document(object):
         # - defaults
         self.ast = empty
         self.style = []
+        self.fullstyle = []
         self.styledef = {}
         self.run_list = default_run_lists()
         self.running = []
@@ -100,9 +102,9 @@ class Document(object):
         if self.style:
             log('INFO', 'panzer', 'style')
             log('INFO', 'panzer', '    %s' % ", ".join(self.style))
-        self.expand_style()
+        self.fullstyle = self.expand_style_hierarchy()
         log('INFO', 'panzer', 'full hierarchy')
-        log('INFO', 'panzer', '    %s' % ", ".join(self.style))
+        log('INFO', 'panzer', '    %s' % ", ".join(self.fullstyle))
         # - check: remove styles lacking definitions
         missing = [ key for key in self.style
                     if key not in self.styledef ]
@@ -144,26 +146,35 @@ class Document(object):
                     % (str(count).rjust(2), field.ljust(11), " ".join(command)))
         self.run_list = run_lists
 
-    def update_json_msg(self):
+    def get_json_message(self):
         """ return json message to pass to executables """
-        data = [{'metadata'    : self.get_metadata(),
-                 'styledef'    : self.styledef,
+        metadata = self.get_metadata()
+        # - delete old 'panzer_reserved' key
+        if 'panzer_reserved' in metadata:
+            del metadata['panzer_reserved']
+        # - build new content for key
+        data = [{'metadata'    : metadata,
                  'template'    : self.template,
                  'style'       : self.style,
+                 'fullstyle'   : self.fullstyle,
+                 'styledef'    : self.styledef,
                  'run_lists'   : self.run_list,
+                 'running'     : self.running,
                  'cli_options' : self.options}]
-        field_content = [{"t": "CodeBlock",
-                          "c": [["", [], []], json_message]}]
-        set_content(metadata, 'panzer_reserved', field_content, 'MetaBlocks')
-        # - update document
+        json_message = json.dumps(data)
+        content = [{"t": "CodeBlock",
+                    "c": [["", [], []], json_message]}]
+        set_content(metadata, 'panzer_reserved', content, 'MetaBlocks')
+        # - update doc's 'panzer_reserved' key
         self.set_metadata(metadata)
-        return json.dumps(data)
+        # - return json_message too
+        return json_message
 
-    def expand_style(self):
+    def expand_style_hierarchy(self):
         """ expand style field to include all parent styles """
         pass
 
-    def purge_styles(self):
+    def purge_style_info(self):
         """ remove metadata fields specific to panzer """
         kill_list = ADDITIVE_FIELDS
         kill_list += ['style']
@@ -239,19 +250,24 @@ class Document(object):
         if kind not in self.run_list or not self.run_list[kind]:
             return
         log('INFO', 'panzer', '-- %s --' % kind)
-        for command in self.run_list[kind]:
+        # - maximum number of executables to run
+        i_max = sum [ len(self.run_list[key]) for key in self.run_list ]
+        for i, command in enumerate(self.run_list[kind]):
             filename = os.path.basename(command[0])
             fullpath = ' '.join(command).replace(os.path.expanduser('~'), '~')
-            log('INFO', 'panzer', '-> "%s"' % fullpath)
+            log('INFO', 'panzer', 
+                '[%d/%d] "%s"' % (i, i_max, fullpath))
             stderr = out_pipe = str()
             try:
+                self.running.append([kind, i])
                 p = subprocess.Popen(command,
                                      stdin=subprocess.PIPE,
                                      stderr=subprocess.PIPE)
                 # send panzer's json message to scripts via stdin
-                in_pipe = json_message
+                in_pipe = self.get_json_message()
                 in_pipe_bytes = in_pipe.encode(ENCODING)
                 out_pipe_bytes, stderr_bytes = p.communicate(input=in_pipe_bytes)
+                self.running.pop()
                 if out_pipe_bytes:
                     out_pipe = out_pipe_bytes.decode(ENCODING)
                 if stderr_bytes:
@@ -275,6 +291,8 @@ class Document(object):
         if kind not in self.run_list or not self.run_list[kind]:
             return
         log('INFO', 'panzer', '-- %s --' % kind)
+        # - maximum number of executables to run
+        i_max = sum [ len(self.run_list[key]) for key in self.run_list ]
         # 1. Set up incoming pipe
         if kind == 'filter':
             in_pipe = json.dumps(self.ast)
@@ -286,37 +304,40 @@ class Document(object):
         # 2. Set up outgoing pipe in case of failure
         out_pipe = in_pipe
         # 3. Run commands
-        for command in self.run_list[kind]:
+        for i, command in enumerate(self.run_list[kind]):
             # - add debugging info
-            command_name = os.path.basename(command[0])
-            command_path = ' '.join(command).replace(os.path.expanduser('~'),
+            filename = os.path.basename(command[0])
+            fullpath = ' '.join(command).replace(os.path.expanduser('~'),
                                                      '~')
-            log('INFO', 'panzer', '-> "%s"' % command_path)
+            log('INFO', 'panzer', 
+                '[%d/%d] "%s"' % (i, i_max, fullpath))
             # - run the command and log any errors
-            stderr = ''
+            stderr = str()
             try:
+                self.running.append([kind, i])
+                self.get_json_message()
                 p = subprocess.Popen(command,
                                      stderr=subprocess.PIPE,
                                      stdin=subprocess.PIPE,
                                      stdout=subprocess.PIPE)
                 in_pipe_bytes = in_pipe.encode(ENCODING)
                 out_pipe_bytes, stderr_bytes = p.communicate(input=in_pipe_bytes)
+                self.running.pop()
                 out_pipe = out_pipe_bytes.decode(ENCODING)
                 stderr = stderr_bytes.decode(ENCODING)
             except OSError as error:
-                log('ERROR', command_name, error)
+                log('ERROR', filename, error)
                 continue
             else:
                 in_pipe = out_pipe
             finally:
-                log_stderr(stderr, command_name)
+                log_stderr(stderr, filename)
         # 4. Update document's data with output from commands
         if kind == 'filter':
             try:
                 self.ast = json.loads(out_pipe)
             except ValueError:
-                log('ERROR',
-                    'panzer',
+                log('ERROR', 'panzer',
                     'failed to receive json object from filters'
                     '---ignoring all filters')
                 return
