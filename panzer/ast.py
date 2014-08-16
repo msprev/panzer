@@ -1,4 +1,4 @@
-# Functions for manipulating metadata
+# Functions for manipulating ast
 
 def update_metadata(old, new):
     """ return old updated with new metadata """
@@ -6,24 +6,24 @@ def update_metadata(old, new):
     try:
         old.update(get_content(new, 'metadata', 'MetaMap'))
         del new['metadata']
-    except (PanzerKeyError, KeyError):
+    except (exception.KeyError, KeyError):
         pass
-    except PanzerTypeError as error:
+    except exception.TypeError as error:
         log('WARNING', 'panzer', error)
     # 2. Update with values in fields for additive lists
     for field in ADDITIVE_FIELDS:
         try:
             try:
                 new_list = get_content(new, field, 'MetaList')
-            except PanzerKeyError:
+            except exception.KeyError:
                 # field not in incoming metadata, move to next list
                 continue
             try:
                 old_list = get_content(old, field, 'MetaList')
-            except PanzerKeyError:
+            except exception.KeyError:
                 # field not in old metadata, start with an empty list
                 old_list = []
-        except PanzerTypeError as error:
+        except exception.TypeError as error:
             # wrong type of value under field, skip to next list
             log('WARNING', 'panzer', error)
             continue
@@ -67,17 +67,16 @@ def apply_kill_rules(old_list):
         elif 'kill' in item_content:
             try:
                 to_be_killed = get_content(item_content, 'kill', 'MetaInlines')
-            except PanzerTypeError as error:
+            except exception.TypeError as error:
                 log('WARNING', 'panzer', error)
                 continue
-            new_list = [new_item for new_item in new_list if
-                        get_content(new_item[C], 'run', 'MetaInlines') !=
-                        to_be_killed]
+            new_list = [i for i in new_list
+                        if get_content(i[C], 'run', 'MetaInlines') != to_be_killed]
         elif 'killall' in item_content:
             try:
                 if get_content(item_content, 'killall', 'MetaBool') == True:
                     new_list = []
-            except PanzerTypeError as error:
+            except exception.TypeError as error:
                 log('WARNING', 'panzer', error)
                 continue
         else:
@@ -112,10 +111,10 @@ def get_nested_content(metadata, fields, expected_type_of_leaf=None):
         # Else on a leaf...
         else:
             return get_content(metadata, current_field, expected_type_of_leaf)
-    except PanzerKeyError:
+    except exception.KeyError:
         # current_field not found, return {}: nothing to update
         return {}
-    except PanzerTypeError as error:
+    except exception.TypeError as error:
         log('WARNING', 'panzer', error)
         # wrong type found, return {}: nothing to update
         return {}
@@ -123,12 +122,12 @@ def get_nested_content(metadata, fields, expected_type_of_leaf=None):
 def get_content(metadata, field, expected_type=None):
     """ return content of field """
     if field not in metadata:
-        raise PanzerKeyError('field "%s" not found' % field)
+        raise exception.KeyError('field "%s" not found' % field)
     check_c_and_t_exist(metadata[field])
     if expected_type:
         found_type = metadata[field][T]
         if found_type != expected_type:
-            raise PanzerTypeError('value of "%s": expecting type "%s", '
+            raise exception.TypeError('value of "%s": expecting type "%s", '
                                   'but found type "%s"'
                                   % (field, expected_type, found_type))
     return metadata[field][C]
@@ -136,7 +135,7 @@ def get_content(metadata, field, expected_type=None):
 def get_type(metadata, field):
     """ return type of field """
     if field not in metadata:
-        raise PanzerKeyError('field "%s" not found' % field)
+        raise exception.KeyError('field "%s" not found' % field)
     check_c_and_t_exist(metadata[field])
     return metadata[field][T]
 
@@ -157,7 +156,7 @@ def get_list_or_inline(metadata, field):
             content.append(pandocfilters.stringify(content_raw))
         return content
     else:
-        raise PanzerTypeError('"%s" value must be of type "MetaInlines" or "MetaList"'
+        raise exception.TypeError('"%s" value must be of type "MetaInlines" or "MetaList"'
                               % field)
 
 def get_metadata(ast):
@@ -168,39 +167,44 @@ def get_metadata(ast):
         metadata = {}
     return metadata
 
-def get_run_list(metadata, field, options):
-    """ return run list for field of metadata """
-    run_list = []
+def get_run_list(metadata, kind, options):
+    """ return run list for kind of metadata """
+    run_list = list()
+    # - return empty list unless entries of kind are in metadata
     try:
-        metadata_list = get_content(metadata, field, 'MetaList')
-    except (PanzerTypeError, PanzerKeyError) as error:
+        metadata_list = get_content(metadata, kind, 'MetaList')
+    except (exception.TypeError, exception.KeyError) as error:
         log('WARNING', 'panzer', error)
         return run_list
     for item in metadata_list:
         check_c_and_t_exist(item)
         item_content = item[C]
-        # command name
+        # - create new entry
+        entry = dict()
+        entry['kind'] = kind
+        entry['command'] = str()
+        entry['status'] = 'queued'
+        # - get entry command
         command_raw = get_content(item_content, 'run', 'MetaInlines')
         command_str = pandocfilters.stringify(command_raw)
-        command = [resolve_path(command_str, field, options)]
-        # arguments
-        arguments = []
+        entry['command'] = resolve_path(command_str, kind, options)
+        # - get entry arguments
+        entry['arguments'] = list()
         if 'args' in item_content:
             if get_type(item_content, 'args') == 'MetaInlines':
-                # arguments are raw string
+                # - arguments raw string
                 arguments_raw = get_content(item_content, 'args', 'MetaInlines')
                 arguments_str = pandocfilters.stringify(arguments_raw)
-                arguments = shlex.split(arguments_str)
+                entry['arguments'] = shlex.split(arguments_str)
             elif get_type(item_content, 'args') == 'MetaList':
-                # arguments specified as MetaList
+                # - arguments MetaList
                 arguments_list = get_content(item_content, 'args', 'MetaList')
-                arguments = get_run_list_args(arguments_list)
-            command.extend(arguments)
-        run_list.append(command)
+                entry['arguments'] = get_run_list_args(arguments_list)
+        run_list.append(entry)
     return run_list
 
 def get_run_list_args(arguments_list):
-    """ return list of arguments from metadata list """
+    """ return list of arguments from 'args' MetaList """
     arguments = []
     for item in arguments_list:
         if item[T] != 'MetaMap':
@@ -233,42 +237,8 @@ def check_c_and_t_exist(item):
     """ check item contains both C and T fields """
     if C not in item:
         message = 'Value of "%s" corrupt: "C" field missing' % repr(item)
-        raise PanzerBadASTError(message)
+        raise exception.BadASTError(message)
     if T not in item:
         message = 'Value of "%s" corrupt: "T" field missing' % repr(item)
-        raise PanzerBadASTError(message)
-
-def default_options():
-    """ return default options """
-    options = {
-        'panzer': {
-            'panzer_support'  : DEFAULT_SUPPORT_DIR,
-            'debug'           : False,
-            'verbose'         : 1,
-            'stdin_temp_file' : ''
-        },
-        'pandoc': {
-            'input'      : [],
-            'output'     : '-',
-            'pdf_output' : False,
-            'read'       : '',
-            'write'      : '',
-            'template'   : '',
-            'filter'     : [],
-            'options'    : []
-        }
-    }
-    return options
-
-def default_run_lists():
-    """ return default run lists """
-    run_lists = {
-        'preflight'   : [],
-        'filter'      : [],
-        'postprocess' : [],
-        'postflight'  : [],
-        'cleanup'     : []
-    }
-    return run_lists
-
+        raise exception.BadASTError(message)
 

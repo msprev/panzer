@@ -1,10 +1,10 @@
 # Exception classes
 
-class Error(Exception):
+class PanzerError(Exception):
     """ base class for all panzer exceptions """
     pass
 
-class SetupError(Error):
+class SetupError(PanzerError):
     """ error in the setup phase """
     pass
 
