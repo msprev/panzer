@@ -8,30 +8,19 @@ Copyright : Copyright 2014, Mark Sprevak
 License   : BSD3
 """
 
-import argparse
-import json
-import logging
-import logging.config
-import pandocfilters
-import shlex
-import subprocess
-import sys
-import tempfile
-
 import os
-import subprocess
 import sys
-from .version import VERSION
-import .document
-import .exception
-from .info import log
-__version__ = VERSION
+from . import document
+from . import error
+from . import info
+from . import version
+
+__version__ = version.VERSION
 
 # Main function
 
 def main():
     """ the main function """
-    # - create a blank document
     doc = document.Document()
     try:
         check_pandoc_exists()
@@ -50,31 +39,31 @@ def main():
         doc.pipe_through('postprocess')
         doc.write()
         doc.run_scripts('postflight')
-    except exception.SetupError as error:
+    except error.SetupError as error:
         # - errors that occur before logging starts
         print(error, file=sys.stderr)
         sys.exit(1)
     except subprocess.CalledProcessError:
-        log('CRITICAL', 'panzer',
-            'cannot continue because of fatal error')
+        info.log('CRITICAL', 'panzer',
+                 'cannot continue because of fatal error')
         sys.exit(1)
     except (KeyError,
-            exception.KeyError,
-            exception.BadASTError,
-            exception.TypeError,
-            exception.InternalError) as error:
+            error.KeyError,
+            error.BadASTError,
+            error.TypeError,
+            error.InternalError) as error:
         # - panzer exceptions not caught elsewhere, should have been
-        log('CRITICAL', 'panzer', error)
+        info.log('CRITICAL', 'panzer', error)
         sys.exit(1)
     finally:
         doc.run_scripts('cleanup', force_continue=True)
         # - if temp file created in setup, remove it
         if doc.options['panzer']['stdin_temp_file']:
             os.remove(doc.options['panzer']['stdin_temp_file'])
-            log('DEBUG', 'panzer',
-                'deleted temp file: %s'
-                % doc.options['panzer']['stdin_temp_file'])
-        log('DEBUG', 'panzer', '>>>>> panzer quits <<<<<')
+            info.log('DEBUG', 'panzer',
+                     'deleted temp file: %s'
+                     % doc.options['panzer']['stdin_temp_file'])
+        info.log('DEBUG', 'panzer', '>>>>> panzer quits <<<<<')
     # - successful exit
     sys.exit(0)
 
