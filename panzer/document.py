@@ -134,7 +134,7 @@ class Document(object):
 
     def build_run_list(self):
         """ populate run_list with metadata """
-        log('INFO', 'panzer', '-- run list --')
+        info.log('INFO', 'panzer', '-- run list --')
         metadata = self.get_metadata()
         run_list = self.run_list
         for kind in ADDITIVE_FIELDS:
@@ -162,9 +162,11 @@ class Document(object):
                 entry['arguments'].insert(0, self.options['pandoc']['write'])
         # - print run lists
         for i, entry in enumerate(run_list):
-            log('INFO', 'panzer',
-                '%s %s "%s"'
-                % (str(i).rjust(2), kind.ljust(11), entry['command']))
+            info.log('INFO', 'panzer',
+                     '%s %s "%s"'
+                     % (str(i).rjust(2),
+                        entry['kind'].ljust(11),
+                        entry['command']))
         self.run_list = run_list
 
     def get_json_message(self):

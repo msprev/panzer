@@ -525,9 +525,10 @@ Note that not all filters that work with panzer will work with pandoc's vanilla 
 
 panzer extends pandoc's existing use of filters by:
 
-1. Allowing filters to take more than one command line argument (first argument still reserved for the writer).
-2. Injecting a special `panzer_reserved` metadata field into document that allows filters to see `OPTIONS` data.
-    This is useful if, say, filters are to write auxiliary files that will be picked up by subsequent processing.
+1. Filters may take more than one command line argument (first argument still reserved for the writer).
+    Presumably pandoc does not permit this because the syntax to provide arguments to filters from the command line would be awkward and non-obvious.
+    panzer lets filters be specified cleanly in metadata, so this limitation does not apply.
+2. Injecting a special `panzer_reserved` metadata field into document containing json message with lots of goodies for filters to mine.
 
 # Known issues
 
