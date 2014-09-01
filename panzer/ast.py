@@ -6,26 +6,26 @@ def update_metadata(old, new):
     try:
         old.update(get_content(new, 'metadata', 'MetaMap'))
         del new['metadata']
-    except (exception.KeyError, KeyError):
+    except (error.MissingField, KeyError):
         pass
-    except exception.TypeError as e:
-        log('WARNING', 'panzer', e)
+    except error.WrongType as err:
+        log('WARNING', 'panzer', err)
     # 2. Update with values in fields for additive lists
     for field in ADDITIVE_FIELDS:
         try:
             try:
                 new_list = get_content(new, field, 'MetaList')
-            except exception.KeyError:
+            except error.MissingField:
                 # field not in incoming metadata, move to next list
                 continue
             try:
                 old_list = get_content(old, field, 'MetaList')
-            except exception.KeyError:
+            except error.MissingField:
                 # field not in old metadata, start with an empty list
                 old_list = []
-        except exception.TypeError as e:
+        except error.WrongType as err:
             # wrong type of value under field, skip to next list
-            log('WARNING', 'panzer', e)
+            log('WARNING', 'panzer', err)
             continue
         old_list.extend(new_list)
         set_content(old, field, old_list, 'MetaList')
@@ -67,8 +67,8 @@ def apply_kill_rules(old_list):
         elif 'kill' in item_content:
             try:
                 to_be_killed = get_content(item_content, 'kill', 'MetaInlines')
-            except exception.TypeError as e:
-                log('WARNING', 'panzer', e)
+            except error.WrongType as err:
+                log('WARNING', 'panzer', err)
                 continue
             new_list = [i for i in new_list
                         if get_content(i[C], 'run', 'MetaInlines') != to_be_killed]
@@ -76,8 +76,8 @@ def apply_kill_rules(old_list):
             try:
                 if get_content(item_content, 'killall', 'MetaBool') == True:
                     new_list = []
-            except exception.TypeError as e:
-                log('WARNING', 'panzer', e)
+            except error.WrongType as err:
+                log('WARNING', 'panzer', err)
                 continue
         else:
             # Should never occur, caught by previous syntax check
@@ -111,23 +111,23 @@ def get_nested_content(metadata, fields, expected_type_of_leaf=None):
         # Else on a leaf...
         else:
             return get_content(metadata, current_field, expected_type_of_leaf)
-    except exception.KeyError:
+    except error.MissingField:
         # current_field not found, return {}: nothing to update
         return {}
-    except exception.TypeError as e:
-        log('WARNING', 'panzer', e)
+    except error.WrongType as err:
+        log('WARNING', 'panzer', err)
         # wrong type found, return {}: nothing to update
         return {}
 
 def get_content(metadata, field, expected_type=None):
     """ return content of field """
     if field not in metadata:
-        raise exception.KeyError('field "%s" not found' % field)
+        raise error.MissingField('field "%s" not found' % field)
     check_c_and_t_exist(metadata[field])
     if expected_type:
         found_type = metadata[field][T]
         if found_type != expected_type:
-            raise exception.TypeError('value of "%s": expecting type "%s", '
+            raise error.WrongType('value of "%s": expecting type "%s", '
                                   'but found type "%s"'
                                   % (field, expected_type, found_type))
     return metadata[field][C]
@@ -135,7 +135,7 @@ def get_content(metadata, field, expected_type=None):
 def get_type(metadata, field):
     """ return type of field """
     if field not in metadata:
-        raise exception.KeyError('field "%s" not found' % field)
+        raise error.MissingField('field "%s" not found' % field)
     check_c_and_t_exist(metadata[field])
     return metadata[field][T]
 
@@ -156,7 +156,7 @@ def get_list_or_inline(metadata, field):
             content.append(pandocfilters.stringify(content_raw))
         return content
     else:
-        raise exception.TypeError('"%s" value must be of type "MetaInlines" or "MetaList"'
+        raise error.WrongType('"%s" value must be of type "MetaInlines" or "MetaList"'
                               % field)
 
 def get_metadata(ast):
@@ -173,8 +173,8 @@ def get_run_list(metadata, kind, options):
     # - return empty list unless entries of kind are in metadata
     try:
         metadata_list = get_content(metadata, kind, 'MetaList')
-    except (exception.TypeError, exception.KeyError) as e:
-        log('WARNING', 'panzer', e)
+    except (error.WrongType, error.MissingField) as err:
+        log('WARNING', 'panzer', err)
         return run_list
     for item in metadata_list:
         check_c_and_t_exist(item)
@@ -237,8 +237,8 @@ def check_c_and_t_exist(item):
     """ check item contains both C and T fields """
     if C not in item:
         message = 'Value of "%s" corrupt: "C" field missing' % repr(item)
-        raise exception.BadASTError(message)
+        raise error.BadASTError(message)
     if T not in item:
         message = 'Value of "%s" corrupt: "T" field missing' % repr(item)
-        raise exception.BadASTError(message)
+        raise error.BadASTError(message)
 

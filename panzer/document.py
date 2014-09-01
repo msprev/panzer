@@ -71,7 +71,7 @@ class Document(object):
             info.log('ERROR', 'panzer',
                      'special field "panzer_reserved" already in metadata'
                      '---will be overwritten')
-        except exception.KeyError:
+        except error.MissingField:
             pass
         # - styledef
         self.populate_styledef(global_styledef)
@@ -104,19 +104,19 @@ class Document(object):
                 log('INFO', 'panzer',
                     'local definition "%s" overrides global'
                     % key)
-        except exception.KeyError as info:
+        except error.MissingField as info:
             log('DEBUG', 'panzer', info)
-        except exception.TypeError as e:
-            log('ERROR', 'panzer', e)
+        except error.WrongType as err:
+            log('ERROR', 'panzer', err)
 
     def populate_style(self):
         log('INFO', 'panzer', '-- document style --')
         try:
             self.style = get_list_or_inline(self.get_metadata(), 'style')
-        except exception.KeyError:
+        except error.MissingField:
             log('INFO', 'panzer', 'no "style" field found, will just run pandoc')
-        except exception.TypeError as e:
-            log('ERROR', 'panzer', e)
+        except error.WrongType as err:
+            log('ERROR', 'panzer', err)
         if self.style:
             log('INFO', 'panzer', 'style')
             log('INFO', 'panzer', '    %s' % ", ".join(self.style))
@@ -244,18 +244,18 @@ class Document(object):
                 else:
                     # if all items killed, delete field
                     del new_metadata[field]
-            except exception.KeyError:
+            except error.MissingField:
                 continue
-            except exception.TypeError as e:
-                log('WARNING', 'panzer', e)
+            except error.WrongType as err:
+                log('WARNING', 'panzer', err)
                 continue
         # 3. Set template
         try:
             template_raw = ast.get_content(new_metadata, 'template', 'MetaInlines')
             template_str = pandocfilters.stringify(template_raw)
             self.template = resolve_path(template_str, 'template', self.options)
-        except (panzer_exception.KeyError, panzer_exception.TypeError) as e:
-            log('DEBUG', 'panzer', e)
+        except (error.MissingField, error.WrongType) as err:
+            log('DEBUG', 'panzer', err)
         if self.template:
             log('INFO', 'panzer', 'template "%s"' % self.template)
         # 4. Update document
@@ -322,7 +322,7 @@ class Document(object):
         elif kind == 'postprocess':
             in_pipe = self.output
         else:
-            raise panzer_exception.InternalError('illegal invocation of '
+            raise error.InternalError('illegal invocation of '
                                                  '"pipe" in panzer.py')
         # 2. Set up outgoing pipe in case of failure
         out_pipe = in_pipe

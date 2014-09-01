@@ -1,4 +1,4 @@
-# Exception classes
+""" Exception classes for panzer """
 
 class PanzerError(Exception):
     """ base class for all panzer exceptions """
@@ -12,11 +12,11 @@ class BadASTError(PanzerError):
     """ malformatted AST encountered (e.g. C or T fields missing) """
     pass
 
-class KeyError(PanzerError):
+class MissingField(PanzerError):
     """ looked for metadata field, did not find it """
     pass
 
-class TypeError(PanzerError):
+class WrongType(PanzerError):
     """ looked for value of a type, encountered different type """
     pass
 

@@ -33,7 +33,7 @@ def load(options):
     try:
         ast = json.loads(out_pipe)
     except ValueError:
-        raise exception.BadASTError('failed to receive valid '
+        raise error.BadASTError('failed to receive valid '
                                 'json object from pandoc')
     return ast
 
@@ -81,7 +81,7 @@ def load_styledef(options):
     try:
         ast = json.loads(out_pipe)
     except ValueError:
-        raise exception.BadASTError('failed to receive valid '
+        raise error.BadASTError('failed to receive valid '
                                 'json object from pandoc')
     # - return metadata branch of dict
     if not ast:
