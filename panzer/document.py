@@ -203,7 +203,7 @@ class Document(object):
         """ expand style field to include all parent styles """
         pass
 
-    def purge_style_info(self):
+    def purge_style_fields(self):
         """ remove metadata fields specific to panzer """
         kill_list = ADDITIVE_FIELDS
         kill_list += ['style']
@@ -268,7 +268,7 @@ class Document(object):
         # 4. Update document
         self.set_metadata(new_metadata)
 
-    def run_scripts(self, kind, force_continue=False):
+    def run_scripts(self, kind, do_not_stop=False):
         """ execute commands of kind listed in run_list """
         # - check if no run list to run
         to_run = [entry for entry in self.run_list if entry['kind'] == kind]
@@ -307,9 +307,9 @@ class Document(object):
                 log('ERROR', filename, e)
                 continue
             except Exception as e:
-                # if force_continue: always run next script
+                # if do_not_stop: always run next script
                 entry['status'] = 'failed'
-                if force_continue:
+                if do_not_stop:
                     log('ERROR', filename, e)
                     continue
                 else:

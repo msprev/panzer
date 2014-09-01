@@ -36,7 +36,7 @@ def main():
         doc.populate(ast, global_styledef)
         doc.transform()
         doc.build_run_list()
-        doc.purge_style_info()
+        doc.purge_style_fields()
         doc.run_scripts('preflight')
         doc.pipe_through('filter')
         doc.pandoc()
@@ -60,7 +60,7 @@ def main():
         info.log('CRITICAL', 'panzer', err)
         sys.exit(1)
     finally:
-        doc.run_scripts('cleanup', force_continue=True)
+        doc.run_scripts('cleanup', do_not_stop=True)
         # - if temp file created in setup, remove it
         if doc.options['panzer']['stdin_temp_file']:
             os.remove(doc.options['panzer']['stdin_temp_file'])
