@@ -16,6 +16,7 @@ from . import error
 from . import info
 from . import load
 from . import util
+from . import cli
 from . import version
 
 __version__ = version.VERSION
@@ -27,7 +28,7 @@ def main():
     doc = document.Document()
     try:
         util.check_pandoc_exists()
-        doc.options = util.parse_cli_options(doc.options)
+        doc.options = cli.parse_cli_options(doc.options)
         info.start_logger(doc.options)
         util.check_support_directory(doc.options)
         global_styledef = load.load_styledef(doc.options)
