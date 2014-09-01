@@ -8,8 +8,8 @@ def update_metadata(old, new):
         del new['metadata']
     except (exception.KeyError, KeyError):
         pass
-    except exception.TypeError as error:
-        log('WARNING', 'panzer', error)
+    except exception.TypeError as e:
+        log('WARNING', 'panzer', e)
     # 2. Update with values in fields for additive lists
     for field in ADDITIVE_FIELDS:
         try:
@@ -23,9 +23,9 @@ def update_metadata(old, new):
             except exception.KeyError:
                 # field not in old metadata, start with an empty list
                 old_list = []
-        except exception.TypeError as error:
+        except exception.TypeError as e:
             # wrong type of value under field, skip to next list
-            log('WARNING', 'panzer', error)
+            log('WARNING', 'panzer', e)
             continue
         old_list.extend(new_list)
         set_content(old, field, old_list, 'MetaList')
@@ -67,8 +67,8 @@ def apply_kill_rules(old_list):
         elif 'kill' in item_content:
             try:
                 to_be_killed = get_content(item_content, 'kill', 'MetaInlines')
-            except exception.TypeError as error:
-                log('WARNING', 'panzer', error)
+            except exception.TypeError as e:
+                log('WARNING', 'panzer', e)
                 continue
             new_list = [i for i in new_list
                         if get_content(i[C], 'run', 'MetaInlines') != to_be_killed]
@@ -76,8 +76,8 @@ def apply_kill_rules(old_list):
             try:
                 if get_content(item_content, 'killall', 'MetaBool') == True:
                     new_list = []
-            except exception.TypeError as error:
-                log('WARNING', 'panzer', error)
+            except exception.TypeError as e:
+                log('WARNING', 'panzer', e)
                 continue
         else:
             # Should never occur, caught by previous syntax check
@@ -114,8 +114,8 @@ def get_nested_content(metadata, fields, expected_type_of_leaf=None):
     except exception.KeyError:
         # current_field not found, return {}: nothing to update
         return {}
-    except exception.TypeError as error:
-        log('WARNING', 'panzer', error)
+    except exception.TypeError as e:
+        log('WARNING', 'panzer', e)
         # wrong type found, return {}: nothing to update
         return {}
 
@@ -173,8 +173,8 @@ def get_run_list(metadata, kind, options):
     # - return empty list unless entries of kind are in metadata
     try:
         metadata_list = get_content(metadata, kind, 'MetaList')
-    except (exception.TypeError, exception.KeyError) as error:
-        log('WARNING', 'panzer', error)
+    except (exception.TypeError, exception.KeyError) as e:
+        log('WARNING', 'panzer', e)
         return run_list
     for item in metadata_list:
         check_c_and_t_exist(item)

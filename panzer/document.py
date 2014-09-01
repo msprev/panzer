@@ -106,8 +106,8 @@ class Document(object):
                     % key)
         except exception.KeyError as info:
             log('DEBUG', 'panzer', info)
-        except exception.TypeError as error:
-            log('ERROR', 'panzer', error)
+        except exception.TypeError as e:
+            log('ERROR', 'panzer', e)
 
     def populate_style(self):
         log('INFO', 'panzer', '-- document style --')
@@ -115,8 +115,8 @@ class Document(object):
             self.style = get_list_or_inline(self.get_metadata(), 'style')
         except exception.KeyError:
             log('INFO', 'panzer', 'no "style" field found, will just run pandoc')
-        except exception.TypeError as error:
-            log('ERROR', 'panzer', error)
+        except exception.TypeError as e:
+            log('ERROR', 'panzer', e)
         if self.style:
             log('INFO', 'panzer', 'style')
             log('INFO', 'panzer', '    %s' % ", ".join(self.style))
@@ -246,16 +246,16 @@ class Document(object):
                     del new_metadata[field]
             except exception.KeyError:
                 continue
-            except exception.TypeError as error:
-                log('WARNING', 'panzer', error)
+            except exception.TypeError as e:
+                log('WARNING', 'panzer', e)
                 continue
         # 3. Set template
         try:
             template_raw = ast.get_content(new_metadata, 'template', 'MetaInlines')
             template_str = pandocfilters.stringify(template_raw)
             self.template = resolve_path(template_str, 'template', self.options)
-        except (panzer_exception.KeyError, panzer_exception.TypeError) as error:
-            log('DEBUG', 'panzer', error)
+        except (panzer_exception.KeyError, panzer_exception.TypeError) as e:
+            log('DEBUG', 'panzer', e)
         if self.template:
             log('INFO', 'panzer', 'template "%s"' % self.template)
         # 4. Update document
@@ -295,15 +295,15 @@ class Document(object):
                     out_pipe = out_pipe_bytes.decode(ENCODING)
                 if stderr_bytes:
                     stderr = stderr_bytes.decode(ENCODING)
-            except OSError as error:
+            except OSError as e:
                 entry['status'] = 'failed'
-                log('ERROR', filename, error)
+                log('ERROR', filename, e)
                 continue
-            except Exception as error:
+            except Exception as e:
                 # if force_continue: always run next script
                 entry['status'] = 'failed'
                 if force_continue:
-                    log('ERROR', filename, error)
+                    log('ERROR', filename, e)
                     continue
                 else:
                     raise
@@ -349,9 +349,9 @@ class Document(object):
                 out_pipe = out_pipe_bytes.decode(ENCODING)
                 stderr = stderr_bytes.decode(ENCODING)
                 in_pipe = out_pipe
-            except OSError as error:
+            except OSError as e:
                 entry['status'] = 'failed'
-                log('ERROR', filename, error)
+                log('ERROR', filename, e)
                 continue
             except Exception:
                 entry['status'] = 'failed'
@@ -410,8 +410,8 @@ class Document(object):
             out_pipe_bytes, stderr_bytes = p.communicate(input=in_pipe_bytes)
             out_pipe = out_pipe_bytes.decode(ENCODING)
             stderr = stderr_bytes.decode(ENCODING)
-        except OSError as error:
-            log('ERROR', 'pandoc', error)
+        except OSError as e:
+            log('ERROR', 'pandoc', e)
         finally:
             log_stderr(stderr)
         # 4. Deal with output of pandoc

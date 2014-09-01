@@ -9,10 +9,13 @@ License   : BSD3
 """
 
 import os
+import subprocess
 import sys
 from . import document
 from . import error
 from . import info
+from . import load
+from . import util
 from . import version
 
 __version__ = version.VERSION
@@ -23,8 +26,8 @@ def main():
     """ the main function """
     doc = document.Document()
     try:
-        check_pandoc_exists()
-        doc.options = parse_cli_options(options)
+        util.check_pandoc_exists()
+        doc.options = util.parse_cli_options(doc.options)
         info.start_logger(doc.options)
         util.check_support_directory(doc.options)
         global_styledef = load.load_styledef(doc.options)
@@ -39,9 +42,9 @@ def main():
         doc.pipe_through('postprocess')
         doc.write()
         doc.run_scripts('postflight')
-    except error.SetupError as error:
+    except error.SetupError as err:
         # - errors that occur before logging starts
-        print(error, file=sys.stderr)
+        print(err, file=sys.stderr)
         sys.exit(1)
     except subprocess.CalledProcessError:
         info.log('CRITICAL', 'panzer',
@@ -51,9 +54,9 @@ def main():
             error.KeyError,
             error.BadASTError,
             error.TypeError,
-            error.InternalError) as error:
+            error.InternalError) as err:
         # - panzer exceptions not caught elsewhere, should have been
-        info.log('CRITICAL', 'panzer', error)
+        info.log('CRITICAL', 'panzer', err)
         sys.exit(1)
     finally:
         doc.run_scripts('cleanup', force_continue=True)
