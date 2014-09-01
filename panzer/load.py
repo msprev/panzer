@@ -1,10 +1,12 @@
-import argparse
-import os
-import subprocess
-import tempfile
-import exception
+""" loading documents into panzer """
 
-# Load documents
+import os
+import json
+import subprocess
+from . import error
+from . import info
+from . import const
+from . import meta
 
 def load(options):
     """ return ast from running pandoc on input documents """
@@ -14,22 +16,22 @@ def load(options):
         command += ['--read', options['pandoc']['read']]
     command += ['--write', 'json', '--output', '-']
     command += options['pandoc']['options']
-    log('DEBUG', 'panzer', 'pandoc %s' % ' '.join(command))
+    info.log('DEBUG', 'panzer', 'pandoc %s' % ' '.join(command))
     command = ['pandoc'] + command
     out_pipe = ''
     stderr = ''
     ast = None
     try:
-        p = subprocess.Popen(command,
-                             stderr=subprocess.PIPE,
-                             stdout=subprocess.PIPE)
-        out_pipe_bytes, stderr_bytes = p.communicate()
-        out_pipe = out_pipe_bytes.decode(ENCODING)
-        stderr = stderr_bytes.decode(ENCODING)
-    except OSError as e:
-        log('ERROR', 'pandoc', e)
+        process = subprocess.Popen(command,
+                                   stderr=subprocess.PIPE,
+                                   stdout=subprocess.PIPE)
+        out_pipe_bytes, stderr_bytes = process.communicate()
+        out_pipe = out_pipe_bytes.decode(const.ENCODING)
+        stderr = stderr_bytes.decode(const.ENCODING)
+    except OSError as err:
+        info.log('ERROR', 'pandoc', err)
     finally:
-        log_stderr(stderr)
+        info.log_stderr(stderr)
     try:
         ast = json.loads(out_pipe)
     except ValueError:
@@ -41,41 +43,42 @@ def load_styledef(options):
     """ return metadata branch of styles.yaml as dict """
     filename = os.path.join(options['panzer']['panzer_support'], 'styles.yaml')
     if not os.path.exists(filename):
-        log('ERROR', 'panzer', 'default styles file not found: %s' % filename)
+        info.log('ERROR', 'panzer',
+                 'default styles file not found: %s' % filename)
         return {}
     # - slurp styles.yaml
     data = []
-    with open(filename, 'r', encoding=ENCODING) as styles_file:
+    with open(filename, 'r', encoding=const.ENCODING) as styles_file:
         data = styles_file.readlines()
     # - top and tail with metadata markings
     data.insert(0, "---\n")
     data.append("...\n")
     data_string = ''.join(data)
-    log('DEBUG', 'panzer', debug_lined('STYLES METADATA'))
-    log('DEBUG', 'panzer', data_string)
+    info.log('DEBUG', 'panzer', info.pretty_lined('STYLES METADATA'))
+    info.log('DEBUG', 'panzer', data_string)
     # - build pandoc command
     command = ['pandoc']
     command += ['-']
     command += ['--write', 'json']
     command += ['--output', '-']
-    log('DEBUG', 'panzer', 'pandoc %s' % ' '.join(command))
+    info.log('DEBUG', 'panzer', 'pandoc %s' % ' '.join(command))
     # - send to pandoc to convert to json
     in_pipe = data_string
     out_pipe = ''
     stderr = ''
     try:
-        p = subprocess.Popen(command,
-                             stderr=subprocess.PIPE,
-                             stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE)
-        in_pipe_bytes = in_pipe.encode(ENCODING)
-        out_pipe_bytes, stderr_bytes = p.communicate(input=in_pipe_bytes)
-        out_pipe = out_pipe_bytes.decode(ENCODING)
-        stderr = stderr_bytes.decode(ENCODING)
-    except OSError as e:
-        log('ERROR', 'pandoc', e)
+        process = subprocess.Popen(command,
+                                   stderr=subprocess.PIPE,
+                                   stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE)
+        in_pipe_bytes = in_pipe.encode(const.ENCODING)
+        out_pipe_bytes, stderr_bytes = process.communicate(input=in_pipe_bytes)
+        out_pipe = out_pipe_bytes.decode(const.ENCODING)
+        stderr = stderr_bytes.decode(const.ENCODING)
+    except OSError as err:
+        info.log('ERROR', 'pandoc', err)
     finally:
-        log_stderr(stderr)
+        info.log_stderr(stderr)
     # - convert json to python dict
     ast = None
     try:
@@ -87,5 +90,5 @@ def load_styledef(options):
     if not ast:
         return {}
     else:
-        return get_metadata(ast)
+        return meta.get_metadata(ast)
 

@@ -153,11 +153,11 @@ def pretty_keys(dictionary):
     matrix = [ "    ".join(row) for row in matrix ]
     return matrix
 
-def json_dump(json_data):
+def pretty_json_dump(json_data):
     """ return pretty printed json_data """
     return json.dumps(json_data, sort_keys=True, indent=1)
 
-def lined(title):
+def pretty_lined(title):
     """ return pretty printed title """
     output = '-' * 20 + title + '-' * 20
     return output
