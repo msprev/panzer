@@ -77,6 +77,7 @@ class Document(object):
         self.populate_styledef(global_styledef)
         # - style
         self.populate_style()
+        self.prune_styledef()
 
     def populate_styledef(self, global_styledef):
         # - global style definitions
@@ -131,6 +132,12 @@ class Document(object):
                 '---ignoring style' % key)
         self.style = [key for key in self.style
                       if key not in missing]
+
+    def prune_styledef(self):
+        """ remove styledefs that are not used """
+        self.styledef = {name: self.styledef[name]
+                         for name in self.styledef
+                         if name not in self.fullstyle}
 
     def build_run_list(self):
         """ populate run_list with metadata """
