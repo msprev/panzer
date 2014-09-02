@@ -1,15 +1,13 @@
-""" document class and its methods """
+""" panzer document class and its methods """
+import json
 import pandocfilters
 import subprocess
-import json
 import sys
 from . import error
 from . import meta
 from . import util
 from . import info
 from . import const
-
-# Document class
 
 class Document(object):
     """ representation of pandoc/panzer documents
@@ -24,29 +22,28 @@ class Document(object):
     """
     def __init__(self):
         """ new blank document """
-        EMPTY = [{'unMeta': {}}, []]
         # - defaults
-        self.ast = EMPTY
-        self.style = []
-        self.fullstyle = []
-        self.styledef = {}
-        self.run_list = []
+        self.ast = const.EMPTY_DOCUMENT
+        self.style = list()
+        self.fullstyle = list()
+        self.styledef = dict()
+        self.run_list = list()
         self.options = {
             'panzer': {
                 'panzer_support'  : const.DEFAULT_SUPPORT_DIR,
                 'debug'           : False,
                 'verbose'         : 1,
-                'stdin_temp_file' : ''
+                'stdin_temp_file' : str()
             },
             'pandoc': {
-                'input'      : [],
+                'input'      : list(),
                 'output'     : '-',
                 'pdf_output' : False,
-                'read'       : '',
-                'write'      : '',
-                'template'   : '',
-                'filter'     : [],
-                'options'    : []
+                'read'       : str(),
+                'write'      : str(),
+                'template'   : str(),
+                'filter'     : list(),
+                'options'    : list()
             }
         }
         self.template = None
@@ -54,18 +51,17 @@ class Document(object):
 
     def populate(self, ast, global_styledef):
         """ populate document with data """
-        # - template : set after 'transform' applied
-        # - output   : set after 'pandoc' applied
-        # - ast
+        # - self.template : set after 'transform' applied
+        # - self.output   : set after 'pandoc' applied
+        # - set self.ast:
         if ast:
             self.ast = ast
         else:
             info.log('DEBUG', 'panzer', 'source document(s) empty')
-        # - get the source document's metadata
+        # - check if panzer_reserved key already exists in metadata
         metadata = self.get_metadata()
         log('DEBUG', 'panzer', info.pretty_lined('Original Metadata'))
         log('DEBUG', 'panzer', info.json_dump(metadata))
-        # - check if panzer_reserved key already exists
         try:
             meta.get_content(metadata, 'panzer_reserved')
             info.log('ERROR', 'panzer',
@@ -73,11 +69,14 @@ class Document(object):
                      '---will be overwritten')
         except error.MissingField:
             pass
-        # - styledef
+        # - set self.styledef
         self.populate_styledef(global_styledef)
-        # - style
+        # - set self.style
         self.populate_style()
-        self.prune_styledef()
+        # - remove any styledef not used in doc
+        self.styledef = {key: self.styledef[key]
+                         for key in self.styledef
+                         if key not in self.fullstyle}
 
     def populate_styledef(self, global_styledef):
         log('INFO', 'panzer', '-- style definition --')
@@ -89,7 +88,7 @@ class Document(object):
             self.styledef = dict(global_styledef)
         else:
             log('INFO', 'panzer', 'no global definitions loaded')
-        # - add style definitions from doc
+        # - add local style definitions in doc
         local_styledef = dict()
         try:
             local_styledef = meta.get_content(self.get_metadata(),
@@ -134,41 +133,42 @@ class Document(object):
         self.style = [key for key in self.style
                       if key not in missing]
 
-    def prune_styledef(self):
-        """ remove styledefs that are not used """
-        self.styledef = {name: self.styledef[name]
-                         for name in self.styledef
-                         if name not in self.fullstyle}
-
     def build_run_list(self):
         """ populate run_list with metadata """
         info.log('INFO', 'panzer', '-- run list --')
         metadata = self.get_metadata()
         run_list = self.run_list
-        for kind in ADDITIVE_FIELDS:
+        for kind in const.RUNLIST_KIND:
             # - if 'filter', add filter list specified on command line first
             if kind == 'filter':
-                for f in self.options['pandoc']['filter']:
+                for cmd in self.options['pandoc']['filter']:
                     entry = dict()
                     entry['kind'] = 'filter'
-                    entry['status'] = 'queued'
-                    entry['command'] = f
-                    entry['arguments'] = ''
+                    entry['status'] = const.QUEUED
+                    entry['command'] = cmd
+                    entry['arguments'] = list()
                     run_list.append(entry)
             #  - add commands specified in metadata
             if kind in metadata:
                 entries = get_run_list(metadata, kind, self.options)
-                # - if pdf output, skip postprocess entries
-                if self.options['pandoc']['pdf_output'] \
-                   and kind == 'postprocess':
-                    log('INFO', 'panzer', 'postprocess skipped --- since output is PDF')
-                    continue
                 run_list.extend(entries)
-        # - add writer as first argument to filters
+        # - now some cleanup:
+        # -- filters: add writer as first argument
         for entry in run_list:
             if entry['kind'] == 'filter':
                 entry['arguments'].insert(0, self.options['pandoc']['write'])
-        # - print run lists
+        # -- postprocessors: remove them if output kind is pdf
+        if self.options['pandoc']['pdf_output']:
+            new_runlist = list()
+            for entry in run_list:
+                if entry['kind'] == 'postprocess':
+                    log('INFO', 'panzer',
+                        'postprocess "%s" skipped --- output set to PDF'
+                        % entry['command'])
+                    continue
+                new_runlist.append(entry)
+            runlist = new_runlist
+        # - pretty print run lists
         for i, entry in enumerate(run_list):
             info.log('INFO', 'panzer',
                      '%s %s "%s"'
@@ -206,7 +206,7 @@ class Document(object):
 
     def purge_style_fields(self):
         """ remove metadata fields specific to panzer """
-        kill_list = ADDITIVE_FIELDS
+        kill_list = const.RUNLIST_KIND
         kill_list += ['style']
         kill_list += ['styledef']
         kill_list += ['template']
@@ -233,7 +233,7 @@ class Document(object):
         log('INFO', 'panzer', 'writer "%s"' % writer)
         # 1. Do transform
         # - start with blank metadata
-        new_metadata = {}
+        new_metadata = dict()
         # - add styles one by one
         for style in self.style:
             new_metadata = update_metadata(new_metadata,
@@ -243,7 +243,7 @@ class Document(object):
         # - add metadata specified in document
         new_metadata.update(self.get_metadata())
         # 2. Apply kill rules to trim lists
-        for field in ADDITIVE_FIELDS:
+        for field in const.RUNLIST_KIND:
             try:
                 original_list = ast.get_content(new_metadata, field, 'MetaList')
                 trimmed_list = apply_kill_rules(original_list)
@@ -290,7 +290,7 @@ class Document(object):
             # - run the command
             stderr = out_pipe = str()
             try:
-                entry['status'] = 'running'
+                entry['status'] = const.RUNNING
                 p = subprocess.Popen(command,
                                      stdin=subprocess.PIPE,
                                      stderr=subprocess.PIPE)
@@ -298,18 +298,18 @@ class Document(object):
                 in_pipe = self.get_json_message()
                 in_pipe_bytes = in_pipe.encode(ENCODING)
                 out_pipe_bytes, stderr_bytes = p.communicate(input=in_pipe_bytes)
-                entry['status'] = 'done'
+                entry['status'] = const.DONE
                 if out_pipe_bytes:
                     out_pipe = out_pipe_bytes.decode(ENCODING)
                 if stderr_bytes:
                     stderr = stderr_bytes.decode(ENCODING)
             except OSError as e:
-                entry['status'] = 'failed'
+                entry['status'] = const.FAILED
                 log('ERROR', filename, e)
                 continue
             except Exception as e:
                 # if do_not_stop: always run next script
-                entry['status'] = 'failed'
+                entry['status'] = const.FAILED
                 if do_not_stop:
                     log('ERROR', filename, e)
                     continue
@@ -345,7 +345,7 @@ class Document(object):
             # - run the command and log any errors
             stderr = str()
             try:
-                entry['status'] = 'running'
+                entry['status'] = const.RUNNING
                 self.get_json_message()
                 p = subprocess.Popen(command,
                                      stderr=subprocess.PIPE,
@@ -353,16 +353,16 @@ class Document(object):
                                      stdout=subprocess.PIPE)
                 in_pipe_bytes = in_pipe.encode(ENCODING)
                 out_pipe_bytes, stderr_bytes = p.communicate(input=in_pipe_bytes)
-                entry['status'] = 'done'
+                entry['status'] = const.DONE
                 out_pipe = out_pipe_bytes.decode(ENCODING)
                 stderr = stderr_bytes.decode(ENCODING)
                 in_pipe = out_pipe
             except OSError as e:
-                entry['status'] = 'failed'
+                entry['status'] = const.FAILED
                 log('ERROR', filename, e)
                 continue
             except Exception:
-                entry['status'] = 'failed'
+                entry['status'] = const.FAILED
                 raise
             finally:
                 log_stderr(stderr, filename)
@@ -404,8 +404,8 @@ class Document(object):
         command += self.options['pandoc']['options']
         # 2. Prefill input and output pipes
         in_pipe = json.dumps(self.ast)
-        out_pipe = ''
-        stderr = ''
+        out_pipe = str()
+        stderr = str()
         # 3. Run pandoc command
         log('INFO', 'panzer', '-- pandoc --')
         log('INFO', 'panzer', '"%s"' % ' '.join(command))
