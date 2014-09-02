@@ -117,7 +117,7 @@ def log_stderr(stderr, sender=str()):
         if not line:
             # - skip blank lines: no valid json or message to decode
             continue
-        incoming = {}
+        incoming = dict()
         try:
             incoming = json.loads(line)
         except ValueError:

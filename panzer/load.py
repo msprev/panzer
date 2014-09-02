@@ -18,8 +18,8 @@ def load(options):
     command += options['pandoc']['options']
     info.log('DEBUG', 'panzer', 'pandoc %s' % ' '.join(command))
     command = ['pandoc'] + command
-    out_pipe = ''
-    stderr = ''
+    out_pipe = str()
+    stderr = str()
     ast = None
     try:
         process = subprocess.Popen(command,
@@ -45,7 +45,7 @@ def load_styledef(options):
     if not os.path.exists(filename):
         info.log('ERROR', 'panzer',
                  'default styles file not found: %s' % filename)
-        return {}
+        return dict()
     # - slurp styles.yaml
     data = []
     with open(filename, 'r', encoding=const.ENCODING) as styles_file:
@@ -88,7 +88,7 @@ def load_styledef(options):
                                 'json object from pandoc')
     # - return metadata branch of dict
     if not ast:
-        return {}
+        return dict()
     else:
         return meta.get_metadata(ast)
 
