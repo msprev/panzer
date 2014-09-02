@@ -3,11 +3,11 @@ import pandocfilters
 import subprocess
 import json
 import sys
-from . import exception
-from . import ast
+from . import error
+from . import meta
 from . import util
 from . import info
-from . import constants
+from . import const
 
 # Document class
 
@@ -24,16 +24,16 @@ class Document(object):
     """
     def __init__(self):
         """ new blank document """
-        empty = [{'unMeta': {}}, []]
+        EMPTY = [{'unMeta': {}}, []]
         # - defaults
-        self.ast = empty
+        self.ast = EMPTY
         self.style = []
         self.fullstyle = []
         self.styledef = {}
         self.run_list = []
         self.options = {
             'panzer': {
-                'panzer_support'  : DEFAULT_SUPPORT_DIR,
+                'panzer_support'  : const.DEFAULT_SUPPORT_DIR,
                 'debug'           : False,
                 'verbose'         : 1,
                 'stdin_temp_file' : ''
@@ -60,14 +60,14 @@ class Document(object):
         if ast:
             self.ast = ast
         else:
-            info.log('DEBUG', 'panzer', 'source documents empty')
+            info.log('DEBUG', 'panzer', 'source document(s) empty')
         # - get the source document's metadata
         metadata = self.get_metadata()
-        log('DEBUG', 'panzer', debug_lined('ORIGINAL METADATA'))
-        log('DEBUG', 'panzer', debug_json_dump(metadata))
+        log('DEBUG', 'panzer', info.pretty_lined('Original Metadata'))
+        log('DEBUG', 'panzer', info.json_dump(metadata))
         # - check if panzer_reserved key already exists
         try:
-            ast.get_content(metadata, 'panzer_reserved')
+            meta.get_content(metadata, 'panzer_reserved')
             info.log('ERROR', 'panzer',
                      'special field "panzer_reserved" already in metadata'
                      '---will be overwritten')
@@ -80,51 +80,52 @@ class Document(object):
         self.prune_styledef()
 
     def populate_styledef(self, global_styledef):
-        # - global style definitions
         log('INFO', 'panzer', '-- style definition --')
+        # - add global style definitions
         if global_styledef:
-            msg = debug_pretty_keys(global_styledef)
             log('INFO', 'panzer', 'global definitions:')
-            for line in msg:
+            for line in info.pretty_keys(global_styledef):
                 log('INFO', 'panzer', '    ' + line)
             self.styledef = dict(global_styledef)
         else:
             log('INFO', 'panzer', 'no global definitions loaded')
-        # - add local style definitions
-        local_styledef = {}
+        # - add style definitions from doc
+        local_styledef = dict()
         try:
-            local_styledef = ast.get_content(self.get_metadata(), 'styledef', 'MetaMap')
-            (self.styledef).update(local_styledef)
-            msg = debug_pretty_keys(local_styledef)
+            local_styledef = meta.get_content(self.get_metadata(),
+                                             'styledef', 'MetaMap')
             log('INFO', 'panzer', 'local definitions:')
-            for line in msg:
+            for line in debug_pretty_keys(local_styledef):
                 log('INFO', 'panzer', '    ' + line)
             overridden = [key for key in local_styledef
                           if key in global_styledef]
             for key in overridden:
-                log('INFO', 'panzer',
-                    'local definition "%s" overrides global'
+                log('INFO', 'panzer', 'local definition "%s" overrides global'
                     % key)
-        except error.MissingField as info:
-            log('DEBUG', 'panzer', info)
+            (self.styledef).update(local_styledef)
+        except error.MissingField as err:
+            log('DEBUG', 'panzer', err)
         except error.WrongType as err:
             log('ERROR', 'panzer', err)
 
     def populate_style(self):
         log('INFO', 'panzer', '-- document style --')
+        # - try to extract value of style field
         try:
             self.style = get_list_or_inline(self.get_metadata(), 'style')
         except error.MissingField:
             log('INFO', 'panzer', 'no "style" field found, will just run pandoc')
+            return
         except error.WrongType as err:
             log('ERROR', 'panzer', err)
-        if self.style:
-            log('INFO', 'panzer', 'style')
-            log('INFO', 'panzer', '    %s' % ", ".join(self.style))
+            return
+        log('INFO', 'panzer', 'style')
+        log('INFO', 'panzer', info.pretty_list(self.style)
+        # - expand the style hierarchy
         self.fullstyle = self.expand_style_hierarchy()
         log('INFO', 'panzer', 'full hierarchy')
-        log('INFO', 'panzer', '    %s' % ", ".join(self.fullstyle))
-        # - check: remove styles lacking definitions
+        log('INFO', 'panzer', info.pretty_list(self.fullstyle)
+        # - check for, and remove, styles missing definitions
         missing = [key for key in self.style
                    if key not in self.styledef]
         for key in missing:
