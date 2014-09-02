@@ -1,24 +1,26 @@
 """ Support functions for non-core operations """
 import os
 import subprocess
+from . import const
+from . import error
+from . import info
 
 def check_pandoc_exists():
     """ check pandoc exists """
     try:
         stdout_bytes = subprocess.check_output(["pandoc", "--version"])
         stdout = stdout_bytes.decode(const.ENCODING)
-    except OSError as e:
-        if error.errno == os.errno.ENOENT:
+    except OSError as err:
+        if err.errno == os.errno.ENOENT:
             raise error.SetupError('pandoc not found')
         else:
-            raise error.SetupError(e)
+            raise error.SetupError(err)
     stdout_list = stdout.splitlines()
     pandoc_ver = stdout_list[0].split(' ')[1]
     if versiontuple(pandoc_ver) < versiontuple(const.REQUIRE_PANDOC_ATLEAST):
         raise error.SetupError('pandoc %s or greater required'
-                                 '---found pandoc version %s'
-                                 % (const.REQUIRE_PANDOC_ATLEAST,
-                                    pandoc_ver))
+                               '---found pandoc version %s'
+                               % (const.REQUIRE_PANDOC_ATLEAST, pandoc_ver))
 
 def versiontuple(version_string):
     """ return tuple of version_string """
@@ -45,24 +47,16 @@ def check_support_directory(options):
 def resolve_path(filename, kind, options):
     """ return path to filename of kind field """
     basename = os.path.splitext(filename)[0]
-    paths = []
+    paths = list()
     paths.append(filename)
-    paths.append(os.path.join('panzer',
-                              kind,
+    paths.append(os.path.join('panzer', kind, filename))
+    paths.append(os.path.join('panzer', kind, basename, filename))
+    paths.append(os.path.join(options['panzer']['panzer_support'], kind,
                               filename))
-    paths.append(os.path.join('panzer',
-                              kind,
-                              basename,
-                              filename))
-    paths.append(os.path.join(options['panzer']['panzer_support'],
-                              kind,
-                              filename))
-    paths.append(os.path.join(options['panzer']['panzer_support'],
-                              kind,
+    paths.append(os.path.join(options['panzer']['panzer_support'], kind,
                               basename,
                               filename))
     for path in paths:
         if os.path.exists(path):
             return path
     return filename
-
