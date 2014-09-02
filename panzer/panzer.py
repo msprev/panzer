@@ -35,7 +35,7 @@ def main():
         ast = load.load(doc.options)
         doc.populate(ast, global_styledef)
         doc.transform()
-        doc.build_run_list()
+        doc.build_runlist()
         doc.purge_style_fields()
         doc.run_scripts('preflight')
         doc.pipe_through('filter')
@@ -52,9 +52,9 @@ def main():
                  'cannot continue because of fatal error')
         sys.exit(1)
     except (KeyError,
-            error.KeyError,
+            error.MissingField,
             error.BadASTError,
-            error.TypeError,
+            error.WrongType,
             error.InternalError) as err:
         # - panzer exceptions not caught elsewhere, should have been
         info.log('CRITICAL', 'panzer', err)
@@ -64,8 +64,7 @@ def main():
         # - if temp file created in setup, remove it
         if doc.options['panzer']['stdin_temp_file']:
             os.remove(doc.options['panzer']['stdin_temp_file'])
-            info.log('DEBUG', 'panzer',
-                     'deleted temp file: %s'
+            info.log('DEBUG', 'panzer', 'deleted temp file: %s'
                      % doc.options['panzer']['stdin_temp_file'])
         info.log('DEBUG', 'panzer', '>>>>> panzer quits <<<<<')
     # - successful exit
