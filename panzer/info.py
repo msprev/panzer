@@ -1,5 +1,10 @@
+""" functions for logging and printing info """
+import json
 import logging
 import logging.config
+import os
+import sys
+from . import const
 
 def start_logger(options):
     """ start the logger """
@@ -22,7 +27,7 @@ def start_logger(options):
                 'filename'     : 'panzer.log',
                 'maxBytes'     : 10485760,
                 'backupCount'  : 5,
-                'encoding'     : ENCODING
+                'encoding'     : const.ENCODING
             },
             'console': {
                 'class'      : 'logging.StreamHandler',
@@ -32,7 +37,7 @@ def start_logger(options):
             }
         },
         'loggers': {
-            __name__: {
+            'panzer': {
                 'handlers'   : ['console', 'log_file_handler'],
                 'level'      : 'DEBUG',
                 'propagate'  : True
@@ -41,7 +46,7 @@ def start_logger(options):
     }
     # - check debug flag
     if not options['panzer']['debug']:
-        config['loggers'][__name__]['handlers'].remove('log_file_handler')
+        config['loggers']['panzer']['handlers'].remove('log_file_handler')
         del config['handlers']['log_file_handler']
     # - set verbosity level
     verbosity = ['CRITICAL', 'WARNING', 'INFO']
@@ -55,12 +60,12 @@ def start_logger(options):
     # - send configuration to logger
     logging.config.dictConfig(config)
     log('DEBUG', 'panzer', '>>>>> panzer starts <<<<<')
-    log('DEBUG', 'panzer', debug_lined('OPTIONS'))
-    log('DEBUG', 'panzer', debug_json_dump(options))
+    log('DEBUG', 'panzer', pretty_lined('OPTIONS'))
+    log('DEBUG', 'panzer', pretty_json_dump(options))
 
 def log(level_str, sender, message):
     """ send a log message """
-    my_logger = logging.getLogger(__name__)
+    my_logger = logging.getLogger('panzer')
     # - lookup table for internal strings to logging levels
     levels = {
         'CRITICAL' : logging.CRITICAL,
@@ -128,30 +133,35 @@ def log_stderr(stderr, sender=str()):
             log(level, sender, message)
 
 def pretty_keys(dictionary):
-    """ return pretty printed list of dictionary keys """
+    """ return pretty printed list of dictionary keys, n per line """
     if not dictionary:
         return []
     # - number of keys printed per line
-    N = 5
+    n = 5
     # - turn into sorted list
     keys = list(dictionary.keys())
     keys.sort()
-    # - fill with blank elements to width N
-    missing = N - (len(keys) % N)
+    # - fill with blank elements to width n
+    missing = n - (len(keys) % n)
     keys.extend([''] * missing)
     # - turn into 2D matrix
-    matrix = [ [ keys[i+j] for i in range(0, N) ]
-               for j in range(0, len(keys), N) ]
+    matrix = [[keys[i+j] for i in range(0, n)]
+              for j in range(0, len(keys), n)]
     # - calculate max width for each column
-    len_matrix = [ [ len(col) for col in row ] for row in matrix ]
-    max_len_col = [ max([ row[j] for row in len_matrix ])
-                    for j in range(0, N) ]
+    len_matrix = [[len(col) for col in row] for row in matrix]
+    max_len_col = [max([row[j] for row in len_matrix])
+                   for j in range(0, n)]
     # - pad with spaces
-    matrix = [ [ row[j].ljust(max_len_col[j]) for j in range(0, N) ]
-               for row in matrix ]
+    matrix = [[row[j].ljust(max_len_col[j]) for j in range(0, n)]
+              for row in matrix]
     # - return list of lines to print
-    matrix = [ "    ".join(row) for row in matrix ]
+    matrix = ["    ".join(row) for row in matrix]
     return matrix
+
+def pretty_list(input_list):
+    """ return pretty printed list """
+    output = '    %s' % ", ".join(input_list)
+    return output
 
 def pretty_json_dump(json_data):
     """ return pretty printed json_data """
