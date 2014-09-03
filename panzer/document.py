@@ -1,5 +1,6 @@
 """ panzer document class and its methods """
 import json
+import os
 import pandocfilters
 import subprocess
 import sys
@@ -15,11 +16,16 @@ class Document(object):
     - style     : list of styles for document
     - fullstyle : full list of styles including all parents
     - styledef  : style definitions
-    - runlist   : run list for document
+    - runlist  : run list for document
     - options   : cli options for document
     - template  : template for document
     - output    : string filled with output when processing complete
     """
+    #
+    # disable pylint warnings:
+    #     + Too many instance attributes
+    # pylint: disable=R0902
+    #
     def __init__(self):
         """ new blank document """
         # - defaults
@@ -27,7 +33,7 @@ class Document(object):
         self.style = list()
         self.fullstyle = list()
         self.styledef = dict()
-        self.run_list = list()
+        self.runlist = list()
         self.options = {
             'panzer': {
                 'panzer_support'  : const.DEFAULT_SUPPORT_DIR,
@@ -60,8 +66,8 @@ class Document(object):
             info.log('DEBUG', 'panzer', 'source document(s) empty')
         # - check if panzer_reserved key already exists in metadata
         metadata = self.get_metadata()
-        log('DEBUG', 'panzer', info.pretty_lined('Original Metadata'))
-        log('DEBUG', 'panzer', info.json_dump(metadata))
+        info.log('DEBUG', 'panzer', info.pretty_lined('Original Metadata'))
+        info.log('DEBUG', 'panzer', info.pretty_json_dump(metadata))
         try:
             meta.get_content(metadata, 'panzer_reserved')
             info.log('ERROR', 'panzer',
@@ -79,66 +85,81 @@ class Document(object):
                          if key not in self.fullstyle}
 
     def populate_styledef(self, global_styledef):
-        log('INFO', 'panzer', '-- style definition --')
+        """ populate self.styledef applying global_styledef defaults """
+        info.log('INFO', 'panzer', '-- style definition --')
         # - add global style definitions
         if global_styledef:
-            log('INFO', 'panzer', 'global definitions:')
+            info.log('INFO', 'panzer', 'global definitions:')
             for line in info.pretty_keys(global_styledef):
-                log('INFO', 'panzer', '    ' + line)
+                info.log('INFO', 'panzer', '    ' + line)
             self.styledef = dict(global_styledef)
         else:
-            log('INFO', 'panzer', 'no global definitions loaded')
+            info.log('INFO', 'panzer', 'no global definitions loaded')
         # - add local style definitions in doc
         local_styledef = dict()
         try:
             local_styledef = meta.get_content(self.get_metadata(),
-                                             'styledef', 'MetaMap')
-            log('INFO', 'panzer', 'local definitions:')
-            for line in debug_pretty_keys(local_styledef):
-                log('INFO', 'panzer', '    ' + line)
+                                              'styledef',
+                                              'MetaMap')
+            info.log('INFO', 'panzer', 'local definitions:')
+            for line in info.pretty_keys(local_styledef):
+                info.log('INFO', 'panzer', '    ' + line)
             overridden = [key for key in local_styledef
                           if key in global_styledef]
             for key in overridden:
-                log('INFO', 'panzer', 'local definition "%s" overrides global'
-                    % key)
+                info.log('INFO', 'panzer',
+                         'local definition "%s" overrides global' % key)
             (self.styledef).update(local_styledef)
         except error.MissingField as err:
-            log('DEBUG', 'panzer', err)
+            info.log('DEBUG', 'panzer', err)
         except error.WrongType as err:
-            log('ERROR', 'panzer', err)
+            info.log('ERROR', 'panzer', err)
 
     def populate_style(self):
-        log('INFO', 'panzer', '-- document style --')
+        """ populate self.style and fullstyle, expanding style hierarchy """
+        info.log('INFO', 'panzer', '-- document style --')
         # - try to extract value of style field
         try:
-            self.style = get_list_or_inline(self.get_metadata(), 'style')
+            self.style = meta.get_list_or_inline(self.get_metadata(), 'style')
         except error.MissingField:
-            log('INFO', 'panzer', 'no "style" field found, will just run pandoc')
+            info.log('INFO', 'panzer',
+                     'no "style" field found, will just run pandoc')
             return
         except error.WrongType as err:
-            log('ERROR', 'panzer', err)
+            info.log('ERROR', 'panzer', err)
             return
-        log('INFO', 'panzer', 'style')
-        log('INFO', 'panzer', info.pretty_list(self.style)
+        info.log('INFO', 'panzer', 'style')
+        info.log('INFO', 'panzer', info.pretty_list(self.style))
         # - expand the style hierarchy
-        self.fullstyle = self.expand_style_hierarchy()
-        log('INFO', 'panzer', 'full hierarchy')
-        log('INFO', 'panzer', info.pretty_list(self.fullstyle)
+        # self.fullstyle = self.expand_style_hierarchy()
+        info.log('INFO', 'panzer', 'full hierarchy')
+        info.log('INFO', 'panzer', info.pretty_list(self.fullstyle))
         # - check for, and remove, styles missing definitions
         missing = [key for key in self.style
                    if key not in self.styledef]
         for key in missing:
-            log('ERROR', 'panzer', 'style definition for "%s" not found'
-                '---ignoring style' % key)
+            info.log('ERROR', 'panzer', 'style definition for "%s" not found'
+                     '---ignoring style' % key)
         self.style = [key for key in self.style
                       if key not in missing]
 
-    def build_run_list(self):
-        """ populate run_list with metadata """
+    def build_runlist(self):
+        """ populate runlist with metadata """
         info.log('INFO', 'panzer', '-- run list --')
         metadata = self.get_metadata()
-        run_list = self.run_list
+        runlist = self.runlist
         for kind in const.RUNLIST_KIND:
+            # - sanity check
+            try:
+                field_type = meta.get_type(metadata, kind)
+                if field_type != 'MetaList':
+                    info.log('ERROR', 'panzer',
+                            'value of field "%s" should be of type "MetaList"'
+                            '---found value of type "%s", ignoring it'
+                            % (kind, field_type))
+                    continue
+            except error.MissingField:
+                pass
             # - if 'filter', add filter list specified on command line first
             if kind == 'filter':
                 for cmd in self.options['pandoc']['filter']:
@@ -147,62 +168,63 @@ class Document(object):
                     entry['status'] = const.QUEUED
                     entry['command'] = cmd
                     entry['arguments'] = list()
-                    run_list.append(entry)
+                    runlist.append(entry)
             #  - add commands specified in metadata
             if kind in metadata:
-                entries = get_run_list(metadata, kind, self.options)
-                run_list.extend(entries)
+                entries = meta.get_runlist(metadata, kind, self.options)
+                runlist.extend(entries)
         # - now some cleanup:
         # -- filters: add writer as first argument
-        for entry in run_list:
+        for entry in runlist:
             if entry['kind'] == 'filter':
                 entry['arguments'].insert(0, self.options['pandoc']['write'])
         # -- postprocessors: remove them if output kind is pdf
         if self.options['pandoc']['pdf_output']:
             new_runlist = list()
-            for entry in run_list:
+            for entry in runlist:
                 if entry['kind'] == 'postprocess':
-                    log('INFO', 'panzer',
-                        'postprocess "%s" skipped --- output set to PDF'
-                        % entry['command'])
+                    info.log('INFO', 'panzer',
+                             'postprocess "%s" skipped --- output set to PDF'
+                             % entry['command'])
                     continue
                 new_runlist.append(entry)
             runlist = new_runlist
         # - pretty print run lists
-        for i, entry in enumerate(run_list):
+        for i, entry in enumerate(runlist):
             info.log('INFO', 'panzer',
                      '%s %s "%s"'
                      % (str(i).rjust(2),
                         entry['kind'].ljust(11),
                         entry['command']))
-        self.run_list = run_list
+        self.runlist = runlist
 
-    def get_json_message(self):
-        """ return json message to pass to executables """
+    def json_message(self):
+        """ return json message to pass to executables
+            and inject json message into `panzer_reserved` field """
         metadata = self.get_metadata()
         # - delete old 'panzer_reserved' key
         if 'panzer_reserved' in metadata:
             del metadata['panzer_reserved']
         # - build new json_message
-        data = [{'metadata'    : metadata,
-                 'template'    : self.template,
-                 'style'       : self.style,
-                 'fullstyle'   : self.fullstyle,
-                 'styledef'    : self.styledef,
-                 'run_list'    : self.run_list,
-                 'cli_options' : self.options}]
+        data = [{'metadata':  metadata,
+                 'template':  self.template,
+                 'style':     self.style,
+                 'fullstyle': self.fullstyle,
+                 'styledef':  self.styledef,
+                 'runlist':  self.runlist,
+                 'options':   self.options}]
         json_message = json.dumps(data)
         # - inject into metadata
         content = [{"t": "CodeBlock",
                     "c": [["", [], []], json_message]}]
-        set_content(metadata, 'panzer_reserved', content, 'MetaBlocks')
+        meta.set_content(metadata, 'panzer_reserved', content, 'MetaBlocks')
         self.set_metadata(metadata)
         # - return json_message
         return json_message
 
-    def expand_style_hierarchy(self):
-        """ expand style field to include all parent styles """
-        pass
+    # def expand_style_hierarchy(self):
+    #     """ expand style field to include all parent styles """
+    #     pass
 
     def purge_style_fields(self):
         """ remove metadata fields specific to panzer """
@@ -218,7 +240,7 @@ class Document(object):
 
     def get_metadata(self):
         """ return metadata of ast """
-        return get_metadata(self.ast)
+        return meta.get_metadata(self.ast)
 
     def set_metadata(self, new_metadata):
         """ set metadata branch to new_metadata """
@@ -230,54 +252,64 @@ class Document(object):
     def transform(self):
         """ transform using style """
         writer = self.options['pandoc']['write']
-        log('INFO', 'panzer', 'writer "%s"' % writer)
+        info.log('INFO', 'panzer', 'writer "%s"' % writer)
         # 1. Do transform
         # - start with blank metadata
         new_metadata = dict()
         # - add styles one by one
         for style in self.style:
-            new_metadata = update_metadata(new_metadata,
-                                           get_nested_content(self.styledef, [style, 'default'], 'MetaMap'))
-            new_metadata = update_metadata(new_metadata,
-                                           get_nested_content(self.styledef, [style, writer], 'MetaMap'))
+            new_metadata = meta.update_metadata(new_metadata,
+                                                meta.get_nested_content(
+                                                    self.styledef,
+                                                    [style, 'default'],
+                                                    'MetaMap'))
+            new_metadata = meta.update_metadata(new_metadata,
+                                                meta.get_nested_content(
+                                                    self.styledef,
+                                                    [style, writer],
+                                                    'MetaMap'))
         # - add metadata specified in document
         new_metadata.update(self.get_metadata())
         # 2. Apply kill rules to trim lists
         for field in const.RUNLIST_KIND:
             try:
-                original_list = ast.get_content(new_metadata, field, 'MetaList')
-                trimmed_list = apply_kill_rules(original_list)
+                original_list = meta.get_content(new_metadata,
+                                                 field, 'MetaList')
+                trimmed_list = meta.apply_kill_rules(original_list)
                 if trimmed_list:
-                    set_content(new_metadata, field, trimmed_list, 'MetaList')
+                    meta.set_content(new_metadata, field,
+                                     trimmed_list, 'MetaList')
                 else:
                     # if all items killed, delete field
                     del new_metadata[field]
             except error.MissingField:
                 continue
             except error.WrongType as err:
-                log('WARNING', 'panzer', err)
+                info.log('WARNING', 'panzer', err)
                 continue
         # 3. Set template
         try:
-            template_raw = ast.get_content(new_metadata, 'template', 'MetaInlines')
+            template_raw = meta.get_content(new_metadata, 'template',
+                                            'MetaInlines')
             template_str = pandocfilters.stringify(template_raw)
-            self.template = resolve_path(template_str, 'template', self.options)
+            self.template = util.resolve_path(template_str, 'template',
+                                              self.options)
         except (error.MissingField, error.WrongType) as err:
-            log('DEBUG', 'panzer', err)
+            info.log('DEBUG', 'panzer', err)
         if self.template:
-            log('INFO', 'panzer', 'template "%s"' % self.template)
+            info.log('INFO', 'panzer', 'template "%s"' % self.template)
         # 4. Update document
         self.set_metadata(new_metadata)
 
     def run_scripts(self, kind, do_not_stop=False):
-        """ execute commands of kind listed in run_list """
+        """ execute commands of kind listed in runlist """
         # - check if no run list to run
-        to_run = [entry for entry in self.run_list if entry['kind'] == kind]
+        to_run = [entry for entry in self.runlist if entry['kind'] == kind]
         if not to_run:
             return
-        log('INFO', 'panzer', '-- %s --' % kind)
+        info.log('INFO', 'panzer', '-- %s --' % kind)
         # - maximum number of executables to run
-        for i, entry in enumerate(self.run_list):
+        for i, entry in enumerate(self.runlist):
             # - skip entries that are not of the right kind
             if entry['kind'] != kind:
                 continue
@@ -285,45 +317,45 @@ class Document(object):
             command = [entry['command']] + entry['arguments']
             filename = os.path.basename(command[0])
             fullpath = ' '.join(command).replace(os.path.expanduser('~'), '~')
-            log('INFO', 'panzer',
-                '[%d/%d] "%s"' % (i, len(self.run_list), fullpath))
+            info.log('INFO', 'panzer', '[%d/%d] "%s"'
+                     % (i, len(self.runlist), fullpath))
             # - run the command
-            stderr = out_pipe = str()
+            stderr = str()
             try:
                 entry['status'] = const.RUNNING
-                p = subprocess.Popen(command,
-                                     stdin=subprocess.PIPE,
-                                     stderr=subprocess.PIPE)
+                process = subprocess.Popen(command,
+                                           stdin=subprocess.PIPE,
+                                           stderr=subprocess.PIPE)
                 # send panzer's json message to scripts via stdin
-                in_pipe = self.get_json_message()
-                in_pipe_bytes = in_pipe.encode(ENCODING)
-                out_pipe_bytes, stderr_bytes = p.communicate(input=in_pipe_bytes)
+                in_pipe = self.json_message()
+                in_pipe_bytes = in_pipe.encode(const.ENCODING)
+                stderr_bytes = process.communicate(input=in_pipe_bytes)[1]
                 entry['status'] = const.DONE
-                if out_pipe_bytes:
-                    out_pipe = out_pipe_bytes.decode(ENCODING)
                 if stderr_bytes:
-                    stderr = stderr_bytes.decode(ENCODING)
-            except OSError as e:
+                    stderr = stderr_bytes.decode(const.ENCODING)
+            except OSError as err:
                 entry['status'] = const.FAILED
-                log('ERROR', filename, e)
+                info.log('ERROR', filename, err)
                 continue
-            except Exception as e:
+            except Exception as err:        # pylint: disable=W0703
                 # if do_not_stop: always run next script
+                # disable pylint warnings:
+                #     + Catching too general exception
                 entry['status'] = const.FAILED
                 if do_not_stop:
-                    log('ERROR', filename, e)
+                    info.log('ERROR', filename, err)
                     continue
                 else:
                     raise
             finally:
-                log_stderr(stderr, filename)
+                info.log_stderr(stderr, filename)
 
     def pipe_through(self, kind):
-        """ pipe through external command listed in run_list """
-        to_run = [entry for entry in self.run_list if entry['kind'] == kind]
+        """ pipe through external command listed in runlist """
+        to_run = [entry for entry in self.runlist if entry['kind'] == kind]
         if not to_run:
             return
-        log('INFO', 'panzer', '-- %s --' % kind)
+        info.log('INFO', 'panzer', '-- %s --' % kind)
         # 1. Set up incoming pipe
         if kind == 'filter':
             in_pipe = json.dumps(self.ast)
@@ -331,49 +363,50 @@ class Document(object):
             in_pipe = self.output
         else:
             raise error.InternalError('illegal invocation of '
-                                                 '"pipe" in panzer.py')
+                                      '"pipe" in panzer.py')
         # 2. Set up outgoing pipe in case of failure
         out_pipe = in_pipe
         # 3. Run commands
-        for i, entry in enumerate(self.run_list):
+        for i, entry in enumerate(self.runlist):
             # - add debugging info
             command = [entry['command']] + entry['arguments']
             filename = os.path.basename(command[0])
             fullpath = ' '.join(command).replace(os.path.expanduser('~'), '~')
-            log('INFO', 'panzer',
-                '[%d/%d] "%s"' % (i, len(self.run_list), fullpath))
+            info.log('INFO', 'panzer', '[%d/%d] "%s"'
+                     % (i, len(self.runlist), fullpath))
             # - run the command and log any errors
             stderr = str()
             try:
                 entry['status'] = const.RUNNING
-                self.get_json_message()
-                p = subprocess.Popen(command,
-                                     stderr=subprocess.PIPE,
-                                     stdin=subprocess.PIPE,
-                                     stdout=subprocess.PIPE)
-                in_pipe_bytes = in_pipe.encode(ENCODING)
-                out_pipe_bytes, stderr_bytes = p.communicate(input=in_pipe_bytes)
+                self.json_message()
+                process = subprocess.Popen(command,
+                                           stderr=subprocess.PIPE,
+                                           stdin=subprocess.PIPE,
+                                           stdout=subprocess.PIPE)
+                in_pipe_bytes = in_pipe.encode(const.ENCODING)
+                out_pipe_bytes, stderr_bytes = \
+                    process.communicate(input=in_pipe_bytes)
                 entry['status'] = const.DONE
-                out_pipe = out_pipe_bytes.decode(ENCODING)
-                stderr = stderr_bytes.decode(ENCODING)
+                out_pipe = out_pipe_bytes.decode(const.ENCODING)
+                stderr = stderr_bytes.decode(const.ENCODING)
                 in_pipe = out_pipe
-            except OSError as e:
+            except OSError as err:
                 entry['status'] = const.FAILED
-                log('ERROR', filename, e)
+                info.log('ERROR', filename, err)
                 continue
             except Exception:
                 entry['status'] = const.FAILED
                 raise
             finally:
-                log_stderr(stderr, filename)
+                info.log_stderr(stderr, filename)
         # 4. Update document's data with output from commands
         if kind == 'filter':
             try:
                 self.ast = json.loads(out_pipe)
             except ValueError:
-                log('ERROR', 'panzer',
-                    'failed to receive json object from filters'
-                    '---ignoring all filters')
+                info.log('ERROR', 'panzer',
+                         'failed to receive json object from filters'
+                         '---ignoring all filters')
                 return
         elif kind == 'postprocess':
             self.output = out_pipe
@@ -407,21 +440,22 @@ class Document(object):
         out_pipe = str()
         stderr = str()
         # 3. Run pandoc command
-        log('INFO', 'panzer', '-- pandoc --')
-        log('INFO', 'panzer', '"%s"' % ' '.join(command))
+        info.log('INFO', 'panzer', '-- pandoc --')
+        info.log('INFO', 'panzer', '"%s"' % ' '.join(command))
         try:
-            p = subprocess.Popen(command,
-                                 stderr=subprocess.PIPE,
-                                 stdin=subprocess.PIPE,
-                                 stdout=subprocess.PIPE)
-            in_pipe_bytes = in_pipe.encode(ENCODING)
-            out_pipe_bytes, stderr_bytes = p.communicate(input=in_pipe_bytes)
-            out_pipe = out_pipe_bytes.decode(ENCODING)
-            stderr = stderr_bytes.decode(ENCODING)
-        except OSError as e:
-            log('ERROR', 'pandoc', e)
+            process = subprocess.Popen(command,
+                                       stderr=subprocess.PIPE,
+                                       stdin=subprocess.PIPE,
+                                       stdout=subprocess.PIPE)
+            in_pipe_bytes = in_pipe.encode(const.ENCODING)
+            out_pipe_bytes, stderr_bytes = \
+                process.communicate(input=in_pipe_bytes)
+            out_pipe = out_pipe_bytes.decode(const.ENCODING)
+            stderr = stderr_bytes.decode(const.ENCODING)
+        except OSError as err:
+            info.log('ERROR', 'pandoc', err)
         finally:
-            log_stderr(stderr)
+            info.log_stderr(stderr)
         # 4. Deal with output of pandoc
         if self.options['pandoc']['pdf_output']:
             # do nothing with a pdf
@@ -436,14 +470,14 @@ class Document(object):
             return
         # case 2: stdout as output
         if self.options['pandoc']['output'] == '-':
-            sys.stdout.buffer.write(self.output.encode(ENCODING))
+            sys.stdout.buffer.write(self.output.encode(const.ENCODING))
             sys.stdout.flush()
         # case 3: any other file as output
         else:
             with open(self.options['pandoc']['output'], 'w',
-                      encoding=ENCODING) as output_file:
+                      encoding=const.ENCODING) as output_file:
                 output_file.write(self.output)
                 output_file.flush()
-            log('INFO',
-                'panzer',
-                'output written to "%s"' % self.options['pandoc']['output'])
+            info.log('INFO', 'panzer', 'output written to "%s"'
+                     % self.options['pandoc']['output'])
+
