@@ -163,7 +163,7 @@ def pretty_list(input_list, separator=', '):
 
 def pretty_json_dump(json_data):
     """ return pretty printed json_data """
-    return json.dumps(json_data, sort_keys=True, indent=1)
+    return json.dumps(json_data, sort_keys=True, indent=4)
 
 def pretty_lined(title):
     """ return pretty printed with lines """

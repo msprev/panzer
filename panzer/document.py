@@ -328,8 +328,9 @@ class Document(object):
                 in_pipe_bytes = in_pipe.encode(const.ENCODING)
                 stderr_bytes = process.communicate(input=in_pipe_bytes)[1]
                 entry['status'] = const.DONE
-                if stderr_bytes:
-                    stderr = stderr_bytes.decode(const.ENCODING)
+                stderr = stderr_bytes.decode(const.ENCODING)
+                if stderr:
+                    entry['stderr'] = stderr
             except OSError as err:
                 entry['status'] = const.FAILED
                 info.log('ERROR', filename, err)
@@ -365,6 +366,8 @@ class Document(object):
         out_pipe = in_pipe
         # 3. Run commands
         for i, entry in enumerate(self.runlist):
+            if entry['kind'] != kind:
+                continue
             # - add debugging info
             command = [entry['command']] + entry['arguments']
             filename = os.path.basename(command[0])
@@ -388,6 +391,8 @@ class Document(object):
                 entry['status'] = const.DONE
                 out_pipe = out_pipe_bytes.decode(const.ENCODING)
                 stderr = stderr_bytes.decode(const.ENCODING)
+                if stderr:
+                    entry['stderr'] = stderr
                 in_pipe = out_pipe
             except OSError as err:
                 entry['status'] = const.FAILED
