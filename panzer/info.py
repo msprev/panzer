@@ -48,21 +48,21 @@ def start_logger(options):
     if not options['panzer']['debug']:
         config['loggers'][__name__]['handlers'].remove('log_file_handler')
         del config['handlers']['log_file_handler']
-        # - set verbosity level
-        verbosity = ['CRITICAL', 'WARNING', 'INFO']
-        index = options['panzer'].get('verbose', 1)
-        try:
-            verbosity_level = verbosity[index]
-        except IndexError:
-            print('ERROR: Unknown setting for ---verbose. '
-                  'Setting ---verbose 2.', file=sys.stderr)
-            verbosity_level = 'INFO'
-        config['handlers']['console']['level'] = verbosity_level
-        # - send configuration to logger
-        logging.config.dictConfig(config)
-        log('DEBUG', 'panzer', '>>>>> panzer starts <<<<<')
-        log('DEBUG', 'panzer', pretty_lined('OPTIONS'))
-        log('DEBUG', 'panzer', pretty_json_dump(options))
+    # - set verbosity level
+    verbosity = ['CRITICAL', 'WARNING', 'INFO']
+    index = options['panzer'].get('verbose', 1)
+    try:
+        verbosity_level = verbosity[index]
+    except IndexError:
+        print('ERROR: Unknown setting for ---verbose. '
+              'Setting ---verbose 2.', file=sys.stderr)
+        verbosity_level = 'INFO'
+    config['handlers']['console']['level'] = verbosity_level
+    # - send configuration to logger
+    logging.config.dictConfig(config)
+    log('DEBUG', 'panzer', '>>>>> panzer starts <<<<<')
+    log('DEBUG', 'panzer', pretty_lined('OPTIONS'))
+    log('DEBUG', 'panzer', pretty_json_dump(options))
 
 def log(level_str, sender, message):
     """ send a log message """
