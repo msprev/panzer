@@ -7,10 +7,10 @@ styledef:
         all:
             metadata:
                 hello: 1
-        cleanup:
-            - run: report.py
+            cleanup:
+                - run: report.py
 
-style  : 
+style  :
     - Notes
     - PDF
     - New

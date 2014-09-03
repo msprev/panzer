@@ -51,8 +51,8 @@ def resolve_path(filename, kind, options):
     basename = os.path.splitext(filename)[0]
     paths = list()
     paths.append(filename)
-    paths.append(os.path.join('panzer', kind, filename))
-    paths.append(os.path.join('panzer', kind, basename, filename))
+    paths.append(os.path.join(kind, filename))
+    paths.append(os.path.join(kind, basename, filename))
     paths.append(os.path.join(options['panzer']['panzer_support'], kind,
                               filename))
     paths.append(os.path.join(options['panzer']['panzer_support'], kind,

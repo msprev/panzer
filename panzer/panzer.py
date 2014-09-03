@@ -66,7 +66,7 @@ def main():
             os.remove(doc.options['panzer']['stdin_temp_file'])
             info.log('DEBUG', 'panzer', 'deleted temp file: %s'
                      % doc.options['panzer']['stdin_temp_file'])
-        info.log('DEBUG', 'panzer', '>>>>> panzer quits <<<<<')
+        info.log('DEBUG', 'panzer', info.pretty_end_log('panzer quits'))
     # - successful exit
     sys.exit(0)
 

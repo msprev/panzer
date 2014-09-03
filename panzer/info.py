@@ -13,7 +13,7 @@ def start_logger(options):
         'disable_existing_loggers' : False,
         'formatters': {
             'detailed': {
-                'format': '%(asctime)s - %(message)s'
+                'format': '%(asctime)s - %(levelname)s - %(message)s'
             },
             'mimimal': {
                 'format': '%(message)s'
@@ -60,7 +60,7 @@ def start_logger(options):
     config['handlers']['console']['level'] = verbosity_level
     # - send configuration to logger
     logging.config.dictConfig(config)
-    log('DEBUG', 'panzer', '>>>>> panzer starts <<<<<')
+    log('DEBUG', 'panzer', pretty_start_log('panzer starts'))
     log('DEBUG', 'panzer', pretty_lined('OPTIONS'))
     log('DEBUG', 'panzer', pretty_json_dump(options))
 
@@ -91,9 +91,9 @@ def log(level_str, sender, message):
     level = levels.get(level_str, levels['ERROR'])
     # -- level
     pretty_level_str = pretty_levels.get(level_str, pretty_levels['ERROR'])
-    # -- sender - right justify name if less than 8 chars long
+    # -- sender
     if sender != 'panzer':
-        sender_str = sender + ': '
+        sender_str = '      ' + sender + ': '
     # -- message
     message_str = message
     output = ''
@@ -123,9 +123,6 @@ def log_stderr(stderr, sender=str()):
             incoming = json.loads(line)
         except ValueError:
             # - if json cannot be decoded, just log as ERROR prefixed by '!'
-            log('DEBUG',
-                'panzer',
-                'failed to decode json message from %s: "%s"' % (sender, line))
             incoming = [{'error_msg': {'level': 'ERROR',
                                        'message': '!' + line}}]
         for item in incoming:
@@ -159,9 +156,9 @@ def pretty_keys(dictionary):
     matrix = ["    ".join(row) for row in matrix]
     return matrix
 
-def pretty_list(input_list):
+def pretty_list(input_list, separator=', '):
     """ return pretty printed list """
-    output = '    %s' % ", ".join(input_list)
+    output = '    %s' % separator.join(input_list)
     return output
 
 def pretty_json_dump(json_data):
@@ -169,6 +166,49 @@ def pretty_json_dump(json_data):
     return json.dumps(json_data, sort_keys=True, indent=1)
 
 def pretty_lined(title):
-    """ return pretty printed title """
-    output = '-' * 20 + title + '-' * 20
+    """ return pretty printed with lines """
+    output = '-' * 20 + ' ' + title.upper() + ' ' + '-' * 20
+    return output
+
+def pretty_title(title):
+    """ return pretty printed section title """
+    output = '-' * 5 + ' ' + title + ' ' + '-' * 5
+    return output
+
+def pretty_start_log(title):
+    """ return pretty printed title for starting log """
+    output = '>' * 10 + ' ' + title + ' ' + '<' * 10
+    return output
+
+def pretty_end_log(title):
+    """ return pretty printed title for ending log """
+    output = '>' * 10 + ' ' + title + ' ' + '<' * 10 + '\n\n'
+    return output
+
+def pretty_path(input_path):
+    """ return path string replacing '~' for home directory """
+    home_path = os.path.expanduser('~')
+    cwd_path = os.getcwd()
+    output_path = input_path.replace(home_path, '~').replace(cwd_path, './')
+    return output_path
+
+def pretty_runlist(runlist):
+    """ return pretty printed runlist """
+    if not runlist:
+        return ['    empty']
+    max_num = len(runlist)
+    output = list()
+    current_kind = str()
+    for i, entry in enumerate(runlist):
+        if current_kind != entry['kind']:
+            output.append(entry['kind'] + ':')
+            current_kind = entry['kind']
+        output.append('  [%d/%d] %s'
+                      % (i+1, max_num,
+                         pretty_path(entry['command'])))
+    return output
+
+def pretty_runlist_entry(num, max_num, path):
+    """ return pretty printed run list entry """
+    output = '[%d/%d] %s' % (num+1, max_num, pretty_path(path))
     return output

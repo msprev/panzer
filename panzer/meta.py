@@ -37,7 +37,6 @@ def update_metadata(old, new):
     # 3. 'template' field
     if 'template' in new:
         old['template'] = new['template']
-    old.update(new)
     return old
 
 def apply_kill_rules(old_list):

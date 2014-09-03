@@ -11,13 +11,14 @@ from . import meta
 def load(options):
     """ return ast from running pandoc on input documents """
     # 1. Build pandoc command
-    command = options['pandoc']['input'].copy()
+    command = ['pandoc']
+    command += options['pandoc']['input'].copy()
     if options['pandoc']['read']:
         command += ['--read', options['pandoc']['read']]
     command += ['--write', 'json', '--output', '-']
     command += options['pandoc']['options']
-    info.log('DEBUG', 'panzer', 'pandoc %s' % ' '.join(command))
-    command = ['pandoc'] + command
+    info.log('DEBUG', 'panzer', 'loading source document(s)')
+    info.log('DEBUG', 'panzer', 'run "%s"' % ' '.join(command))
     out_pipe = str()
     stderr = str()
     ast = None
@@ -41,6 +42,7 @@ def load(options):
 
 def load_styledef(options):
     """ return metadata branch of styles.yaml as dict """
+    info.log('DEBUG', 'panzer', 'loading global style definitions file')
     filename = os.path.join(options['panzer']['panzer_support'], 'styles.yaml')
     if not os.path.exists(filename):
         info.log('ERROR', 'panzer',
@@ -54,14 +56,12 @@ def load_styledef(options):
     data.insert(0, "---\n")
     data.append("...\n")
     data_string = ''.join(data)
-    info.log('DEBUG', 'panzer', info.pretty_lined('STYLES METADATA'))
-    info.log('DEBUG', 'panzer', data_string)
     # - build pandoc command
     command = ['pandoc']
     command += ['-']
     command += ['--write', 'json']
     command += ['--output', '-']
-    info.log('DEBUG', 'panzer', 'pandoc %s' % ' '.join(command))
+    info.log('DEBUG', 'panzer', 'run "%s"' % ' '.join(command))
     # - send to pandoc to convert to json
     in_pipe = data_string
     out_pipe = ''

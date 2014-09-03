@@ -66,8 +66,6 @@ class Document(object):
             info.log('DEBUG', 'panzer', 'source document(s) empty')
         # - check if panzer_reserved key already exists in metadata
         metadata = self.get_metadata()
-        info.log('DEBUG', 'panzer', info.pretty_lined('Original Metadata'))
-        info.log('DEBUG', 'panzer', info.pretty_json_dump(metadata))
         try:
             meta.get_content(metadata, 'panzer_reserved')
             info.log('ERROR', 'panzer',
@@ -82,11 +80,11 @@ class Document(object):
         # - remove any styledef not used in doc
         self.styledef = {key: self.styledef[key]
                          for key in self.styledef
-                         if key not in self.fullstyle}
+                         if key in self.fullstyle}
 
     def populate_styledef(self, global_styledef):
         """ populate self.styledef applying global_styledef defaults """
-        info.log('INFO', 'panzer', '-- style definition --')
+        info.log('INFO', 'panzer', info.pretty_title('style definition'))
         # - add global style definitions
         if global_styledef:
             info.log('INFO', 'panzer', 'global definitions:')
@@ -117,7 +115,7 @@ class Document(object):
 
     def populate_style(self):
         """ populate self.style and fullstyle, expanding style hierarchy """
-        info.log('INFO', 'panzer', '-- document style --')
+        info.log('INFO', 'panzer', info.pretty_title('document style'))
         # - try to extract value of style field
         try:
             self.style = meta.get_list_or_inline(self.get_metadata(), 'style')
@@ -128,11 +126,11 @@ class Document(object):
         except error.WrongType as err:
             info.log('ERROR', 'panzer', err)
             return
-        info.log('INFO', 'panzer', 'style')
+        info.log('INFO', 'panzer', 'style:')
         info.log('INFO', 'panzer', info.pretty_list(self.style))
         # - expand the style hierarchy
-        # self.fullstyle = self.expand_style_hierarchy()
-        info.log('INFO', 'panzer', 'full hierarchy')
+        self.fullstyle = self.expand_style_hierarchy()
+        info.log('INFO', 'panzer', 'full hierarchy:')
         info.log('INFO', 'panzer', info.pretty_list(self.fullstyle))
         # - check for, and remove, styles missing definitions
         missing = [key for key in self.style
@@ -145,7 +143,7 @@ class Document(object):
 
     def build_runlist(self):
         """ populate runlist with metadata """
-        info.log('INFO', 'panzer', '-- run list --')
+        info.log('INFO', 'panzer', info.pretty_title('run list'))
         metadata = self.get_metadata()
         runlist = self.runlist
         for kind in const.RUNLIST_KIND:
@@ -154,9 +152,9 @@ class Document(object):
                 field_type = meta.get_type(metadata, kind)
                 if field_type != 'MetaList':
                     info.log('ERROR', 'panzer',
-                            'value of field "%s" should be of type "MetaList"'
-                            '---found value of type "%s", ignoring it'
-                            % (kind, field_type))
+                             'value of field "%s" should be of type "MetaList"'
+                             '---found value of type "%s", ignoring it'
+                             % (kind, field_type))
                     continue
             except error.MissingField:
                 pass
@@ -189,13 +187,9 @@ class Document(object):
                     continue
                 new_runlist.append(entry)
             runlist = new_runlist
-        # - pretty print run lists
-        for i, entry in enumerate(runlist):
-            info.log('INFO', 'panzer',
-                     '%s %s "%s"'
-                     % (str(i).rjust(2),
-                        entry['kind'].ljust(11),
-                        entry['command']))
+        msg = info.pretty_runlist(runlist)
+        for line in msg:
+            info.log('INFO', 'panzer', line)
         self.runlist = runlist
 
     def json_message(self):
@@ -222,9 +216,9 @@ class Document(object):
         # - return json_message
         return json_message
 
-    # def expand_style_hierarchy(self):
-    #     """ expand style field to include all parent styles """
-    #     pass
+    def expand_style_hierarchy(self):
+        """ expand style field to include all parent styles """
+        return self.style
 
     def purge_style_fields(self):
         """ remove metadata fields specific to panzer """
@@ -261,7 +255,7 @@ class Document(object):
             new_metadata = meta.update_metadata(new_metadata,
                                                 meta.get_nested_content(
                                                     self.styledef,
-                                                    [style, 'default'],
+                                                    [style, 'all'],
                                                     'MetaMap'))
             new_metadata = meta.update_metadata(new_metadata,
                                                 meta.get_nested_content(
@@ -297,7 +291,8 @@ class Document(object):
         except (error.MissingField, error.WrongType) as err:
             info.log('DEBUG', 'panzer', err)
         if self.template:
-            info.log('INFO', 'panzer', 'template "%s"' % self.template)
+            info.log('INFO', 'panzer', 'template "%s"'
+                     % info.pretty_path(self.template))
         # 4. Update document
         self.set_metadata(new_metadata)
 
@@ -307,7 +302,7 @@ class Document(object):
         to_run = [entry for entry in self.runlist if entry['kind'] == kind]
         if not to_run:
             return
-        info.log('INFO', 'panzer', '-- %s --' % kind)
+        info.log('INFO', 'panzer', info.pretty_title(kind))
         # - maximum number of executables to run
         for i, entry in enumerate(self.runlist):
             # - skip entries that are not of the right kind
@@ -316,9 +311,11 @@ class Document(object):
             # - build the command to run
             command = [entry['command']] + entry['arguments']
             filename = os.path.basename(command[0])
-            fullpath = ' '.join(command).replace(os.path.expanduser('~'), '~')
-            info.log('INFO', 'panzer', '[%d/%d] "%s"'
-                     % (i, len(self.runlist), fullpath))
+            info.log('INFO', 'panzer',
+                     info.pretty_runlist_entry(i,
+                                               len(self.runlist),
+                                               ' '.join(command)))
+            info.log('DEBUG', 'panzer', 'run "%s"' % ' '.join(command))
             # - run the command
             stderr = str()
             try:
@@ -355,7 +352,7 @@ class Document(object):
         to_run = [entry for entry in self.runlist if entry['kind'] == kind]
         if not to_run:
             return
-        info.log('INFO', 'panzer', '-- %s --' % kind)
+        info.log('INFO', 'panzer', info.pretty_title(kind))
         # 1. Set up incoming pipe
         if kind == 'filter':
             in_pipe = json.dumps(self.ast)
@@ -371,9 +368,11 @@ class Document(object):
             # - add debugging info
             command = [entry['command']] + entry['arguments']
             filename = os.path.basename(command[0])
-            fullpath = ' '.join(command).replace(os.path.expanduser('~'), '~')
-            info.log('INFO', 'panzer', '[%d/%d] "%s"'
-                     % (i, len(self.runlist), fullpath))
+            info.log('INFO', 'panzer',
+                     info.pretty_runlist_entry(i,
+                                               len(self.runlist),
+                                               ' '.join(command)))
+            info.log('DEBUG', 'panzer', 'run "%s"' % ' '.join(command))
             # - run the command and log any errors
             stderr = str()
             try:
@@ -440,8 +439,15 @@ class Document(object):
         out_pipe = str()
         stderr = str()
         # 3. Run pandoc command
-        info.log('INFO', 'panzer', '-- pandoc --')
-        info.log('INFO', 'panzer', '"%s"' % ' '.join(command))
+        info.log('INFO', 'panzer', info.pretty_title('pandoc'))
+        if self.options['pandoc']['options']:
+            info.log('INFO', 'panzer', 'running with options:')
+            info.log('INFO', 'panzer',
+                     info.pretty_list(self.options['pandoc']['options'],
+                                      separator=' '))
+        else:
+            info.log('INFO', 'panzer', 'running')
+        info.log('DEBUG', 'panzer', 'run "%s"' % ' '.join(command))
         try:
             process = subprocess.Popen(command,
                                        stderr=subprocess.PIPE,
@@ -467,11 +473,13 @@ class Document(object):
         """ write document """
         # case 1: pdf as output file
         if self.options['pandoc']['pdf_output']:
+            info.log('DEBUG', 'panzer', 'output to PDF by pandoc')
             return
         # case 2: stdout as output
         if self.options['pandoc']['output'] == '-':
             sys.stdout.buffer.write(self.output.encode(const.ENCODING))
             sys.stdout.flush()
+            info.log('DEBUG', 'panzer', 'output written stdout by panzer')
         # case 3: any other file as output
         else:
             with open(self.options['pandoc']['output'], 'w',
