@@ -11,7 +11,6 @@ def update_metadata(old, new):
     # 1. Update with values in 'metadata' field
     try:
         old.update(get_content(new, 'metadata', 'MetaMap'))
-        del new['metadata']
     except (error.MissingField, KeyError):
         pass
     except error.WrongType as err:
@@ -35,9 +34,9 @@ def update_metadata(old, new):
             continue
         old_list.extend(new_list)
         set_content(old, field, old_list, 'MetaList')
-        del new[field]
-    # 3. Update with values of all remaining fields
-    # - includes 'template' field
+    # 3. 'template' field
+    if 'template' in new:
+        old['template'] = new['template']
     old.update(new)
     return old
 
@@ -56,8 +55,8 @@ def apply_kill_rules(old_list):
             continue
         if len(item_content.keys() & {'run', 'kill', 'killall'}) != 1:
             info.log('ERROR', 'panzer',
-                     'must contain exactly one "run", "kill", or "killall" per item'
-                     '---ignoring 1 item')
+                     'must contain exactly one "run", "kill", '
+                     'or "killall" per item---ignoring 1 item')
             continue
         # 2. Now operate on content
         if 'run' in item_content:
@@ -74,7 +73,9 @@ def apply_kill_rules(old_list):
                 info.log('WARNING', 'panzer', err)
                 continue
             new_list = [i for i in new_list
-                        if get_content(i[const.C], 'run', 'MetaInlines') != to_be_killed]
+                        if get_content(i[const.C],
+                                       'run',
+                                       'MetaInlines') != to_be_killed]
         elif 'killall' in item_content:
             try:
                 if get_content(item_content, 'killall', 'MetaBool') == True:
@@ -108,8 +109,7 @@ def get_nested_content(metadata, fields, expected_type_of_leaf=None):
         # If on a branch...
         if fields:
             next_content = get_content(metadata, current_field, 'MetaMap')
-            return get_nested_content(next_content,
-                                      fields,
+            return get_nested_content(next_content, fields,
                                       expected_type_of_leaf)
         # Else on a leaf...
         else:
@@ -159,8 +159,8 @@ def get_list_or_inline(metadata, field):
             content.append(pandocfilters.stringify(content_raw))
         return content
     else:
-        raise error.WrongType('"%s" value must be of type "MetaInlines" or "MetaList"'
-                              % field)
+        raise error.WrongType('"%s" value must be of type "MetaInlines"'
+                              'or "MetaList"' % field)
 
 def get_metadata(ast):
     """ returns metadata branch of ast or {} if not present """
@@ -170,15 +170,15 @@ def get_metadata(ast):
         metadata = dict()
     return metadata
 
-def get_run_list(metadata, kind, options):
+def get_runlist(metadata, kind, options):
     """ return run list for kind from metadata """
-    run_list = list()
+    runlist = list()
     # - return empty list unless entries of kind are in metadata
     try:
         metadata_list = get_content(metadata, kind, 'MetaList')
     except (error.WrongType, error.MissingField) as err:
         info.log('WARNING', 'panzer', err)
-        return run_list
+        return runlist
     for item in metadata_list:
         check_c_and_t_exist(item)
         item_content = item[const.C]
@@ -202,11 +202,11 @@ def get_run_list(metadata, kind, options):
             elif get_type(item_content, 'args') == 'MetaList':
                 # - arguments MetaList
                 arguments_list = get_content(item_content, 'args', 'MetaList')
-                entry['arguments'] = get_run_list_args(arguments_list)
-        run_list.append(entry)
-    return run_list
+                entry['arguments'] = get_runlist_args(arguments_list)
+        runlist.append(entry)
+    return runlist
 
-def get_run_list_args(arguments_list):
+def get_runlist_args(arguments_list):
     """ return list of arguments from 'args' MetaList """
     arguments = list()
     for item in arguments_list:

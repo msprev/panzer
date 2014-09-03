@@ -11,12 +11,12 @@ License   : BSD3
 import os
 import subprocess
 import sys
+from . import cli
 from . import document
 from . import error
 from . import info
 from . import load
 from . import util
-from . import cli
 from . import version
 
 __version__ = version.VERSION

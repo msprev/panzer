@@ -24,6 +24,8 @@ def check_pandoc_exists():
 
 def versiontuple(version_string):
     """ return tuple of version_string """
+    # pylint: disable=W0141
+    # disable warning for using builtin 'map'
     return tuple(map(int, (version_string.split("."))))
 
 def check_support_directory(options):

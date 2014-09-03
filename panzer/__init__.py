@@ -1,3 +1,4 @@
+""" check that python3 is being used """
 import sys
 
 if sys.version_info[0] != 3:

@@ -64,6 +64,13 @@ PANDOC_WRITER_MAPPING = {
 
 def parse_cli_options(options):
     """ parse command line options """
+    #
+    # disable pylint warnings:
+    #     + Too many local variables (too-many-locals)
+    #     + Too many branches (too-many-branches)
+    # pylint: disable=R0912
+    # pylint: disable=R0914
+    #
     # 1. Parse options specific to panzer
     panzer_known, unknown = panzer_parse()
     # 2. Update options with panzer-specific values

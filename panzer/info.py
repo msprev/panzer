@@ -37,7 +37,7 @@ def start_logger(options):
             }
         },
         'loggers': {
-            'panzer': {
+            __name__: {
                 'handlers'   : ['console', 'log_file_handler'],
                 'level'      : 'DEBUG',
                 'propagate'  : True
@@ -46,26 +46,27 @@ def start_logger(options):
     }
     # - check debug flag
     if not options['panzer']['debug']:
-        config['loggers']['panzer']['handlers'].remove('log_file_handler')
+        config['loggers'][__name__]['handlers'].remove('log_file_handler')
         del config['handlers']['log_file_handler']
-    # - set verbosity level
-    verbosity = ['CRITICAL', 'WARNING', 'INFO']
-    index = options['panzer'].get('verbose', 1)
-    try:
-        verbosity_level = verbosity[index]
-    except IndexError:
-        print('error: unknown setting for verbosity level', file=sys.stderr)
-        verbosity_level = 'INFO'
-    config['handlers']['console']['level'] = verbosity_level
-    # - send configuration to logger
-    logging.config.dictConfig(config)
-    log('DEBUG', 'panzer', '>>>>> panzer starts <<<<<')
-    log('DEBUG', 'panzer', pretty_lined('OPTIONS'))
-    log('DEBUG', 'panzer', pretty_json_dump(options))
+        # - set verbosity level
+        verbosity = ['CRITICAL', 'WARNING', 'INFO']
+        index = options['panzer'].get('verbose', 1)
+        try:
+            verbosity_level = verbosity[index]
+        except IndexError:
+            print('ERROR: Unknown setting for ---verbose. '
+                  'Setting ---verbose 2.', file=sys.stderr)
+            verbosity_level = 'INFO'
+        config['handlers']['console']['level'] = verbosity_level
+        # - send configuration to logger
+        logging.config.dictConfig(config)
+        log('DEBUG', 'panzer', '>>>>> panzer starts <<<<<')
+        log('DEBUG', 'panzer', pretty_lined('OPTIONS'))
+        log('DEBUG', 'panzer', pretty_json_dump(options))
 
 def log(level_str, sender, message):
     """ send a log message """
-    my_logger = logging.getLogger('panzer')
+    my_logger = logging.getLogger(__name__)
     # - lookup table for internal strings to logging levels
     levels = {
         'CRITICAL' : logging.CRITICAL,
@@ -133,26 +134,26 @@ def log_stderr(stderr, sender=str()):
             log(level, sender, message)
 
 def pretty_keys(dictionary):
-    """ return pretty printed list of dictionary keys, n per line """
+    """ return pretty printed list of dictionary keys, num per line """
     if not dictionary:
         return []
     # - number of keys printed per line
-    n = 5
+    num = 5
     # - turn into sorted list
     keys = list(dictionary.keys())
     keys.sort()
-    # - fill with blank elements to width n
-    missing = n - (len(keys) % n)
+    # - fill with blank elements to width num
+    missing = num - (len(keys) % num)
     keys.extend([''] * missing)
     # - turn into 2D matrix
-    matrix = [[keys[i+j] for i in range(0, n)]
-              for j in range(0, len(keys), n)]
+    matrix = [[keys[i+j] for i in range(0, num)]
+              for j in range(0, len(keys), num)]
     # - calculate max width for each column
     len_matrix = [[len(col) for col in row] for row in matrix]
     max_len_col = [max([row[j] for row in len_matrix])
-                   for j in range(0, n)]
+                   for j in range(0, num)]
     # - pad with spaces
-    matrix = [[row[j].ljust(max_len_col[j]) for j in range(0, n)]
+    matrix = [[row[j].ljust(max_len_col[j]) for j in range(0, num)]
               for row in matrix]
     # - return list of lines to print
     matrix = ["    ".join(row) for row in matrix]

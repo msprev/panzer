@@ -11,13 +11,14 @@ ENCODING = 'utf8'
 T = 't'
 C = 'c'
 
+# list of 'kind' of items on runlist, in order they should run
 RUNLIST_KIND = ['preflight',
                 'filter',
                 'postprocess',
                 'postflight',
                 'cleanup']
 
-# status of items on runlist
+# 'status' of items on runlist
 QUEUED = 'queued'
 RUNNING = 'running'
 FAILED = 'failed'
