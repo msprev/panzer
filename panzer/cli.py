@@ -1,6 +1,7 @@
 """ command line options for panzer """
 import argparse
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -9,10 +10,11 @@ from . import version
 
 PANZER_DESCRIPTION = '''
 Panzer-specific arguments are prefixed by triple dashes ('---').
-All other arguments are passed to pandoc.
+Other arguments are passed to pandoc.
 
-Default support directory: "%s"
-''' % const.DEFAULT_SUPPORT_DIR
+  panzer default support directory: "%s"
+  pandoc executable: "%s"
+''' % (const.DEFAULT_SUPPORT_DIR, shutil.which('pandoc'))
 
 PANZER_EPILOG = '''
 Copyright (C) 2014 Mark Sprevak
@@ -22,6 +24,7 @@ warranty, not even for merchantability or fitness for a particular purpose.
 '''
 
 # Adapted from https://github.com/jgm/pandoc/blob/master/pandoc.hs#L841
+
 PANDOC_WRITER_MAPPING = {
     ""          : "markdown",
     ".tex"      : "latex",
@@ -142,21 +145,25 @@ def panzer_parse():
     panzer_parser = argparse.ArgumentParser(
         description=PANZER_DESCRIPTION,
         epilog=PANZER_EPILOG,
-        formatter_class=argparse.RawTextHelpFormatter)
-    panzer_parser.add_argument("---panzer-support",
-                               help='location of directory of support files')
-    panzer_parser.add_argument("---debug",
-                               action="store_true",
-                               help='write debug info to panzer.log')
-    panzer_parser.add_argument("---verbose",
-                               type=int,
-                               help='verbosity of console messages\n'
-                               ' 0: silent\n'
-                               ' 1: only errors and warnings\n'
-                               ' 2: full info (default)')
+        formatter_class=argparse.RawTextHelpFormatter,
+        add_help=False)
+    panzer_parser.add_argument("-h", "--help", '---help', '---h',
+                               action="help",
+                               help="show this help message and exit")
     panzer_parser.add_argument('---version',
                                action='version',
                                version=('%(prog)s ' + version.VERSION))
+    panzer_parser.add_argument("---verbose",
+                               type=int,
+                               help='verbosity of warnings\n'
+                               ' 0: silent\n'
+                               ' 1: only errors and warnings (default)\n'
+                               ' 2: full info')
+    panzer_parser.add_argument("---panzer-support",
+                               help='directory of support files')
+    panzer_parser.add_argument("---debug",
+                               action="store_true",
+                               help='write debug info to panzer.log')
     panzer_known_raw, unknown = panzer_parser.parse_known_args()
     panzer_known = vars(panzer_known_raw)
     return (panzer_known, unknown)
