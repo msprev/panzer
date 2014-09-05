@@ -241,3 +241,4 @@ def check_c_and_t_exist(item):
         message = 'Value of "%s" corrupt: "T" field missing' % repr(item)
         raise error.BadASTError(message)
 
+

@@ -330,7 +330,7 @@ class Document(object):
                 entry['status'] = const.DONE
                 stderr = stderr_bytes.decode(const.ENCODING)
                 if stderr:
-                    entry['stderr'] = stderr
+                    entry['stderr'] = info.decode_stderr_json(stderr)
             except OSError as err:
                 entry['status'] = const.FAILED
                 info.log('ERROR', filename, err)
@@ -392,7 +392,7 @@ class Document(object):
                 out_pipe = out_pipe_bytes.decode(const.ENCODING)
                 stderr = stderr_bytes.decode(const.ENCODING)
                 if stderr:
-                    entry['stderr'] = stderr
+                    entry['stderr'] = info.decode_stderr_json(stderr)
                 in_pipe = out_pipe
             except OSError as err:
                 entry['status'] = const.FAILED

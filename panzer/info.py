@@ -102,6 +102,27 @@ def log(level_str, sender, message):
     output += message_str
     my_logger.log(level, output)
 
+def decode_stderr_json(stderr):
+    """ return a list of decoded json messages in stderr """
+    # - check for blank input
+    if not stderr:
+        # - nothing to do
+        return list()
+    # - split the input (based on newlines) into list of json strings
+    output = list()
+    for line in stderr.split('\n'):
+        if not line:
+            # - skip blank lines: no valid json or message to decode
+            continue
+        json_message = list()
+        try:
+            json_message = json.loads(line)
+        except ValueError:
+            # - if json cannot be decoded, just log as ERROR prefixed by '!'
+            json_message = {'level': 'ERROR', 'message': '!' + line}
+        output.append(json_message)
+    return output
+
 def log_stderr(stderr, sender=str()):
     """ send a log from external executable """
     # 1. check for blank input
@@ -113,22 +134,11 @@ def log_stderr(stderr, sender=str()):
         # - remove file extension from sender's name if present
         sender = os.path.splitext(sender)[0]
     # 3. now handle the messages sent by sender
-    # - split the input (based on newlines) into list of json strings
-    for line in stderr.split('\n'):
-        if not line:
-            # - skip blank lines: no valid json or message to decode
-            continue
-        incoming = dict()
-        try:
-            incoming = json.loads(line)
-        except ValueError:
-            # - if json cannot be decoded, just log as ERROR prefixed by '!'
-            incoming = [{'error_msg': {'level': 'ERROR',
-                                       'message': '!' + line}}]
-        for item in incoming:
-            level = item['error_msg']['level']
-            message = item['error_msg']['message']
-            log(level, sender, message)
+    json_message = decode_stderr_json(stderr)
+    for item in json_message:
+        level = item['level']
+        message = item['message']
+        log(level, sender, message)
 
 def pretty_keys(dictionary):
     """ return pretty printed list of dictionary keys, num per line """
@@ -163,7 +173,7 @@ def pretty_list(input_list, separator=', '):
 
 def pretty_json_dump(json_data):
     """ return pretty printed json_data """
-    return json.dumps(json_data, sort_keys=True, indent=4)
+    return json.dumps(json_data, sort_keys=True, indent=2)
 
 def pretty_lined(title):
     """ return pretty printed with lines """
