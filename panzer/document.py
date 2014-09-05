@@ -14,7 +14,7 @@ class Document(object):
     """ representation of pandoc/panzer documents
     - ast       : pandoc abstract syntax tree of document
     - style     : list of styles for document
-    - fullstyle : full list of styles including all parents
+    - styleall : full list of styles including all parents
     - styledef  : style definitions
     - runlist  : run list for document
     - options   : cli options for document
@@ -31,13 +31,13 @@ class Document(object):
         # - defaults
         self.ast = const.EMPTY_DOCUMENT
         self.style = list()
-        self.fullstyle = list()
+        self.styleall = list()
         self.styledef = dict()
         self.runlist = list()
         self.options = {
             'panzer': {
                 'panzer_support'  : const.DEFAULT_SUPPORT_DIR,
-                'debug'           : False,
+                'debug'           : str(),
                 'verbose'         : 1,
                 'stdin_temp_file' : str()
             },
@@ -80,7 +80,7 @@ class Document(object):
         # - remove any styledef not used in doc
         self.styledef = {key: self.styledef[key]
                          for key in self.styledef
-                         if key in self.fullstyle}
+                         if key in self.styleall}
 
     def populate_styledef(self, global_styledef):
         """ populate self.styledef applying global_styledef defaults """
@@ -114,7 +114,7 @@ class Document(object):
             info.log('ERROR', 'panzer', err)
 
     def populate_style(self):
-        """ populate self.style and fullstyle, expanding style hierarchy """
+        """ populate self.style and styleall, expanding style hierarchy """
         info.log('INFO', 'panzer', info.pretty_title('document style'))
         # - try to extract value of style field
         try:
@@ -129,9 +129,9 @@ class Document(object):
         info.log('INFO', 'panzer', 'style:')
         info.log('INFO', 'panzer', info.pretty_list(self.style))
         # - expand the style hierarchy
-        self.fullstyle = self.expand_style_hierarchy()
+        self.styleall = self.expand_style_hierarchy()
         info.log('INFO', 'panzer', 'full hierarchy:')
-        info.log('INFO', 'panzer', info.pretty_list(self.fullstyle))
+        info.log('INFO', 'panzer', info.pretty_list(self.styleall))
         # - check for, and remove, styles missing definitions
         missing = [key for key in self.style
                    if key not in self.styledef]
@@ -200,13 +200,13 @@ class Document(object):
         if 'panzer_reserved' in metadata:
             del metadata['panzer_reserved']
         # - build new json_message
-        data = [{'metadata':  metadata,
-                 'template':  self.template,
-                 'style':     self.style,
-                 'fullstyle': self.fullstyle,
-                 'styledef':  self.styledef,
+        data = [{'metadata': metadata,
+                 'template': self.template,
+                 'style':    self.style,
+                 'styleall': self.styleall,
+                 'styledef': self.styledef,
                  'runlist':  self.runlist,
-                 'options':   self.options}]
+                 'options':  self.options}]
         json_message = json.dumps(data)
         # - inject into metadata
         content = [{"t": "CodeBlock",

@@ -8,6 +8,7 @@ Copyright : Copyright 2014, Mark Sprevak
 License   : BSD3
 """
 
+import json
 import os
 import subprocess
 import sys
@@ -66,7 +67,15 @@ def main():
             os.remove(doc.options['panzer']['stdin_temp_file'])
             info.log('DEBUG', 'panzer', 'deleted temp file: %s'
                      % doc.options['panzer']['stdin_temp_file'])
+        # - write json message to file if ---debug set
+        if doc.options['panzer']['debug']:
+            filename = doc.options['panzer']['debug'] + '.json'
+            content = info.pretty_json_repr(json.loads(doc.json_message()))
+            with open(filename, 'w', encoding='utf8') as output_file:
+                output_file.write(content)
+                output_file.flush()
         info.log('DEBUG', 'panzer', info.pretty_end_log('panzer quits'))
+
     # - successful exit
     sys.exit(0)
 

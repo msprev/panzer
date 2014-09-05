@@ -21,12 +21,10 @@ def start_logger(options):
         },
         'handlers': {
             'log_file_handler': {
-                'class'        : 'logging.handlers.RotatingFileHandler',
+                'class'        : 'logging.FileHandler',
                 'level'        : 'DEBUG',
                 'formatter'    : 'detailed',
-                'filename'     : 'panzer.log',
-                'maxBytes'     : 10485760,
-                'backupCount'  : 5,
+                'filename'     : options['panzer']['debug'] + '.log',
                 'encoding'     : const.ENCODING
             },
             'console': {
@@ -48,6 +46,12 @@ def start_logger(options):
     if not options['panzer']['debug']:
         config['loggers'][__name__]['handlers'].remove('log_file_handler')
         del config['handlers']['log_file_handler']
+    else:
+        # - delete old log file if it exists
+        # - don't see value in keeping old logs here...
+        filename = config['handlers']['log_file_handler']['filename']
+        if os.path.exists(filename):
+            os.remove(filename)
     # - set verbosity level
     verbosity = ['CRITICAL', 'WARNING', 'INFO']
     index = options['panzer'].get('verbose', 1)
@@ -61,8 +65,8 @@ def start_logger(options):
     # - send configuration to logger
     logging.config.dictConfig(config)
     log('DEBUG', 'panzer', pretty_start_log('panzer starts'))
-    log('DEBUG', 'panzer', pretty_lined('OPTIONS'))
-    log('DEBUG', 'panzer', pretty_json_dump(options))
+    log('DEBUG', 'panzer', pretty_title('OPTIONS'))
+    log('DEBUG', 'panzer', pretty_json_repr(options))
 
 def log(level_str, sender, message):
     """ send a log message """
@@ -171,9 +175,9 @@ def pretty_list(input_list, separator=', '):
     output = '  %s' % separator.join(input_list)
     return output
 
-def pretty_json_dump(json_data):
-    """ return pretty printed json_data """
-    return json.dumps(json_data, sort_keys=True, indent=2)
+def pretty_json_repr(data):
+    """ return pretty printed data as a json """
+    return json.dumps(data, sort_keys=True, indent=2)
 
 def pretty_lined(title):
     """ return pretty printed with lines """
@@ -182,7 +186,7 @@ def pretty_lined(title):
 
 def pretty_title(title):
     """ return pretty printed section title """
-    output = '-' * 5 + ' ' + title + ' ' + '-' * 5
+    output = '-' * 5 + ' ' + title.lower() + ' ' + '-' * 5
     return output
 
 def pretty_start_log(title):

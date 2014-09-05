@@ -162,8 +162,7 @@ def panzer_parse():
     panzer_parser.add_argument("---panzer-support",
                                help='directory of support files')
     panzer_parser.add_argument("---debug",
-                               action="store_true",
-                               help='write debug info to panzer.log')
+                               help='filename to write .log and .json debug files')
     panzer_known_raw, unknown = panzer_parser.parse_known_args()
     panzer_known = vars(panzer_known_raw)
     return (panzer_known, unknown)
