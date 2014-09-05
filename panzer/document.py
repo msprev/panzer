@@ -89,7 +89,7 @@ class Document(object):
         if global_styledef:
             info.log('INFO', 'panzer', 'global definitions:')
             for line in info.pretty_keys(global_styledef):
-                info.log('INFO', 'panzer', '    ' + line)
+                info.log('INFO', 'panzer', '  ' + line)
             self.styledef = dict(global_styledef)
         else:
             info.log('INFO', 'panzer', 'no global definitions loaded')
@@ -101,7 +101,7 @@ class Document(object):
                                               'MetaMap')
             info.log('INFO', 'panzer', 'local definitions:')
             for line in info.pretty_keys(local_styledef):
-                info.log('INFO', 'panzer', '    ' + line)
+                info.log('INFO', 'panzer', '  ' + line)
             overridden = [key for key in local_styledef
                           if key in global_styledef]
             for key in overridden:
@@ -246,7 +246,8 @@ class Document(object):
     def transform(self):
         """ transform using style """
         writer = self.options['pandoc']['write']
-        info.log('INFO', 'panzer', 'writer "%s"' % writer)
+        info.log('INFO', 'panzer', 'writer:')
+        info.log('INFO', 'panzer', '  %s' % writer)
         # 1. Do transform
         # - start with blank metadata
         new_metadata = dict()
@@ -291,8 +292,9 @@ class Document(object):
         except (error.MissingField, error.WrongType) as err:
             info.log('DEBUG', 'panzer', err)
         if self.template:
-            info.log('INFO', 'panzer', 'template "%s"'
-                     % info.pretty_path(self.template))
+
+            info.log('INFO', 'panzer', info.pretty_title('template'))
+            info.log('INFO', 'panzer', '  %s' % info.pretty_path(self.template))
         # 4. Update document
         self.set_metadata(new_metadata)
 

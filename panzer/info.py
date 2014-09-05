@@ -93,7 +93,7 @@ def log(level_str, sender, message):
     pretty_level_str = pretty_levels.get(level_str, pretty_levels['ERROR'])
     # -- sender
     if sender != 'panzer':
-        sender_str = '      ' + sender + ': '
+        sender_str = '  ' + sender + ': '
     # -- message
     message_str = message
     output = ''
@@ -163,12 +163,12 @@ def pretty_keys(dictionary):
     matrix = [[row[j].ljust(max_len_col[j]) for j in range(0, num)]
               for row in matrix]
     # - return list of lines to print
-    matrix = ["    ".join(row) for row in matrix]
+    matrix = ['  '.join(row) for row in matrix]
     return matrix
 
 def pretty_list(input_list, separator=', '):
     """ return pretty printed list """
-    output = '    %s' % separator.join(input_list)
+    output = '  %s' % separator.join(input_list)
     return output
 
 def pretty_json_dump(json_data):
@@ -205,7 +205,7 @@ def pretty_path(input_path):
 def pretty_runlist(runlist):
     """ return pretty printed runlist """
     if not runlist:
-        return ['    empty']
+        return ['  empty']
     max_num = len(runlist)
     output = list()
     current_kind = str()
