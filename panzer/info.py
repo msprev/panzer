@@ -179,11 +179,6 @@ def pretty_json_repr(data):
     """ return pretty printed data as a json """
     return json.dumps(data, sort_keys=True, indent=2)
 
-def pretty_lined(title):
-    """ return pretty printed with lines """
-    output = '-' * 20 + ' ' + title.upper() + ' ' + '-' * 20
-    return output
-
 def pretty_title(title):
     """ return pretty printed section title """
     output = '-' * 5 + ' ' + title.lower() + ' ' + '-' * 5
