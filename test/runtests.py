@@ -3,6 +3,11 @@
 
 """ automated test framework for panzer
 
+this will:
+    -   run panzer on series of source files
+    -   run pandoc on series of source files
+    -   compare the outputs to ensure that they are the same
+
 for more info: <https://github.com/msprev/panzer>
 
 Author    : Mark Sprevak <mark.sprevak@ed.ac.uk>
