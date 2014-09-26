@@ -84,10 +84,10 @@ class Document(object):
 
     def populate_styledef(self, global_styledef):
         """ populate self.styledef applying global_styledef defaults """
-        info.log('INFO', 'panzer', info.pretty_title('style definition'))
+        info.log('INFO', 'panzer', info.pretty_title('style definitions'))
         # - add global style definitions
         if global_styledef:
-            info.log('INFO', 'panzer', 'global definitions:')
+            info.log('INFO', 'panzer', 'global:')
             for line in info.pretty_keys(global_styledef):
                 info.log('INFO', 'panzer', '  ' + line)
             self.styledef = dict(global_styledef)
@@ -99,7 +99,7 @@ class Document(object):
             local_styledef = meta.get_content(self.get_metadata(),
                                               'styledef',
                                               'MetaMap')
-            info.log('INFO', 'panzer', 'local definitions:')
+            info.log('INFO', 'panzer', 'local:')
             for line in info.pretty_keys(local_styledef):
                 info.log('INFO', 'panzer', '  ' + line)
             overridden = [key for key in local_styledef

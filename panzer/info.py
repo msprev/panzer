@@ -97,7 +97,8 @@ def log(level_str, sender, message):
     pretty_level_str = pretty_levels.get(level_str, pretty_levels['ERROR'])
     # -- sender
     if sender != 'panzer':
-        sender_str = '  ' + sender + ': '
+        # sender_str = '  ' + sender + ': '
+        sender_str = '  '
     # -- message
     message_str = message
     output = ''
@@ -212,12 +213,18 @@ def pretty_runlist(runlist):
         if current_kind != entry['kind']:
             output.append(entry['kind'] + ':')
             current_kind = entry['kind']
-        output.append('  [%d/%d] %s'
-                      % (i+1, max_num,
-                         pretty_path(entry['command'])))
+        path = entry['command']
+        basename = os.path.splitext(os.path.basename(path))[0]
+        line = '  [%d/%d] %s' % (i+1, max_num, basename)
+        line = line.ljust(30)
+        line += '"%s"' % pretty_path(path)
+        output.append(line)
     return output
 
 def pretty_runlist_entry(num, max_num, path):
     """ return pretty printed run list entry """
-    output = '[%d/%d] %s' % (num+1, max_num, pretty_path(path))
-    return output
+    basename = os.path.splitext(os.path.basename(path))[0]
+    line = '[%d/%d] %s' % (num+1, max_num, basename)
+    # line = line.ljust(30)
+    # line += '"%s"' % pretty_path(path)
+    return line
