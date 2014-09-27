@@ -75,7 +75,7 @@ class Document(object):
             pass
         # - set self.styledef
         self.populate_styledef(global_styledef)
-        # - set self.style
+        # - set self.style and self.stylefull
         self.populate_style()
         # - remove any styledef not used in doc
         self.styledef = {key: self.styledef[key]
@@ -129,17 +129,9 @@ class Document(object):
         info.log('INFO', 'panzer', 'style:')
         info.log('INFO', 'panzer', info.pretty_list(self.style))
         # - expand the style hierarchy
-        self.stylefull = self.expand_style_hierarchy()
+        self.stylefull = meta.expand_style_hierarchy(self.style, self.styledef)
         info.log('INFO', 'panzer', 'full hierarchy:')
         info.log('INFO', 'panzer', info.pretty_list(self.stylefull))
-        # - check for, and remove, styles missing definitions
-        missing = [key for key in self.style
-                   if key not in self.styledef]
-        for key in missing:
-            info.log('ERROR', 'panzer', 'style definition for "%s" not found'
-                     '---ignoring style' % key)
-        self.style = [key for key in self.style
-                      if key not in missing]
 
     def build_runlist(self):
         """ populate runlist with metadata """
@@ -216,10 +208,6 @@ class Document(object):
         # - return json_message
         return json_message
 
-    def expand_style_hierarchy(self):
-        """ expand style field to include all parent styles """
-        return self.style
-
     def purge_style_fields(self):
         """ remove metadata fields specific to panzer """
         kill_list = const.RUNLIST_KIND
@@ -252,7 +240,7 @@ class Document(object):
         # - start with blank metadata
         new_metadata = dict()
         # - add styles one by one
-        for style in self.style:
+        for style in self.stylefull:
             new_metadata = meta.update_metadata(new_metadata,
                                                 meta.get_nested_content(
                                                     self.styledef,

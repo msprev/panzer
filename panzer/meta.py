@@ -146,7 +146,7 @@ def set_content(metadata, field, content, content_type):
     metadata[field] = {const.C: content, const.T: content_type}
 
 def get_list_or_inline(metadata, field):
-    """ return content of MetaList or MetaInlines item as a list """
+    """ return content of MetaList or MetaInlines item coerced as list """
     field_type = get_type(metadata, field)
     if field_type == 'MetaInlines':
         content_raw = get_content(metadata, field, 'MetaInlines')
@@ -241,4 +241,20 @@ def check_c_and_t_exist(item):
         message = 'Value of "%s" corrupt: "T" field missing' % repr(item)
         raise error.BadASTError(message)
 
-
+def expand_style_hierarchy(stylelist, styledef):
+    """ return stylelist expanded to include all parent styles """
+    expanded_list = []
+    for style in stylelist:
+        if style not in styledef:
+            # - style not in styledef tree
+            info.log('ERROR', 'panzer',
+                     'No style definition found for style "%s" --- ignoring it'
+                     % style)
+            continue
+        defcontent = get_content(styledef, style, 'MetaMap')
+        if 'parent' in defcontent:
+            # - non-leaf node
+            parents = get_list_or_inline(defcontent, 'parent')
+            expanded_list.extend(expand_style_hierarchy(parents, styledef))
+        expanded_list.append(style)
+    return expanded_list
