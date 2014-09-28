@@ -16,14 +16,13 @@ style  : Notes
     panzer adds *styles* to pandoc.
     Styles are metadata fields that govern the look and feel of your document in a convenient and reusable way.
     Styles are combinations of templates, metadata settings, filters, post-processors, and pre- and post-flight scripts.
-    panzer remembers the options for a style so that you don't have to.
     Styles are written and selected using YAML metadata.
     Styles can be customised on a per document and per writer basis.
 
 Instead of running `pandoc`, you run `panzer` on your document.
     panzer will run pandoc plus any associated scripts, and it will pass on information based on your style.
     To select a style in your document, add the field `style` to its metadata.
-    By convention, styles have MixedCase values.
+    By convention, styles take MixedCase values.
     For example:
 
     style: Notes
@@ -67,17 +66,19 @@ Like pandoc, panzer expects all I/O to be encoded in utf-8.
 
 A style consists of the following elements, which can be set on a per writer basis:
 
-1. Default metadata
-2. Template
-3. Pre-flight scripts
-4. Filters
-5. Postprocessors
-6. Post-flight scripts
-7. Cleanup scripts
+1.  Parent style(s)
+2.  Default metadata
+3.  Template
+4.  Pre-flight scripts
+5.  Filters
+6.  Postprocessors
+7.  Post-flight scripts
+8.  Cleanup scripts
 
 A style definition is a metadata block:
 
     Style:
+        parent:
         writer:
             ...
 
@@ -92,7 +93,7 @@ Under a writer field, the following metadata fields may appear:
 
   field           value                                                            value type
   --------------- ---------------------------------------------------------------- ---------------
-  `parent`        styles that it inherits                                          `MetaInlines` or `MetaList`
+  `parent`        styles definition(s) to inherit                                  `MetaInlines` or `MetaList`
   `metadata`      default metadata fields                                          `MetaMap`
   `template`      pandoc template                                                  `MetaInlines`
   `preflight`     list of executables to run/kill before input doc is processed    `MetaList`
@@ -266,42 +267,14 @@ panzer would run pandoc with the following document:
 
 
 
-## Applying styles to documents
+## Style inheritance
 
-Individual items in styles are combined with a union biased to the most specific named settings.
-    Items in the global scope take highest precedence (say, you place `template: new_one` in your document's metadata, this would override any setting by the style).
-    Items in the style definitions that appear inside the document take precedence over items that appear in the style definitions in `styles.md`
-    Items in the currently selected style take precedence over items in `Base` and `default`.
-    This allows for a flexible and commonsensical way for style fields to be overrided.
-
-Items in styles are combined with a union biased to the highest ranked items below:
-
-1. Options specified on command line trump everything
-2. Raw metadata fields in document (i.e. outside a style definition) clobber any set by styles
-3. Style definitions inside the document's own metadata definitions inside `styles.yaml`
-4. Current writer trumps `default` writer
-5. Children trump their parents
-6. Later parents (listed later under `parent`) trump earlier parents
-7. Later styles (listed later in `style` field) trump earlier styles
-
-The 'trumping' relation is one in which settings
-
-This sounds complex, but it is actually pretty natural and fits roughly with one's expectations on how styles should behave.
-
-Here are some examples:
-
-    style: Notes
-    Notes:
-        default:
-            metadata:
-                name: Notey
-        latex:
-            metadata:
-                name: Latexy
-    name: MyName
-
-As it stands, the `name` gets set to `MyName`.
-
+Inheritance among style settings follows only four fairly intuitive rules.
+    Fields specified in the document metadata override any style setting.
+    In a style list, later styles override earlier ones.
+    Children override their parents.
+    Specific writer settings override those of the `all` writer.
+    That is it.
 
 ### Non-additive fields
 
@@ -328,7 +301,7 @@ Any text outside the metadata block in `styles.md` is ignored.
 
 ### Command line options
 
-Command line options override settings in the metadata, and they cannot be disable by a metadata setting.
+Command line options override settings in the metadata, and they cannot be disabled by a metadata setting.
 
 Filters specified on the command line (as a value of `--filter`) are always run first: they will be treated as appearing at the start of the list.
     Filters specified on the command line cannot be killed by a `kill` or `killall` command.
@@ -408,11 +381,15 @@ Scripts need to know about the command line options passed to panzer.
     Scripts are passed this information via stdin by a utf8-encoded json message.
     The json message received on stdin by scripts is as follows:
 
-    [ { 'cli_options' : OPTIONS,
-        'run_lists'   : RUN_LISTS,
-        'metadata'    : METADATA   } ]
+    MESSAGE = [{'metadata':  METADATA,
+                'template':  TEMPLATE,
+                'style':     STYLE,
+                'stylefull': STYLEFULL,
+                'styledef':  STYLEDEF,
+                'runlist':   RUNLIST,
+                'options':   OPTIONS}]
 
-`OPTIONS` is a json dictionary with the relevant information.
+`OPTIONS` is a dictionary with information about the command line options.
     It is divided into two dictionaries that concern `panzer` and `pandoc` respectively.
 
     OPTIONS = {
@@ -492,7 +469,7 @@ panzer captures stderr output from all executables.
 
 The message format for stderr that panzer expects is a newline-separated sequence of utf-8 encoded json strings, each with the following structure:
 
-    [ { 'error_msg': { 'level': LEVEL, 'message': MESSAGE } } ]
+    { 'level': LEVEL, 'message': MESSAGE }
 
 `LEVEL` is a string that sets the error level; it can take one of the following values:
 
@@ -513,10 +490,18 @@ The Python module `panzertools` provides a `log` function to scripts/filters to 
 The following metadata fields are reserved for use by panzer and should be avoided.
     Using these fields in ways other than described above in your document will result in unpredictable results.
 
-* `panzer_reserved`
+* `styledef`
 * `style`
-* Field with name same as the value of `style` field.
-    Style names should be capitalized (`Notes`) to prevent name collision with other fields of the same name (`notes`).
+* `template`
+* `preflight`
+* `filter`
+* `postflight`
+* `postprocess`
+* `cleanup`
+* `panzer_reserved`
+* Fields with same name as value of document's `style` field.
+
+A custom pandoc writer with the name `all` should be avoided
 
 # Compatibility with pandoc {#pandoc_compatibility}
 
@@ -534,7 +519,6 @@ panzer extends pandoc's existing use of filters by:
 
 * Calls to subprocesses (scripts, filters, etc.) are blocking
 * Incompatible with Python 2 (pull requests welcome)
-* panzer is not the fastest; a Haskell version is in the works and it should be much faster.
 
 
  [pandoc]: http://johnmacfarlane.net/pandoc/index.html

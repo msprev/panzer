@@ -13,15 +13,15 @@ elements, scripts and filters.
 pandoc. Styles are metadata fields that govern the look and feel of your
 document in a convenient and reusable way. Styles are combinations of
 templates, metadata settings, filters, post-processors, and pre- and
-post-flight scripts. panzer remembers the options for a style so that
-you don't have to. Styles are written and selected using YAML metadata.
-Styles can be customised on a per document and per writer basis.
+post-flight scripts. Styles are written and selected using YAML
+metadata. Styles can be customised on a per document and per writer
+basis.
 
 Instead of running ``pandoc``, you run ``panzer`` on your document.
 panzer will run pandoc plus any associated scripts, and it will pass on
 information based on your style. To select a style in your document, add
 the field ``style`` to its metadata. By convention, styles take
-capitalized values. For example:
+MixedCase values. For example:
 
 ::
 
@@ -73,19 +73,21 @@ Styles
 A style consists of the following elements, which can be set on a per
 writer basis:
 
-1. Default metadata
-2. Template
-3. Pre-flight scripts
-4. Filters
-5. Postprocessors
-6. Post-flight scripts
-7. Cleanup scripts
+1. Parent style(s)
+2. Default metadata
+3. Template
+4. Pre-flight scripts
+5. Filters
+6. Postprocessors
+7. Post-flight scripts
+8. Cleanup scripts
 
 A style definition is a metadata block:
 
 ::
 
     Style:
+        parent:
         writer:
             ...
 
@@ -99,23 +101,25 @@ settings apply to all writers of the style.
 
 Under a writer field, the following metadata fields may appear:
 
-+-------------------+------------------------------------------------------------------+-------------------+
-| field             | value                                                            | value type        |
-+===================+==================================================================+===================+
-| ``metadata``      | default metadata fields                                          | ``MetaMap``       |
-+-------------------+------------------------------------------------------------------+-------------------+
-| ``template``      | pandoc template                                                  | ``MetaInlines``   |
-+-------------------+------------------------------------------------------------------+-------------------+
-| ``preflight``     | list of executables to run/kill before input doc is processed    | ``MetaList``      |
-+-------------------+------------------------------------------------------------------+-------------------+
-| ``filter``        | list of pandoc json filters to run/kill                          | ``MetaList``      |
-+-------------------+------------------------------------------------------------------+-------------------+
-| ``postprocess``   | list of executables to run/kill to postprocess pandoc's output   | ``MetaList``      |
-+-------------------+------------------------------------------------------------------+-------------------+
-| ``postflight``    | list of executables to run/kill after output file written        | ``MetaList``      |
-+-------------------+------------------------------------------------------------------+-------------------+
-| ``cleanup``       | list of executables to run/kill on exit irrespective of errors   | ``MetaList``      |
-+-------------------+------------------------------------------------------------------+-------------------+
++-------------------+------------------------------------------------------------------+-----------------------------------+
+| field             | value                                                            | value type                        |
++===================+==================================================================+===================================+
+| ``parent``        | styles definition(s) to inherit                                  | ``MetaInlines`` or ``MetaList``   |
++-------------------+------------------------------------------------------------------+-----------------------------------+
+| ``metadata``      | default metadata fields                                          | ``MetaMap``                       |
++-------------------+------------------------------------------------------------------+-----------------------------------+
+| ``template``      | pandoc template                                                  | ``MetaInlines``                   |
++-------------------+------------------------------------------------------------------+-----------------------------------+
+| ``preflight``     | list of executables to run/kill before input doc is processed    | ``MetaList``                      |
++-------------------+------------------------------------------------------------------+-----------------------------------+
+| ``filter``        | list of pandoc json filters to run/kill                          | ``MetaList``                      |
++-------------------+------------------------------------------------------------------+-----------------------------------+
+| ``postprocess``   | list of executables to run/kill to postprocess pandoc's output   | ``MetaList``                      |
++-------------------+------------------------------------------------------------------+-----------------------------------+
+| ``postflight``    | list of executables to run/kill after output file written        | ``MetaList``                      |
++-------------------+------------------------------------------------------------------+-----------------------------------+
+| ``cleanup``       | list of executables to run/kill on exit irrespective of errors   | ``MetaList``                      |
++-------------------+------------------------------------------------------------------+-----------------------------------+
 
 **Default metadata** can be set by the style. Any metadata field that
 can appear in a pandoc document can be defined as default metadata. This
@@ -212,7 +216,7 @@ field.
             - run: ...
               args: ...
             - kill: ...
-            - killall: [true|false] 
+            - killall: [true|false]
 
 Passing command line arguments to executables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -262,7 +266,7 @@ Here is a definition for the ``Notes`` style:
 ::
 
     Notes:
-        default:                 
+        default:
             metadata:
                 numbersections: false
         latex:
@@ -321,36 +325,14 @@ panzer would run pandoc with the following document:
         - run: rmlatex.py
     ...
 
-Applying styles to documents
-----------------------------
+Style inheritance
+-----------------
 
-Individual items in styles are combined with a union biased to the most
-specific named settings. Items in the global scope take highest
-precedence (say, you place ``template: new_one`` in your document's
-metadata, this would override any setting by the style). Items in the
-style definitions that appear inside the document take precedence over
-items that appear in the style definitions in ``styles.md`` Items in the
-currently selected style take precedence over items in ``Base`` and
-``default``. This allows for a flexible and commonsensical way for style
-fields to be overrided.
-
-Items in styles are combined with a union biased to the highest ranked
-items below:
-
-1. Metadata fields in document
-2. Style definitions in document:
-
-   a. Current style, current writer
-   b. Current style, ``default`` writer
-   c. ``Base`` style, current writer
-   d. ``Base`` style, ``default`` writer
-
-3. Style definitions in ``styles.md``:
-
-   a. Current style, current writer
-   b. Current style, ``default`` writer
-   c. ``Base`` style, current writer
-   d. ``Base`` style, ``default`` writer
+Inheritance among style settings follows only four fairly intuitive
+rules. Fields specified in the document metadata override any style
+setting. In a style list, later styles override earlier ones. Children
+override their parents. Specific writer settings override those of the
+``all`` writer. That is it.
 
 Non-additive fields
 ~~~~~~~~~~~~~~~~~~~
@@ -387,7 +369,7 @@ Command line options
 ~~~~~~~~~~~~~~~~~~~~
 
 Command line options override settings in the metadata, and they cannot
-be disable by a metadata setting.
+be disabled by a metadata setting.
 
 Filters specified on the command line (as a value of ``--filter``) are
 always run first: they will be treated as appearing at the start of the
@@ -500,13 +482,17 @@ received on stdin by scripts is as follows:
 
 ::
 
-    [ { 'cli_options' : OPTIONS,
-        'run_lists'   : RUN_LISTS,
-        'metadata'    : METADATA   } ]
+    MESSAGE = [{'metadata':  METADATA,
+                'template':  TEMPLATE,
+                'style':     STYLE,
+                'stylefull': STYLEFULL,
+                'styledef':  STYLEDEF,
+                'runlist':   RUNLIST,
+                'options':   OPTIONS}]
 
-``OPTIONS`` is a json dictionary with the relevant information. It is
-divided into two dictionaries that concern ``panzer`` and ``pandoc``
-respectively.
+``OPTIONS`` is a dictionary with information about the command line
+options. It is divided into two dictionaries that concern ``panzer`` and
+``pandoc`` respectively.
 
 ::
 
@@ -614,7 +600,7 @@ structure:
 
 ::
 
-    [ { 'error_msg': { 'level': LEVEL, 'message': MESSAGE } } ]
+    { 'level': LEVEL, 'message': MESSAGE }
 
 ``LEVEL`` is a string that sets the error level; it can take one of the
 following values:
@@ -622,11 +608,11 @@ following values:
 ::
 
     'CRITICAL'
-    'ERROR'   
-    'WARNING' 
-    'INFO'    
-    'DEBUG'   
-    'NOTSET'  
+    'ERROR'
+    'WARNING'
+    'INFO'
+    'DEBUG'
+    'NOTSET'
 
 ``MESSAGE`` is your error message.
 
@@ -640,12 +626,18 @@ The following metadata fields are reserved for use by panzer and should
 be avoided. Using these fields in ways other than described above in
 your document will result in unpredictable results.
 
--  ``panzer_reserved``
--  ``Base``
+-  ``styledef``
 -  ``style``
--  Field with name same as the value of ``style`` field. Style names
-   should be capitalized (``Notes``) to prevent name collision with
-   other fields of the same name (``notes``).
+-  ``template``
+-  ``preflight``
+-  ``filter``
+-  ``postflight``
+-  ``postprocess``
+-  ``cleanup``
+-  ``panzer_reserved``
+-  Fields with same name as value of document's ``style`` field.
+
+A custom pandoc writer with the name ``all`` should be avoided
 
 Compatibility with pandoc
 =========================
@@ -655,18 +647,17 @@ work with panzer will work with pandoc's vanilla ``--filter`` option.
 
 panzer extends pandoc's existing use of filters by:
 
-1. Allowing filters to take more than one command line argument (first
-   argument still reserved for the writer).
+1. Filters may take more than one command line argument (first argument
+   still reserved for the writer). Presumably pandoc does not permit
+   this because the syntax to provide arguments to filters from the
+   command line would be awkward and non-obvious. panzer lets filters be
+   specified cleanly in metadata, so this limitation does not apply.
 2. Injecting a special ``panzer_reserved`` metadata field into document
-   that allows filters to see ``OPTIONS`` data. This is useful if, say,
-   filters are to write auxiliary files that will be picked up by
-   subsequent processing.
+   containing json message with lots of goodies for filters to mine.
 
 Known issues
 ============
 
 -  Calls to subprocesses (scripts, filters, etc.) are blocking
 -  Incompatible with Python 2 (pull requests welcome)
--  panzer is not the fastest; a Haskell version is in the works and it
-   should be much faster.
 
