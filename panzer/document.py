@@ -169,12 +169,14 @@ class Document(object):
             if entry['kind'] == 'filter':
                 entry['arguments'].insert(0, self.options['pandoc']['write'])
         # -- postprocessors: remove them if output kind is pdf
-        if self.options['pandoc']['pdf_output']:
+        # .. or if a binary writer is selected
+        if self.options['pandoc']['pdf_output'] \
+        or self.options['pandoc']['write'] in const.BINARY_WRITERS:
             new_runlist = list()
             for entry in runlist:
                 if entry['kind'] == 'postprocess':
                     info.log('INFO', 'panzer',
-                             'postprocess "%s" skipped --- output set to PDF'
+                             'postprocess "%s" skipped --- output of pandoc is binary file'
                              % entry['command'])
                     continue
                 new_runlist.append(entry)
@@ -409,16 +411,17 @@ class Document(object):
         """ run pandoc on document
 
         Normally, input to pandoc is passed via stdin and output received via
-        stout. Exception is when the output file has .pdf extension. Then,
-        output is simply pdf file that panzer does not process further, and
-        internal document not updated by pandoc.
+        stout. Exception is when the output file has .pdf extension or a binary
+        writer selected. Then, output is simply the binary file that panzer
+        does not process further, and internal document not updated by pandoc.
         """
         # 1. Build pandoc command
         command = ['pandoc']
         command += ['-']
         command += ['--read', 'json']
         command += ['--write', self.options['pandoc']['write']]
-        if self.options['pandoc']['pdf_output']:
+        if self.options['pandoc']['pdf_output'] \
+        or self.options['pandoc']['write'] in const.BINARY_WRITERS:
             command += ['--output', self.options['pandoc']['output']]
         else:
             command += ['--output', '-']
@@ -458,8 +461,9 @@ class Document(object):
         finally:
             info.log_stderr(stderr)
         # 4. Deal with output of pandoc
-        if self.options['pandoc']['pdf_output']:
-            # do nothing with a pdf
+        if self.options['pandoc']['pdf_output'] \
+        or self.options['pandoc']['write'] in const.BINARY_WRITERS:
+            # do nothing with a binary output
             pass
         else:
             self.output = out_pipe
@@ -467,8 +471,9 @@ class Document(object):
     def write(self):
         """ write document """
         # case 1: pdf as output file
-        if self.options['pandoc']['pdf_output']:
-            info.log('DEBUG', 'panzer', 'output to PDF by pandoc')
+        if self.options['pandoc']['pdf_output'] \
+        or self.options['pandoc']['write'] in const.BINARY_WRITERS:
+            info.log('DEBUG', 'panzer', 'output to binary file by pandoc')
             return
         # case 2: stdout as output
         if self.options['pandoc']['output'] == '-':

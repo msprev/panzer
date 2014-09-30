@@ -26,3 +26,7 @@ DONE = 'done'
 
 # ast of an empty pandoc document
 EMPTY_DOCUMENT = [{'unMeta': {}}, []]
+
+# writers that give binary outputs
+# these cannot be written to stdout
+BINARY_WRITERS = ['odt', 'docx', 'epub', 'epub3']
