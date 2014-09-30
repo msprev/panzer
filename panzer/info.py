@@ -155,8 +155,10 @@ def pretty_keys(dictionary):
     keys = list(dictionary.keys())
     keys.sort()
     # - fill with blank elements to width num
-    missing = num - (len(keys) % num)
-    keys.extend([''] * missing)
+    missing = (len(keys) % num)
+    if missing != 0:
+        to_add = num - missing
+        keys.extend([''] * to_add)
     # - turn into 2D matrix
     matrix = [[keys[i+j] for i in range(0, num)]
               for j in range(0, len(keys), num)]
