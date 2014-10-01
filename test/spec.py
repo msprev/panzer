@@ -1,6 +1,7 @@
 """ specs of tests to run """
 
 # matrix of tests to run on source files
+# - currently no tests are run for binary writers
 TEST = {
     'writer' : [
         '',
@@ -13,7 +14,7 @@ TEST = {
         'dzslides',
         # 'epub',
         # 'epub3',
-        # 'fb2',
+        'fb2',
         'haddock',
         'html',
         'html5',
@@ -55,6 +56,8 @@ EXTRA_TESTS = [
     # {'writer': 'latex', 'pandoc_options': '', 'extension': '.pdf'},
     # {'writer': 'beamer', 'pandoc_options': '', 'extension': '.pdf'}
 ]
+
+########################################################################
 
 # default file extensions for each writer
 DEFAULT_EXTENSION = {

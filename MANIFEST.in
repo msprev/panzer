@@ -1,4 +1,2 @@
 include README.rst
 include LICENSE.txt
-recursive-exclude support *
-recursive-exclude tests *
