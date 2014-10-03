@@ -217,7 +217,7 @@ def pretty_runlist(runlist):
             current_kind = entry['kind']
         path = entry['command']
         basename = os.path.splitext(os.path.basename(path))[0]
-        line = '  [%d/%d] %s' % (i+1, max_num, basename)
+        line = ' %d. %s' % (i+1, basename)
         line = line.ljust(30)
         line += '"%s"' % pretty_path(path)
         output.append(line)
