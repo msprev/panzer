@@ -156,7 +156,7 @@ class Document(object):
                     entry = dict()
                     entry['kind'] = 'filter'
                     entry['status'] = const.QUEUED
-                    entry['command'] = cmd
+                    entry['command'] = cmd[0]
                     entry['arguments'] = list()
                     runlist.append(entry)
             #  - add commands specified in metadata
