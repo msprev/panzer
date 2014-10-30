@@ -9,22 +9,21 @@ syntax: runtest.py REMIT [SOURCE1] [SOURCE2] ...
 
 runtest.py will:
 
--   Run panzer on series of source files, dumping output to output-panzer/
--   Run pandoc on series of source files, dumping output to output-pandoc/
+-   Run panzer on source files, dumping output to output-panzer/
+-   Run pandoc on source files, dumping output to output-pandoc/
 -   Diff relevant outputs in output-panzer/ and output-pandoc/
 
 Tests are specified in:
 
 -   'panzer.md' files in source-panzer/
--   'pandoc.md' and 'pandoc_WRITER.md' files in source-pandoc/
-    (WRITER is name of writer to run with that input)
+-   'pandoc.md' and 'pandoc_WRITER.md' files in source-pandoc/ (WRITER is name of writer to run with that input)
 -   spec.py, which specifies the command line options and writers to test
 
 To write a new test:
 
 -   Write a panzer source file
 -   Write a pandoc source file that will produce the same output file
--   Place them in directory of same number in source-panzer/ and source-pandoc/
+-   Place them in numbered directories in source-panzer/ and source-pandoc/
 
 # Limitations
 
