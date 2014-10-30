@@ -259,23 +259,21 @@ def pretty_title(title):
 def do_diff(sourcelist):
     """ diff the pandoc and panzer output directories """
     for source in sourcelist:
-        print(pretty_title(source))
         dc = filecmp.dircmp('output-pandoc/'+source, 'output-panzer/'+source)
+        if dc.right_only or dc.left_only or dc.diff_files:
+            print(pretty_title(source))
         if dc.right_only:
             print('* only in output-pandoc/%s:' % source)
             for line in pretty_list(dc.right_only):
                 print('    ' + line)
-            print('')
         if dc.left_only:
             print('* only in output-panzer/%s:' % source)
             for line in pretty_list(dc.left_only):
                 print('    ' + line)
-            print('')
         if dc.diff_files:
             print('* differing:')
             for line in pretty_list(dc.diff_files):
                 print('    ' + line)
-            print('')
 
 def pretty_list(keys):
     """ return pretty printed list of dictionary keys, num per line """
@@ -300,7 +298,6 @@ def pretty_list(keys):
     # - pad with spaces
     matrix = [[row[j].ljust(max_len_col[j]) for j in range(0, num)]
               for row in matrix]
-
     # - return list of lines to print
     matrix = ['  '.join(row) for row in matrix]
     return matrix
