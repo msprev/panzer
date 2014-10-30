@@ -16,7 +16,8 @@ runtest.py will:
 Tests are specified in:
 
 -   'panzer.md' files in source-panzer/
--   'pandoc.md' files in source-pandoc/
+-   'pandoc.md' and 'pandoc_WRITER.md' files in source-pandoc/
+    (WRITER is name of writer to run with that input)
 -   spec.py, which specifies the command line options and writers to test
 
 To write a new test:
@@ -27,7 +28,6 @@ To write a new test:
 
 # Limitations
 
--   Does not allow different pandoc outputs for different writers
 -   Does not test binary writers (docx, odt, etc.) or pdf output
 -   Does not test runlists
 
@@ -201,8 +201,13 @@ def make_command(remit=str(),
     # start building the command...
     # remit
     command = [remit]
-    # source
-    command += [remit + '.md']
+    # input file
+    # - if remit_WRITER.md exists, then use it!
+    writer_specific_source = remit + '_' + writer + '.md'
+    if os.path.exists(writer_specific_source):
+        command += [writer_specific_source]
+    else:
+        command += [remit + '.md']
     # writer
     if writer:
         command += ['-t']
