@@ -12,7 +12,7 @@ PANZER_DESCRIPTION = '''
 Panzer-specific arguments are prefixed by triple dashes ('---').
 Other arguments are passed to pandoc.
 
-  panzer default support directory: "%s"
+  panzer default user data directory: "%s"
   pandoc executable: "%s"
 ''' % (const.DEFAULT_SUPPORT_DIR, shutil.which('pandoc'))
 
