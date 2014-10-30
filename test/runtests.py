@@ -139,8 +139,11 @@ def run_tests(remit, sourcelist):
         commands = remove_blacklist(remit, source, commands)
         # - run the commands
         for i, command in enumerate(commands):
-            print('[test %s : %d of %d] %s'
-                  % (source, i+1, len(commands), ' '.join(command)))
+            print('[test %s: %s of %d] %s'
+                  % (source,
+                     str(i+1).rjust(len(str(len(commands)))),
+                     len(commands),
+                     ' '.join(command)))
             subprocess.call(command)
         # - move out of source's directory
         os.chdir('..')
