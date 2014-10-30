@@ -470,17 +470,21 @@ class Document(object):
 
     def write(self):
         """ write document """
-        # case 1: pdf as output file
+        # case 1: pdf or binary file as output
         if self.options['pandoc']['pdf_output'] \
         or self.options['pandoc']['write'] in const.BINARY_WRITERS:
             info.log('DEBUG', 'panzer', 'output to binary file by pandoc')
             return
-        # case 2: stdout as output
+        # case 2: no output generated
+        if not self.output:
+            info.log('DEBUG', 'panzer', 'no output to write')
+            return
+        # case 3: stdout as output
         if self.options['pandoc']['output'] == '-':
             sys.stdout.buffer.write(self.output.encode(const.ENCODING))
             sys.stdout.flush()
             info.log('DEBUG', 'panzer', 'output written stdout by panzer')
-        # case 3: any other file as output
+        # case 4: output to file
         else:
             with open(self.options['pandoc']['output'], 'w',
                       encoding=const.ENCODING) as output_file:
