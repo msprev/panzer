@@ -7,7 +7,7 @@ syntax: runtest.py REMIT [SOURCE1] [SOURCE2] ...
     where REMIT could be "pandoc" or "panzer" or "diff"
     if no sources specified, then all sources are tested
 
-runtest.py can:
+runtest.py will:
 
 -   Run panzer on series of source files, dumping output to output-panzer/
 -   Run pandoc on series of source files, dumping output to output-pandoc/
@@ -15,8 +15,8 @@ runtest.py can:
 
 Tests are specified in:
 
--   Numbered files in source-panzer/
--   Numbered files in source-pandoc/
+-   'panzer.md' files in source-panzer/
+-   'pandoc.md' files in source-pandoc/
 -   spec.py, which specifies the command line options and writers to test
 
 To write a new test:
@@ -27,14 +27,17 @@ To write a new test:
 
 # Limitations
 
+-   Does not allow different pandoc outputs for different writers
 -   Does not test binary writers (docx, odt, etc.) or pdf output
--   Does not test metadata
 -   Does not test runlists
 
 Author    : Mark Sprevak <mark.sprevak@ed.ac.uk>
 Copyright : Copyright 2014, Mark Sprevak
 License   : BSD3
 """
+
+# TODO implement logging functions
+# TODO allow 'pandoc_WRITER.md' source to generate output specific to WRITER
 
 import datetime
 import filecmp
@@ -57,12 +60,11 @@ def main():
         do_diff(sourcelist)
         exit(0)
     describe_tests(remit, sourcelist)
-    print('--> Delete old output files of %s for these tests?' % remit)
-    input("    Press Enter to continue...")
+    print('--> Delete old output files of %s for these tests' % remit)
+    # input("    Press Enter to continue...")
     clean_outputs(remit, sourcelist)
-    print('--> Run %s to generate new output now?' % remit)
-    input("    Press Enter to continue...")
-    print('changing working directory to "source-%s"' % remit)
+    print('--> Run %s to generate new output now' % remit)
+    # input("    Press Enter to continue...")
     os.chdir('source-' + remit)
     print(pretty_title('start'))
     start_time = time.time()
@@ -103,8 +105,8 @@ def get_all_sources(remit):
 
 def describe_tests(remit, sourcelist):
     """ print info about tests to be run """
-    print('* test run for "%s"' % remit)
-    print('* files to test: ')
+    print('* run tests using "%s"' % remit)
+    print('* tests to run: ')
     print('    ' + str(sourcelist))
     print('* writers to test: ')
     print('    ' + str(spec.TEST['writer']))
@@ -137,7 +139,7 @@ def run_tests(remit, sourcelist):
         commands = remove_blacklist(remit, source, commands)
         # - run the commands
         for i, command in enumerate(commands):
-            print('[%s:%d/%d] %s'
+            print('[test %s : %d of %d] %s'
                   % (source, i+1, len(commands), ' '.join(command)))
             subprocess.call(command)
         # - move out of source's directory
@@ -200,7 +202,7 @@ def make_command(remit=str(),
     # remit
     command = [remit]
     # source
-    command += [source + '.md']
+    command += [remit + '.md']
     # writer
     if writer:
         command += ['-t']
@@ -214,15 +216,14 @@ def make_command(remit=str(),
     else:
         pretty_writer_string = writer
     target = os.path.join(os.getcwd(), '..', '..', 'output-'+remit,
-                          source, source)
+                          source,
+                          pretty_writer_string
+                          + ''.join(pandoc_options)
+                          + extension)
     target = os.path.normpath(target)
     target = os.path.relpath(target)
     command += ['-o']
-    command += [target
-                + "_"
-                + pretty_writer_string
-                + ''.join(pandoc_options)
-                + extension]
+    command += [target]
     # panzer-specific options
     if remit == 'panzer':
         # support directory
