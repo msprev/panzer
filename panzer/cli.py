@@ -157,8 +157,8 @@ def panzer_parse():
                                type=int,
                                help='verbosity of warnings\n'
                                ' 0: silent\n'
-                               ' 1: only errors and warnings (default)\n'
-                               ' 2: full info')
+                               ' 1: only errors and warnings\n'
+                               ' 2: full info (default)')
     panzer_parser.add_argument("---panzer-support",
                                help='directory of support files')
     panzer_parser.add_argument("---debug",

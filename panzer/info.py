@@ -54,7 +54,7 @@ def start_logger(options):
             os.remove(filename)
     # - set verbosity level
     verbosity = ['CRITICAL', 'WARNING', 'INFO']
-    index = options['panzer'].get('verbose', 1)
+    index = options['panzer'].get('verbose', 2)
     try:
         verbosity_level = verbosity[index]
     except IndexError:
