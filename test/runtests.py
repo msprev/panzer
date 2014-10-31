@@ -36,7 +36,6 @@ License   : BSD3
 """
 
 # TODO implement logging functions
-# TODO allow 'pandoc_WRITER.md' source to generate output specific to WRITER
 
 import datetime
 import filecmp
