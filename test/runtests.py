@@ -269,10 +269,11 @@ def do_diff(sourcelist):
             for line in pretty_list(dc.diff_files):
                 print('    ' + line)
 
-def pretty_list(keys, num=3):
+def pretty_list(incoming_keys, num=3):
     """ return pretty printed list of dictionary keys, num per line """
-    if not keys:
+    if not incoming_keys:
         return []
+    keys = list(incoming_keys)
     # - turn into sorted list
     keys.sort()
     # - fill with blank elements to width num
