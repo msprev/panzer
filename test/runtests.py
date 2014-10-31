@@ -58,16 +58,14 @@ def main():
         do_diff(sourcelist)
         exit(0)
     describe_tests(remit, sourcelist)
-    print('--> Delete old output files of %s for these tests' % remit)
+    print('--> Start test run')
     # input("    Press Enter to continue...")
     clean_outputs(remit, sourcelist)
-    print('--> Run %s to generate new output now' % remit)
+    print('--> Running tests for %s' % remit)
     # input("    Press Enter to continue...")
     os.chdir('source-' + remit)
-    print(pretty_title('start'))
     start_time = time.time()
     run_tests(remit, sourcelist)
-    print(pretty_title('end'))
     elapsed_time = time.time() - start_time
     print('time taken: %s (%f seconds)'
           % (str(datetime.timedelta(seconds=elapsed_time)),
@@ -103,13 +101,11 @@ def get_all_sources(remit):
 
 def describe_tests(remit, sourcelist):
     """ print info about tests to be run """
-    print('* run tests using "%s"' % remit)
+    print('* run tests with "%s"' % remit)
     print('* tests to run: ')
-    print('    ' + str(sourcelist))
+    for line in pretty_list(sourcelist, 7):
+        print('    ' + line)
     print('* writers to test: ')
-    print('    ' + str(spec.TEST['writer']))
-    print('* pandoc options to test: ')
-    print('    ' + str(spec.TEST['pandoc_options']))
 
 def clean_outputs(remit, sourcelist):
     """ delete the output files for all the sources of remit """
@@ -127,7 +123,6 @@ def clean_outputs(remit, sourcelist):
 def run_tests(remit, sourcelist):
     """ run all the tests for remit on sourcelist """
     for source in sourcelist:
-        print(pretty_title(source))
         # - move into source's directory
         os.chdir(source)
         # - build worklist of commands
@@ -274,12 +269,10 @@ def do_diff(sourcelist):
             for line in pretty_list(dc.diff_files):
                 print('    ' + line)
 
-def pretty_list(keys):
+def pretty_list(keys, num=3):
     """ return pretty printed list of dictionary keys, num per line """
     if not keys:
         return []
-    # - number of keys printed per line
-    num = 3
     # - turn into sorted list
     keys.sort()
     # - fill with blank elements to width num
