@@ -48,6 +48,8 @@ def check_support_directory(options):
                  % const.DEFAULT_SUPPORT_DIR)
         input("    Press Enter to continue...")
         create_default_support_dir()
+    os.environ['PANZER_SHARED'] = \
+        os.path.join(options['panzer']['panzer_support'], 'shared')
 
 def create_default_support_dir():
     """ create a blank panzer support directory """
