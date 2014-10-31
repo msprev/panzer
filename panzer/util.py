@@ -43,8 +43,27 @@ def check_support_directory(options):
         info.log('WARNING', 'panzer',
                  'default panzer support directory "%s" not found'
                  % const.DEFAULT_SUPPORT_DIR)
-    os.environ['PANZER_SHARED'] = \
-        os.path.join(options['panzer']['panzer_support'], 'shared')
+        info.log('WARNING', 'panzer',
+                 'create blank support directory "%s"?'
+                 % const.DEFAULT_SUPPORT_DIR)
+        input("    Press Enter to continue...")
+        create_default_support_dir()
+
+def create_default_support_dir():
+    """ create a blank panzer support directory """
+    # - create .panzer
+    os.mkdir(const.DEFAULT_SUPPORT_DIR)
+    info.log('INFO', 'panzer', 'created "%s"' % const.DEFAULT_SUPPORT_DIR)
+    # - create styles.yaml
+    style_definitions = os.path.join(const.DEFAULT_SUPPORT_DIR, 'styles.yaml')
+    info.log('INFO', 'panzer', 'created "styles.yaml"')
+    open(style_definitions, 'w').close()
+    # - create subdirectories of .panzer
+    subdirs = const.RUNLIST_KIND + ['template']
+    for subdir in subdirs:
+        target = os.path.join(const.DEFAULT_SUPPORT_DIR, subdir)
+        os.mkdir(target)
+        info.log('INFO', 'panzer', 'created "%s"' % target)
 
 def resolve_path(filename, kind, options):
     """ return path to filename of kind field """
@@ -62,3 +81,4 @@ def resolve_path(filename, kind, options):
         if os.path.exists(path):
             return path
     return filename
+
