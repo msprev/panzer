@@ -184,7 +184,7 @@ Notes:
             numbersections: true
             fontsize:       12pt
         postflight:
-            - run: latexmk.py
+            - run:          latexmk.py
 ```
 
 If panzer is run on the following document with the latex writer selected:
@@ -202,10 +202,10 @@ panzer would run pandoc with the following document, and then run `latexmk.py` i
 
 ``` {.yaml}
 ---
-title: "My document"
-author: John Smith
+title:          "My document"
+author:         John Smith
 numbersections: true
-fontsize: 12pt
+fontsize:       12pt
 ...
 ```
 
