@@ -476,7 +476,9 @@ class Document(object):
             info.log('DEBUG', 'panzer', 'output to binary file by pandoc')
             return
         # case 2: no output generated
-        if not self.output:
+        if not self.output and self.options['pandoc']['write'] != 'rtf':
+            # hack for rtf writer to get around issue:
+            # https://github.com/jgm/pandoc/issues/1732
             info.log('DEBUG', 'panzer', 'no output to write')
             return
         # case 3: stdout as output
