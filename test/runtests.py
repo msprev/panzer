@@ -61,7 +61,7 @@ def main():
     print('--> Start test run')
     # input("    Press Enter to continue...")
     clean_outputs(remit, sourcelist)
-    print('--> Running tests for %s' % remit)
+    print('--> Running tests with %s' % remit)
     # input("    Press Enter to continue...")
     os.chdir('source-' + remit)
     start_time = time.time()
@@ -106,6 +106,20 @@ def describe_tests(remit, sourcelist):
     for line in pretty_list(sourcelist, 7):
         print('    ' + line)
     print('* writers to test: ')
+    for line in pretty_list(spec.TEST['writer'], 7):
+        print('    ' + line)
+    print('* options to test: ')
+    for line in pretty_list(spec.TEST['pandoc_options'], 7):
+        print('    ' + line)
+    print('* blacklisted: ')
+    for config in spec.BLACKLIST:
+        command = make_command(remit=remit,
+                               source='TEST',
+                               writer=config['writer'],
+                               pandoc_options=config['pandoc_options'],
+                               extension=config['extension'])
+        print('    ' + ' '.join(command))
+        print('        (' + config['comment'] + ')')
 
 def clean_outputs(remit, sourcelist):
     """ delete the output files for all the sources of remit """
@@ -178,13 +192,23 @@ def extra_tests(remit, source):
 
 def remove_blacklist(remit, source, commands):
     """ return worklist with anything in BLACKLIST removed """
+    blacklisted_commands = list()
+    for config in spec.BLACKLIST:
+        command = make_command(remit=remit,
+                               source=source,
+                               writer=config['writer'],
+                               pandoc_options=config['pandoc_options'],
+                               extension=config['extension'])
+        blacklisted_commands.append(command)
+    commands = [command for command in commands
+                if command not in blacklisted_commands]
     return commands
 
 def make_command(remit=str(),
                  source=str(),
                  writer=str(),
                  extension=str(),
-                 pandoc_options=str()):
+                 pandoc_options=list()):
     """ return command to run remit on source based on arguments """
     # if no extension specified, infer it from writer
     if not extension and writer:

@@ -49,7 +49,18 @@ TEST = {
 }
 
 # blacklist of tests not to run
-BLACKLIST = []
+BLACKLIST = [
+    {'writer': 'fb2',
+     'pandoc_options': ['--standalone'],
+     'extension': '.fb2',
+     'comment': 'hack to get around https://github.com/jgm/pandoc/issues/1660'
+    },
+    {'writer': 'fb2',
+     'pandoc_options': ['--smart', '--standalone'],
+     'extension': '.fb2',
+     'comment': 'hack to get around https://github.com/jgm/pandoc/issues/1660'
+    }
+]
 
 # extra tests, in addition to the matrix, to run
 EXTRA_TESTS = [
