@@ -123,6 +123,8 @@ def describe_tests(remit, sourcelist):
 
 def clean_outputs(remit, sourcelist):
     """ delete the output files for all the sources of remit """
+    if not os.path.exists('output-'+remit):
+        os.mkdir('output-'+remit)
     for source in sourcelist:
         os.chdir('output-'+remit)
         if os.path.exists(source):
