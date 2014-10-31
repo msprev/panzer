@@ -263,11 +263,11 @@ def do_diff(sourcelist):
         if dc.right_only or dc.left_only or dc.diff_files:
             print(pretty_title(source))
         if dc.right_only:
-            print('* only in output-pandoc/%s:' % source)
+            print('* only in output-panzer/%s:' % source)
             for line in pretty_list(dc.right_only):
                 print('    ' + line)
         if dc.left_only:
-            print('* only in output-panzer/%s:' % source)
+            print('* only in output-pandoc/%s:' % source)
             for line in pretty_list(dc.left_only):
                 print('    ' + line)
         if dc.diff_files:
