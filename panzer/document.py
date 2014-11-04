@@ -253,8 +253,16 @@ class Document(object):
                                                     self.styledef,
                                                     [style, writer],
                                                     'MetaMap'))
-        # - add metadata specified in document
-        new_metadata.update(self.get_metadata())
+        # - add local metadata in document
+        local_data = self.get_metadata()
+        # -- add items from additive fields in local metadata
+        new_metadata = meta.update_additive_lists(new_metadata, local_data)
+        # -- delete those fields
+        local_data = {key: local_data[key]
+                      for key in local_data
+                      if key not in const.RUNLIST_KIND}
+        # -- add all other (non-additive) fields in
+        new_metadata.update(local_data)
         # 2. Apply kill rules to trim lists
         for field in const.RUNLIST_KIND:
             try:

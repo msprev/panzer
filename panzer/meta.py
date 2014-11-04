@@ -16,6 +16,14 @@ def update_metadata(old, new):
     except error.WrongType as err:
         info.log('WARNING', 'panzer', err)
     # 2. Update with values in fields for additive lists
+    old = update_additive_lists(old, new)
+    # 3. 'template' field
+    if 'template' in new:
+        old['template'] = new['template']
+    return old
+
+def update_additive_lists(old, new):
+    """ return old updated with info from additive lists in new """
     for field in const.RUNLIST_KIND:
         try:
             try:
@@ -34,9 +42,6 @@ def update_metadata(old, new):
             continue
         old_list.extend(new_list)
         set_content(old, field, old_list, 'MetaList')
-    # 3. 'template' field
-    if 'template' in new:
-        old['template'] = new['template']
     return old
 
 def apply_kill_rules(old_list):
