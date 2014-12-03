@@ -121,7 +121,7 @@ class Document(object):
             self.style = meta.get_list_or_inline(self.get_metadata(), 'style')
         except error.MissingField:
             info.log('INFO', 'panzer',
-                     'no "style" field found, will just run pandoc')
+                     'no "style" field found, run only pandoc')
             return
         except error.WrongType as err:
             info.log('ERROR', 'panzer', err)

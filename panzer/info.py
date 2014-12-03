@@ -175,7 +175,10 @@ def pretty_keys(dictionary):
 
 def pretty_list(input_list, separator=', '):
     """ return pretty printed list """
-    output = '  %s' % separator.join(input_list)
+    if input_list:
+        output = '  %s' % separator.join(input_list)
+    else:
+        output = '  empty'
     return output
 
 def pretty_json_repr(data):
