@@ -168,7 +168,7 @@ Parents and inheritance
 
 Inheritance among style settings follows five rules.
 
-|-----|:----------------------------------------------------------------------------------------|
+|:----|:----------------------------------------------------------------------------------------|
 | 1.  | Metadata fields set outside a style definition override any style's setting             |
 | 2.  | Local definitions inside a `styledef` field override global definitions in `style.yaml` |
 | 3.  | In a list of styles, later ones override earlier ones.                                  |
@@ -250,7 +250,7 @@ Finding scripts and filters
 
 When panzer is searching for an executable or template, say filter `foo.py`, it will search in the following places and in the following order (current working directory is starting point; panzer's support directory is `~/.panzer`):
 
-|-----|:------------------------------------------------|
+|:----|:------------------------------------------------|
 | 1   | `foo.py`                                        |
 | 2   | `filter/foo.py`                                 |
 | 3   | `filter/foo/foo.py`                             |

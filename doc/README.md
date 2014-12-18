@@ -228,14 +228,13 @@ Local definitions take precedence over global definitions.
 Inheritance among style settings follows five rules.
 
 
---  ------------------------------------------------------------------------------------------------------------------
-1.  Metadata fields set outside a style definition override any style's setting
-2.  Local definitions inside a `styledef` field override global definitions in `style.yaml`
-3.  In a list of styles, later ones override earlier ones.
-4.  Children override their parents.
-5.  Writer-specific settings override settings for `all`.
---  ------------------------------------------------------------------------------------------------------------------
-
+  ---- -----------------------------------------------------------------------------------------
+  1.   Metadata fields set outside a style definition override any style's setting
+  2.   Local definitions inside a `styledef` field override global definitions in `style.yaml`
+  3.   In a list of styles, later ones override earlier ones.
+  4.   Children override their parents.
+  5.   Writer-specific settings override settings for `all`.
+  ---- -----------------------------------------------------------------------------------------
 
 There are some intuitive wrinkles regarding what 'overrides' means for different style properties.
     Generally, fields that pertain to the run list overriding is *additive* while other fields it is *non-additive*.
@@ -338,14 +337,14 @@ The following constructions are equivalent:
 When panzer is searching for an executable or template, say filter `foo.py`, it will search in the following places and in the following order
     (current working directory is starting point; panzer's support directory is `~/.panzer`):
 
--    -----------------------------------------------
-1    `foo.py`
-2    `filter/foo.py`
-3    `filter/foo/foo.py`
-4    `~/.panzer/filter/foo.py`
-5    `~/.panzer/filter/foo/foo.py`
-6    `foo.py` in PATH defined by current environment
--    -----------------------------------------------
+  --- -------------------------------------------------
+  1   `foo.py`
+  2   `filter/foo.py`
+  3   `filter/foo/foo.py`
+  4   `~/.panzer/filter/foo.py`
+  5   `~/.panzer/filter/foo/foo.py`
+  6   `foo.py` in PATH defined by current environment
+  --- -------------------------------------------------
 
 ## panzer support directory
 
