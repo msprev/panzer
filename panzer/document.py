@@ -487,6 +487,7 @@ class Document(object):
         if not self.output and self.options['pandoc']['write'] != 'rtf':
             # hack for rtf writer to get around issue:
             # https://github.com/jgm/pandoc/issues/1732
+            # probably no longer needed as now fixed in pandoc 1.13.2
             info.log('DEBUG', 'panzer', 'no output to write')
             return
         # case 3: stdout as output
