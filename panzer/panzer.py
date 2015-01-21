@@ -26,24 +26,38 @@ __version__ = version.VERSION
 
 def main():
     """ the main function """
+    info.time_stamp('panzer started')
     doc = document.Document()
     try:
-        util.check_pandoc_exists()
+        # util.check_pandoc_exists()
+        info.time_stamp('checked pandoc exists')
         doc.options = cli.parse_cli_options(doc.options)
+        info.time_stamp('cli options parsed')
         info.start_logger(doc.options)
+        info.time_stamp('logger started')
         util.check_support_directory(doc.options)
+        info.time_stamp('support directory checked')
         global_styledef = load.load_styledef(doc.options)
+        info.time_stamp('global styledef loaded')
         ast = load.load(doc.options)
+        info.time_stamp('document loaded')
         doc.populate(ast, global_styledef)
         doc.transform()
         doc.build_runlist()
         doc.purge_style_fields()
+        info.time_stamp('document transformed')
         doc.run_scripts('preflight')
+        info.time_stamp('preflight scripts done')
         doc.pipe_through('filter')
+        info.time_stamp('filters done')
         doc.pandoc()
+        info.time_stamp('pandoc done')
         doc.pipe_through('postprocess')
+        info.time_stamp('postprocess done')
         doc.write()
+        info.time_stamp('output written')
         doc.run_scripts('postflight')
+        info.time_stamp('postflight scripts done')
     except error.SetupError as err:
         # - errors that occur before logging starts
         print(err, file=sys.stderr)
@@ -77,6 +91,7 @@ def main():
         info.log('DEBUG', 'panzer', info.pretty_end_log('panzer quits'))
 
     # - successful exit
+    info.time_stamp('finished')
     sys.exit(0)
 
 if __name__ == '__main__':
