@@ -153,12 +153,9 @@ def panzer_parse():
     panzer_parser.add_argument('---version',
                                action='version',
                                version=('%(prog)s ' + version.VERSION))
-    panzer_parser.add_argument("---verbose",
-                               type=int,
-                               help='verbosity of warnings\n'
-                               ' 0: silent\n'
-                               ' 1: only errors and warnings\n'
-                               ' 2: full info (default)')
+    panzer_parser.add_argument("---silent",
+                               action='store_true',
+                               help='only print errors and warnings')
     panzer_parser.add_argument("---panzer-support",
                                help='directory of support files')
     panzer_parser.add_argument("---debug",
