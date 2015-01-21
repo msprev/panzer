@@ -2,7 +2,6 @@
 import argparse
 import os
 import shutil
-import subprocess
 import sys
 import tempfile
 from . import const
@@ -110,7 +109,7 @@ def parse_cli_options(options):
     # 5. Input from stdin
     # - if one of the inputs is stdin then read from stdin now into
     # - temp file, then replace '-'s in input filelist with reference to file
-    if '-' in unknown:
+    if '-' in options['pandoc']['input']:
         # Read from stdin now into temp file in cwd
         stdin_bytes = sys.stdin.buffer.read()
         with tempfile.NamedTemporaryFile(prefix='__panzer-',
@@ -122,21 +121,10 @@ def parse_cli_options(options):
             temp_file.write(stdin_bytes)
             temp_file.flush()
         # Replace all reference to stdin in pandoc cli with temp file
-        for index, val in enumerate(unknown):
+        for index, val in enumerate(options['pandoc']['input']):
             if val == '-':
-                unknown[index] = options['panzer']['stdin_temp_file']
-    # 6. Other input files
-    # - detect input files by using `pandoc --dump-args`
-    command = ['pandoc', '--dump-args'] + unknown
-    stdout_bytes = subprocess.check_output(command)
-    stdout = stdout_bytes.decode(const.ENCODING)
-    stdout_list = stdout.splitlines()
-    # - first line from `pandoc --dump-args` is output file, ignore it
-    options['pandoc']['input'] = stdout_list[1:]
-    # - remove input files from unknown
-    unknown = [arg for arg in unknown
-               if arg not in options['pandoc']['input']]
-    # 7. Remaining options for pandoc
+                options['pandoc']['input'][index] = options['panzer']['stdin_temp_file']
+    # 6. Remaining options for pandoc
     options['pandoc']['options'] = unknown
     return options
 
@@ -167,6 +155,7 @@ def panzer_parse():
 def pandoc_parse(args):
     """ return list of arguments recognised by pandoc + unknowns """
     pandoc_parser = argparse.ArgumentParser(prog='pandoc')
+    pandoc_parser.add_argument('input', nargs='*')
     pandoc_parser.add_argument("--read", "-r",
                                "--from", "-f",
                                help='reader')
