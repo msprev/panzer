@@ -1,6 +1,8 @@
 """ constants for panzer code """
 import os
 
+DEBUG_TIMING = True
+
 REQUIRE_PANDOC_ATLEAST = "1.12.1"
 
 DEFAULT_SUPPORT_DIR = os.path.join(os.path.expanduser('~'), '.panzer')

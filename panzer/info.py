@@ -1,9 +1,11 @@
 """ functions for logging and printing info """
+import datetime
 import json
 import logging
 import logging.config
 import os
 import sys
+import time
 from . import const
 
 def start_logger(options):
@@ -229,3 +231,30 @@ def pretty_runlist_entry(num, max_num, path):
     # line = line.ljust(30)
     # line += '"%s"' % pretty_path(path)
     return line
+def time_stamp(text):
+    """
+    print time since first & previous time_stamp call
+    """
+    if not const.DEBUG_TIMING:
+        return
+    try:
+        now = time.time() - time_stamp.start
+    except AttributeError:
+        time_stamp.start = time.time()
+        now = 0
+    try:
+        elapsed = now - time_stamp.last
+    except AttributeError:
+        elapsed = 0
+    now_str = str(round(now * 1000)).rjust(7)
+    now_str += ' msec'
+    now_str += '    '
+    now_str += text.ljust(30)
+    if elapsed * 1000 > 1:
+        now_str += str(round(elapsed * 1000)).rjust(7)
+        now_str += ' msec'
+    else:
+        now_str += ' ' * 12
+    time_stamp.last = now
+    print(now_str)
+
