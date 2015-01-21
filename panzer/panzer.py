@@ -30,6 +30,7 @@ def main():
     doc = document.Document()
     try:
         # util.check_pandoc_exists()
+        ## don't do this as it takes too long
         info.time_stamp('checked pandoc exists')
         doc.options = cli.parse_cli_options(doc.options)
         info.time_stamp('cli options parsed')
