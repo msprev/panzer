@@ -16,7 +16,7 @@ Other arguments are passed to pandoc.
 ''' % (const.DEFAULT_SUPPORT_DIR, shutil.which('pandoc'))
 
 PANZER_EPILOG = '''
-Copyright (C) 2014 Mark Sprevak
+Copyright (C) 2015 Mark Sprevak
 Web:  http://sites.google.com/site/msprevak
 This is free software; see the source for copying conditions. There is no
 warranty, not even for merchantability or fitness for a particular purpose.
