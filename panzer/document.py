@@ -455,13 +455,16 @@ class Document(object):
             info.log('INFO', 'panzer', 'running')
         info.log('DEBUG', 'panzer', 'run "%s"' % ' '.join(command))
         try:
+            info.time_stamp('ready to do popen')
             process = subprocess.Popen(command,
                                        stderr=subprocess.PIPE,
                                        stdin=subprocess.PIPE,
                                        stdout=subprocess.PIPE)
+            info.time_stamp('popen done')
             in_pipe_bytes = in_pipe.encode(const.ENCODING)
             out_pipe_bytes, stderr_bytes = \
                 process.communicate(input=in_pipe_bytes)
+            info.time_stamp('communicate done')
             out_pipe = out_pipe_bytes.decode(const.ENCODING)
             stderr = stderr_bytes.decode(const.ENCODING)
         except OSError as err:
