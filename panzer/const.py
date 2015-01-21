@@ -1,7 +1,7 @@
 """ constants for panzer code """
 import os
 
-DEBUG_TIMING = True
+DEBUG_TIMING = False
 
 REQUIRE_PANDOC_ATLEAST = "1.12.1"
 
