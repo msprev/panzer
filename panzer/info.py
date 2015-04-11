@@ -207,7 +207,6 @@ def pretty_runlist(runlist):
     """ return pretty printed runlist """
     if not runlist:
         return ['  empty']
-    max_num = len(runlist)
     output = list()
     current_kind = str()
     for i, entry in enumerate(runlist):
