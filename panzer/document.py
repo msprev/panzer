@@ -203,9 +203,10 @@ class Document(object):
                  'options':   self.options}]
         json_message = json.dumps(data)
         # - inject into metadata
-        content = [{"t": "CodeBlock",
-                    "c": [["", [], []], json_message]}]
-        meta.set_content(metadata, 'panzer_reserved', content, 'MetaBlocks')
+        content = {"json_message": {
+            "t": "MetaBlocks",
+            "c": [{"t": "CodeBlock", "c": [["", ["json"], []], json_message]}]}}
+        meta.set_content(metadata, 'panzer_reserved', content, 'MetaMap')
         self.set_metadata(metadata)
         # - return json_message
         return json_message
