@@ -1,10 +1,8 @@
 """ functions for logging and printing info """
-import datetime
 import json
 import logging
 import logging.config
 import os
-import sys
 import time
 from . import const
 
