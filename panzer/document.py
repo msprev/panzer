@@ -351,21 +351,14 @@ class Document(object):
 
     def pipe_through(self, kind):
         """ pipe through external command listed in runlist """
+        if kind != 'filter' and kind != 'postprocess':
+            raise error.InternalError('illegal invocation of '
+                                      '"pipe" in panzer.py')
         to_run = [entry for entry in self.runlist if entry['kind'] == kind]
         if not to_run:
             return
         info.log('INFO', 'panzer', info.pretty_title(kind))
-        # 1. Set up incoming pipe
-        if kind == 'filter':
-            in_pipe = json.dumps(self.ast)
-        elif kind == 'postprocess':
-            in_pipe = self.output
-        else:
-            raise error.InternalError('illegal invocation of '
-                                      '"pipe" in panzer.py')
-        # 2. Set up outgoing pipe in case of failure
-        out_pipe = in_pipe
-        # 3. Run commands
+        # Run commands
         for i, entry in enumerate(self.runlist):
             if entry['kind'] != kind:
                 continue
@@ -382,6 +375,13 @@ class Document(object):
             try:
                 entry['status'] = const.RUNNING
                 self.json_message()
+                # Set up incoming pipe
+                if kind == 'filter':
+                    in_pipe = json.dumps(self.ast)
+                elif kind == 'postprocess':
+                    in_pipe = self.output
+                # Set up outgoing pipe in case of failure
+                out_pipe = in_pipe
                 process = subprocess.Popen(command,
                                            stderr=subprocess.PIPE,
                                            stdin=subprocess.PIPE,
