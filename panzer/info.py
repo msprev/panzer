@@ -218,8 +218,8 @@ def pretty_runlist(runlist):
             current_kind = entry['kind']
         path = entry['command']
         basename = os.path.splitext(os.path.basename(path))[0]
-        line = ' %d. %s' % (i+1, basename)
-        line = line.ljust(30)
+        line = ' %d  %s' % (i+1, basename)
+        line = line.ljust(20)
         line += '"%s"' % pretty_path(path)
         output.append(line)
     return output
@@ -231,6 +231,7 @@ def pretty_runlist_entry(num, max_num, path):
     # line = line.ljust(30)
     # line += '"%s"' % pretty_path(path)
     return line
+
 def time_stamp(text):
     """
     print time since first & previous time_stamp call
