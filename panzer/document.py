@@ -394,7 +394,6 @@ class Document(object):
                 stderr = stderr_bytes.decode(const.ENCODING)
                 if stderr:
                     entry['stderr'] = info.decode_stderr_json(stderr)
-                in_pipe = out_pipe
             except OSError as err:
                 entry['status'] = const.FAILED
                 info.log('ERROR', filename, err)
@@ -404,17 +403,17 @@ class Document(object):
                 raise
             finally:
                 info.log_stderr(stderr, filename)
-        # 4. Update document's data with output from commands
-        if kind == 'filter':
-            try:
-                self.ast = json.loads(out_pipe)
-            except ValueError:
-                info.log('ERROR', 'panzer',
-                         'failed to receive json object from filters'
-                         '---ignoring all filters')
-                return
-        elif kind == 'postprocess':
-            self.output = out_pipe
+            # 4. Update document's data with output from commands
+            if kind == 'filter':
+                try:
+                    self.ast = json.loads(out_pipe)
+                except ValueError:
+                    info.log('ERROR', 'panzer',
+                            'failed to receive json object from filter'
+                            '---skipping filter')
+                    continue
+            elif kind == 'postprocess':
+                self.output = out_pipe
 
     def pandoc(self):
         """ run pandoc on document
@@ -448,7 +447,7 @@ class Document(object):
         # 3. Run pandoc command
         info.log('INFO', 'panzer', info.pretty_title('pandoc'))
         if self.options['pandoc']['options']:
-            info.log('INFO', 'panzer', 'running with options:')
+            info.log('INFO', 'panzer', 'running pandoc with options:')
             info.log('INFO', 'panzer',
                      info.pretty_list(self.options['pandoc']['options'],
                                       separator=' '))
