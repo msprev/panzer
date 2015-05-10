@@ -311,11 +311,12 @@ class Document(object):
                 continue
             # - build the command to run
             command = [entry['command']] + entry['arguments']
-            filename = os.path.basename(command[0])
+            filename = os.path.basename(entry['command'])
             info.log('INFO', 'panzer',
                      info.pretty_runlist_entry(i,
                                                len(self.runlist),
-                                               ' '.join(command)))
+                                               entry['command'],
+                                               entry['arguments']))
             info.log('DEBUG', 'panzer', 'run "%s"' % ' '.join(command))
             # - run the command
             stderr = str()
@@ -364,11 +365,12 @@ class Document(object):
                 continue
             # - add debugging info
             command = [entry['command']] + entry['arguments']
-            filename = os.path.basename(command[0])
+            filename = os.path.basename(entry['command'])
             info.log('INFO', 'panzer',
                      info.pretty_runlist_entry(i,
                                                len(self.runlist),
-                                               ' '.join(command)))
+                                               entry['command'],
+                                               entry['arguments']))
             info.log('DEBUG', 'panzer', 'run "%s"' % ' '.join(command))
             # - run the command and log any errors
             stderr = str()

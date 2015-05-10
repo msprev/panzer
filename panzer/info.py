@@ -221,12 +221,13 @@ def pretty_runlist(runlist):
         output.append(line)
     return output
 
-def pretty_runlist_entry(num, max_num, path):
+def pretty_runlist_entry(num, max_num, command, arguments):
     """ return pretty printed run list entry """
-    basename = os.path.splitext(os.path.basename(path))[0]
+    basename = os.path.splitext(os.path.basename(command))[0]
+    if arguments:
+        basename += ' '
+        basename += ' '.join(arguments)
     line = '[%d/%d] %s' % (num+1, max_num, basename)
-    # line = line.ljust(30)
-    # line += '"%s"' % pretty_path(path)
     return line
 
 def time_stamp(text):
