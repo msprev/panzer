@@ -198,44 +198,14 @@ def get_runlist(metadata, kind, options):
         # - get entry arguments
         entry['arguments'] = list()
         if 'args' in item_content:
-            if get_type(item_content, 'args') == 'MetaInlines':
+            if get_type(item_content, 'args') == 'MetaInlines' \
+            or get_type(item_content, 'args') == 'MetaString':
                 # - arguments raw string
                 arguments_raw = get_content(item_content, 'args', 'MetaInlines')
                 arguments_str = pandocfilters.stringify(arguments_raw)
                 entry['arguments'] = shlex.split(arguments_str)
-            elif get_type(item_content, 'args') == 'MetaList':
-                # - arguments MetaList
-                arguments_list = get_content(item_content, 'args', 'MetaList')
-                entry['arguments'] = get_runlist_args(arguments_list)
         runlist.append(entry)
     return runlist
-
-def get_runlist_args(arguments_list):
-    """ return list of arguments from 'args' MetaList """
-    arguments = list()
-    for item in arguments_list:
-        if item[const.T] != 'MetaMap':
-            info.log('ERROR', 'panzer',
-                     '"args" list should have fields of type "MetaMap"')
-            continue
-        fields = item[const.C]
-        if len(fields) != 1:
-            info.log('ERROR', 'panzer',
-                     '"args" list should have exactly one field per item')
-            continue
-        field_name = "".join(fields.keys())
-        field_type = get_type(fields, field_name)
-        field_value = get_content(fields, field_name, field_type)
-        if field_type == 'MetaBool':
-            arguments.append('--' + field_name)
-        elif field_type == 'MetaInlines':
-            value_str = pandocfilters.stringify(field_value)
-            arguments.append('--%s="%s"' % (field_name, value_str))
-        else:
-            info.log('ERROR', 'panzer',
-                     'arguments of type "%s" not' 'supported---"%s" ignored'
-                     % (field_type, field_name))
-    return arguments
 
 def check_c_and_t_exist(item):
     """ check item contains both C and T fields """
