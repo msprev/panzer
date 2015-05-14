@@ -141,7 +141,7 @@ def panzer_parse():
     panzer_parser.add_argument('---version',
                                action='version',
                                version=('%(prog)s ' + version.VERSION))
-    panzer_parser.add_argument("---silent",
+    panzer_parser.add_argument("---quiet",
                                action='store_true',
                                help='only print errors and warnings')
     panzer_parser.add_argument("---panzer-support",

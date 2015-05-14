@@ -94,7 +94,7 @@ dashes (``---``). Run the command ``panzer -h`` to see them:
       -h, --help, ---help, ---h
                             show this help message and exit
       ---version            show program's version number and exit
-      ---silent             only print errors and warnings
+      ---quiet              only print errors and warnings
       ---panzer-support PANZER_SUPPORT
                             .panzer directory
       ---debug DEBUG        filename to write .log and .json debug files
@@ -381,7 +381,7 @@ using a filter).
            'panzer': {
                'panzer_support':  const.DEFAULT_SUPPORT_DIR,
                'debug':           str(),
-               'silent':          False,
+               'quiet':           False,
                'stdin_temp_file': str()
            },
            'pandoc': {

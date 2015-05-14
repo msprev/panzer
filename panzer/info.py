@@ -53,7 +53,7 @@ def start_logger(options):
         if os.path.exists(filename):
             os.remove(filename)
     # - set verbosity level
-    if options['panzer']['silent']:
+    if options['panzer']['quiet']:
         verbosity_level = 'WARNING'
     else:
         verbosity_level = 'INFO'
