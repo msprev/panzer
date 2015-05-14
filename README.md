@@ -52,7 +52,7 @@ Installation
 *Requirements:*
 
 -   [pandoc](http://johnmacfarlane.net/pandoc/index.html)
--   [Python 3](https://www.python.org/download/releases/3.0)
+-   [Python 3](https://www.python.org/downloads/)
 
 Use
 ===
@@ -249,9 +249,9 @@ panzer sends information to external processes via a json message. This message 
                             'postprocess'|
                             'postflight'|
                             'cleanup',
-                    'command': 'my command',
+                    'command':   'my command',
                     'arguments': ['argument1', 'argument2', ...]
-                    'status': 'queued'|'running'|'failed'|'done'},
+                    'status':    'queued'|'running'|'failed'|'done'},
                     ...
                     ...
                 ]
@@ -260,20 +260,20 @@ panzer sends information to external processes via a json message. This message 
 
         OPTIONS = {
             'panzer': {
-                'panzer_support'  : const.DEFAULT_SUPPORT_DIR,
-                'debug'           : str(),
-                'silent'          : False,
-                'stdin_temp_file' : str()
+                'panzer_support':  const.DEFAULT_SUPPORT_DIR,
+                'debug':           str(),
+                'silent':          False,
+                'stdin_temp_file': str()
             },
             'pandoc': {
-                'input'      : list(),
-                'output'     : '-',
-                'pdf_output' : False,
-                'read'       : str(),
-                'write'      : str(),
-                'template'   : str(),
-                'filter'     : list(),
-                'options'    : list()
+                'input':      list(),
+                'output':     '-',
+                'pdf_output': False,
+                'read':       str(),
+                'write':      str(),
+                'template':   str(),
+                'filter':     list(),
+                'options':    list()
             }
         }
 

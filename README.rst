@@ -72,7 +72,7 @@ Installation
 *Requirements:*
 
 -  `pandoc <http://johnmacfarlane.net/pandoc/index.html>`__
--  `Python 3 <https://www.python.org/download/releases/3.0>`__
+-  `Python 3 <https://www.python.org/downloads/>`__
 
 Use
 ===
@@ -363,9 +363,9 @@ using a filter).
                            'postprocess'|
                            'postflight'|
                            'cleanup',
-                   'command': 'my command',
+                   'command':   'my command',
                    'arguments': ['argument1', 'argument2', ...]
-                   'status': 'queued'|'running'|'failed'|'done'},
+                   'status':    'queued'|'running'|'failed'|'done'},
                    ...
                    ...
                ]
@@ -376,20 +376,20 @@ using a filter).
 
        OPTIONS = {
            'panzer': {
-               'panzer_support'  : const.DEFAULT_SUPPORT_DIR,
-               'debug'           : str(),
-               'silent'          : False,
-               'stdin_temp_file' : str()
+               'panzer_support':  const.DEFAULT_SUPPORT_DIR,
+               'debug':           str(),
+               'silent':          False,
+               'stdin_temp_file': str()
            },
            'pandoc': {
-               'input'      : list(),
-               'output'     : '-',
-               'pdf_output' : False,
-               'read'       : str(),
-               'write'      : str(),
-               'template'   : str(),
-               'filter'     : list(),
-               'options'    : list()
+               'input':      list(),
+               'output':     '-',
+               'pdf_output': False,
+               'read':       str(),
+               'write':      str(),
+               'template':   str(),
+               'filter':     list(),
+               'options':    list()
            }
        }
 
