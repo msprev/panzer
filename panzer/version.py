@@ -1,2 +1,2 @@
 """ version of panzer """
-VERSION = "1.0a4"
+VERSION = "1.0b1"
