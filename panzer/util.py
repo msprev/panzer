@@ -58,7 +58,7 @@ def create_default_support_dir():
     info.log('INFO', 'panzer', 'created "%s"' % const.DEFAULT_SUPPORT_DIR)
     # - create styles.yaml
     style_definitions = os.path.join(const.DEFAULT_SUPPORT_DIR, 'styles.yaml')
-    info.log('INFO', 'panzer', 'created "styles.yaml"')
+    info.log('INFO', 'panzer', 'created blank "styles.yaml"')
     open(style_definitions, 'w').close()
     # - create subdirectories of .panzer
     subdirs = const.RUNLIST_KIND + ['template']
