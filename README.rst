@@ -175,9 +175,9 @@ Example:
         latex:
             metadata:
                 numbersections: true
-                fontsize:       12pt
+                fontsize: 12pt
             postflight:
-                - run:          latexmk.py
+                - run: latexmk.py
 
 If panzer were run on the following document with the latex writer
 selected,
@@ -185,9 +185,9 @@ selected,
 .. code:: yaml
 
     ---
-    title:  "My document"
+    title: "My document"
     author: John Smith
-    style:  Notes
+    style: Notes
     ...
 
 it would run pandoc on the following input, and then execute
@@ -196,10 +196,10 @@ it would run pandoc on the following input, and then execute
 .. code:: yaml
 
     ---
-    title:          "My document"
-    author:         John Smith
+    title: "My document"
+    author: John Smith
     numbersections: true
-    fontsize:       12pt
+    fontsize: 12pt
     ...
 
 Styles are defined:
