@@ -6,8 +6,6 @@ date: 14 May 2015
 style: Plain
 ...
 
-# Introduction
-
 panzer adds 'styles' to [pandoc][].
     Styles change the look of a document in a reusable way.
     Styles are combinations of templates, metadata settings, filters, postprocessors, preflight and postflight scripts.
@@ -90,16 +88,16 @@ Panzer expects all input and output to be utf-8.
 
 A style definition may consist of:
 
-  field           value                                                            value type
-  --------------- ---------------------------------------------------------------- ---------------
-  `parent`        parent(s) of style                                               `MetaList` or `MetaInlines`
-  `metadata`      default metadata fields                                          `MetaMap`
-  `template`      pandoc template                                                  `MetaInlines`
-  `preflight`     executables to run before input doc is processed                 `MetaList`
-  `filter`        pandoc json filters to run                                       `MetaList`
-  `postprocess`   executables to run to postprocess pandoc's output                `MetaList`
-  `postflight`    executables to run after output file written                     `MetaList`
-  `cleanup`       executables to run on exit irrespective of errors                `MetaList`
+  field           value                                               value type
+  --------------- --------------------------------------------------- -----------------------------
+  `parent`        parent(s) of style                                  `MetaList` or `MetaInlines`
+  `metadata`      default metadata fields                             `MetaMap`
+  `template`      pandoc template                                     `MetaInlines`
+  `preflight`     executables to run before input doc is processed    `MetaList`
+  `filter`        pandoc json filters to run                          `MetaList`
+  `postprocess`   executables to run to postprocess pandoc's output   `MetaList`
+  `postflight`    executables to run after output file written        `MetaList`
+  `cleanup`       executables to run on exit irrespective of errors   `MetaList`
 
 Style definitions are hierarchically structured by *name* and *writer*.
     Style names by convention should be MixedCase (`MyNotes`).
@@ -178,13 +176,13 @@ Styles are defined:
 
 Overriding among styles:
 
-  ---- -----------------------------------------------------------------------------------------
-  1.   Fields set outside a style definition override a style's setting
-  2.   Local definitions inside a `styledef` override global definitions in `style.yaml`
-  3.   Later styles in list override earlier ones
-  4.   Children override their parents
-  5.   Writer-specific settings override settings for `all`
-  ---- -----------------------------------------------------------------------------------------
+  --- -----------------------------------------------------------------------------------
+  1   Fields set outside a style definition override a style's setting
+  2   Local definitions inside a `styledef` override global definitions in `style.yaml`
+  3   Later styles in list override earlier ones
+  4   Children override their parents
+  5   Writer-specific settings override settings for `all`
+  --- -----------------------------------------------------------------------------------
 
 For fields that pertain to scripts/filters, overriding is *additive*; for other fields, it is *non-additive*:
 

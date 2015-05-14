@@ -1,5 +1,9 @@
-Introduction
-============
+=================
+panzer user guide
+=================
+
+:Author: Mark Sprevak
+:Date:   14 May 2015
 
 panzer adds 'styles' to
 `pandoc <http://johnmacfarlane.net/pandoc/index.html>`__. Styles change
@@ -198,17 +202,17 @@ Styles are defined:
 
 Overriding among styles:
 
-+------+-----------------------------------------------------------------------------------------+
-| 1.   | Fields set outside a style definition override a style's setting                        |
-+------+-----------------------------------------------------------------------------------------+
-| 2.   | Local definitions inside a ``styledef`` override global definitions in ``style.yaml``   |
-+------+-----------------------------------------------------------------------------------------+
-| 3.   | Later styles in list override earlier ones                                              |
-+------+-----------------------------------------------------------------------------------------+
-| 4.   | Children override their parents                                                         |
-+------+-----------------------------------------------------------------------------------------+
-| 5.   | Writer-specific settings override settings for ``all``                                  |
-+------+-----------------------------------------------------------------------------------------+
++-----+-----------------------------------------------------------------------------------------+
+| 1   | Fields set outside a style definition override a style's setting                        |
++-----+-----------------------------------------------------------------------------------------+
+| 2   | Local definitions inside a ``styledef`` override global definitions in ``style.yaml``   |
++-----+-----------------------------------------------------------------------------------------+
+| 3   | Later styles in list override earlier ones                                              |
++-----+-----------------------------------------------------------------------------------------+
+| 4   | Children override their parents                                                         |
++-----+-----------------------------------------------------------------------------------------+
+| 5   | Writer-specific settings override settings for ``all``                                  |
++-----+-----------------------------------------------------------------------------------------+
 
 For fields that pertain to scripts/filters, overriding is *additive*;
 for other fields, it is *non-additive*:
@@ -471,4 +475,3 @@ Pull requests welcome:
 -  Slow (calls to subprocess is slow in Python)
 -  Calls to subprocesses (scripts, filters, etc.) are blocking
 -  No Python 2 support
-

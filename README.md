@@ -1,6 +1,3 @@
-Introduction
-============
-
 panzer adds 'styles' to [pandoc](http://johnmacfarlane.net/pandoc/index.html). Styles change the look of a document in a reusable way. Styles are combinations of templates, metadata settings, filters, postprocessors, preflight and postflight scripts. These can be set on a per document or per writer basis. Styles bear inheritance relations to each other.
 
 To use a style, add a field with your style name to the yaml metadata block of your document:
@@ -145,11 +142,11 @@ Styles are defined:
 Overriding among styles:
 
 |:----|:----------------------------------------------------------------------------------|
-| 1.  | Fields set outside a style definition override a style's setting                  |
-| 2.  | Local definitions inside a `styledef` override global definitions in `style.yaml` |
-| 3.  | Later styles in list override earlier ones                                        |
-| 4.  | Children override their parents                                                   |
-| 5.  | Writer-specific settings override settings for `all`                              |
+| 1   | Fields set outside a style definition override a style's setting                  |
+| 2   | Local definitions inside a `styledef` override global definitions in `style.yaml` |
+| 3   | Later styles in list override earlier ones                                        |
+| 4   | Children override their parents                                                   |
+| 5   | Writer-specific settings override settings for `all`                              |
 
 For fields that pertain to scripts/filters, overriding is *additive*; for other fields, it is *non-additive*:
 
@@ -346,4 +343,3 @@ Pull requests welcome:
 -   Slow (calls to subprocess is slow in Python)
 -   Calls to subprocesses (scripts, filters, etc.) are blocking
 -   No Python 2 support
-
