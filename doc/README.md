@@ -20,10 +20,16 @@ To use a style, add a field with your style name to the yaml metadata block of y
 style: Notes
 ```
 
-Multiple styles can be supplied as a list.
+Multiple styles can be supplied as a list:
 
-Styles are defined in a `style.yaml` file ([example style definition][example-yaml]).
-    The style definition file, plus associated executables, are placed in the `.panzer` directory in the user's home folder ([example .panzer directory][example-dot-panzer]).
+``` {.yaml}
+style: 
+    - Notes
+    - BoldHeadings
+```
+
+Styles are defined in a `style.yaml` file ([example][example-yaml]).
+    The style definition file, plus associated executables, are placed in the `.panzer` directory in the user's home folder ([example][example-dot-panzer]).
 
 Styles can also be defined locally inside the document:
 
@@ -90,16 +96,17 @@ Panzer expects all input and output to be utf-8.
 
 A style definition may consist of:
 
-  field           value                                               value type
-  --------------- --------------------------------------------------- -----------------------------
-  `parent`        parent(s) of style                                  `MetaList` or `MetaInlines`
-  `metadata`      default metadata fields                             `MetaMap`
-  `template`      pandoc template                                     `MetaInlines`
-  `preflight`     executables to run before input doc is processed    `MetaList`
-  `filter`        pandoc json filters to run                          `MetaList`
-  `postprocess`   executables to run to postprocess pandoc's output   `MetaList`
-  `postflight`    executables to run after output file written        `MetaList`
-  `cleanup`       executables to run on exit irrespective of errors   `MetaList`
+  field           value                                value type
+  --------------- ------------------------------------ -----------------------------
+  `parent`        parent(s) of style                   `MetaList` or `MetaInlines`
+  `metadata`      default metadata fields              `MetaMap`
+  `template`      pandoc template                      `MetaInlines`
+  `preflight`     run before input doc is processed    `MetaList`
+  `filter`        pandoc filters                       `MetaList`
+  `postprocess`   run on pandoc's output               `MetaList`
+  `postflight`    run after output file written        `MetaList`
+  `cleanup`       run on exit irrespective of errors   `MetaList`
+
 
 Style definitions are hierarchically structured by *name* and *writer*.
     Style names by convention should be MixedCase (`MyNotes`).
@@ -109,29 +116,27 @@ Style definitions are hierarchically structured by *name* and *writer*.
 `parent` takes a list or single style.
     Children inherit the properties of their parents.
     Children may have multiple parents.
-    Children add to the list of filters and scripts, and they override the metadata settings of parents.
 
 `metadata` contains default metadata set by the style.
-    Any metadata field that can appear in a pandoc document can be defined here.
+    Any metadata field that can appear in a pandoc document can appear here.
 
 `template` specifies a pandoc [template][] for the document.
 
-`preflight` specifies executables that are run before any other scripts or filters.
-    Preflight scripts are run after panzer reads the source documents, but before panzer runs pandoc to convert this data to the output format.
+`preflight` specifies executables run before the document is processed.
+    Preflight scripts are run after panzer reads the input documents, but before pandoc is run to convert to the output.
 
-`filter` specifies pandoc [json filters][] that should be run.
+`filter` specifies pandoc [json filters][].
     Filters gain two new properties from panzer.
     For more info, see section below on [compatibility](#pandoc_compatibility) with pandoc.
 
-`postprocessor` specifies executable to pipe through pandoc's output.
-    Standard unix executables (`sed`, `tr`, etc.) are examples of use.
-    Postprocessors are not run if a writer that produces binary output files (e.g. `.docx`) is selected.
+`postprocessor` specifies executable to pipe pandoc's output through.
+    Standard unix executables (`sed`, `tr`, etc.) are examples of possible use.
+    Postprocessors are skipped if a binary writer (e.g. `.docx`) is selected.
 
-`postflight` specifies executables that are run after the output file has been written.
-    If output is stdout, postflight scripts are run after output to stdout has been flushed.
-    Postflight scripts will not be run if a fatal error occurs earlier.
+`postflight` specifies executables run after the output file has been written.
+    If output is stdout, postflight scripts are run after output has been flushed.
 
-`cleanup` specifies executables that are run before panzer exits, and after postflight scripts.
+`cleanup` specifies executables that are run before panzer exits and after postflight scripts.
     Cleanup scripts run irrespective of whether a fatal error has occurred earlier.
 
 Example:
@@ -178,7 +183,7 @@ Styles are defined:
 
 Overriding among styles:
 
-  .   Rule
+  #   rule for overriding
   --- -----------------------------------------------------------------------------------
   1   Fields set outside a style definition override a style's setting
   2   Local definitions inside a `styledef` override global definitions in `style.yaml`
@@ -205,7 +210,7 @@ Multiple input files are joined according to pandoc's rules.
     Metadata are merged using left-biased union.
     This means overriding behaviour when merging multiple input files is always non-additive.
 
-panzer buffers stdin input to a temporary file in the current working directory.
+panzer buffers stdin input, if present, to a temporary file in the current working directory.
     This allows preflight scripts to access the data.
     The temporary file is removed when panzer exits.
 
@@ -215,7 +220,7 @@ Executables (scripts, filters, postprocessors) are specified by a list.
     If an item appears as the value of a `run` field in the list, then it is added to the list of processes to be run (the 'run list').
     If an item appears as the value of a `kill` field, then any previous use is removed from the run list.
     Killing items does not prevent them being added later.
-    A run list can be emptied by by adding the item `- killall: true`.
+    A run list can be emptied entirely by adding the special item `- killall: true`.
 
 Arguments can be passed to executables by listing them as the value of the `args` field of that item. 
     The value of the `args` field is passed as the command line argument to the external process.
@@ -237,7 +242,7 @@ The filter `setbaseheader.py` receives the writer name as its first argument and
 
 When panzer is searching for an executable `foo.py`, it will look in:
 
-  .   Searching in
+  #   searching in...
   --- -------------------------------------------------
   1   `./foo.py`
   2   `./filter/foo.py`
@@ -270,7 +275,7 @@ Within each directory, each executable has its named subdirectory:
 
 panzer sends information to external processes via a json message.
     This message is sent over stdin to scripts (preflight, postflight, cleanup scripts), and embedded in the AST for filters.
-    Postprocessors do not receive a json message.
+    Postprocessors do not receive a json message (if you need the message, you should probably be using a filter).
 
 ``` 
 JSON_MESSAGE = [{'metadata':  METADATA,
@@ -286,11 +291,11 @@ JSON_MESSAGE = [{'metadata':  METADATA,
 
 - `TEMPLATE` is a string with full path to the current template
 
-- `STYLE` is a list of current style(s). 
+- `STYLE` is a list of current style(s) 
 
 - `STYLEFULL` is a list of current style(s) including all parents, grandparents, etc.
 
-- `STYLEDEF` is a copy of the metadata branch of style definitions
+- `STYLEDEF` is a copy of the metadata branch with all used style definitions
 
 - `RUNLIST` is a list with the current state of the run list:
 
@@ -332,7 +337,7 @@ JSON_MESSAGE = [{'metadata':  METADATA,
     }
     ```
 
-`filter` and `template` only include the filters and template, if any, set on the command line (via `--filter` and `--template` command line options).
+    `filter` and `template` only include the filters and template, if any, set on the command line (via `--filter` and `--template` command line options).
 
 Scripts read the json message above by deserialising json input on stdin. 
     Filters can read the json message by extracting a special metadata field, `panzer_reserved`, from the AST:
@@ -345,7 +350,7 @@ panzer_reserved:
         ```
 ```
 
-Visible to filters as the following:
+which is sent to filters as the following:
 
       "panzer_reserved": {
         "t": "MetaMap",
@@ -360,6 +365,7 @@ Visible to filters as the following:
 # Receiving messages from external processes
 
 panzer captures stderr output from all executables.
+    This is for pretty printing error messages.
     Scripts and filters should send json messages to panzer via stderr.
     If a message is sent to stderr that is not correctly formatted, panzer will print it verbatim prefixed by a '!'.
 
@@ -407,7 +413,7 @@ The pandoc writer name `all` is also occupied.
 
 Pull requests welcome:
 
-* Slow (calls to subprocess is slow in Python)
+* Slow (calls to subprocess slow in Python)
 * Calls to subprocesses (scripts, filters, etc.) are blocking
 * No Python 2 support
 
@@ -415,6 +421,6 @@ Pull requests welcome:
  [panzer]: https://github.com/msprev
  [python 3]: https://www.python.org/download/releases/3.0
  [json filters]: http://johnmacfarlane.net/pandoc/scripting.html
- [templates]: http://johnmacfarlane.net/pandoc/demo/example9/templates.html
+ [template]: http://johnmacfarlane.net/pandoc/demo/example9/templates.html
  [example-yaml]:  https://github.com/msprev/dot-panzer/blob/master/styles.yaml
  [example-dot-panzer]: https://github.com/msprev/dot-panzer
