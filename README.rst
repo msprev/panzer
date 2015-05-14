@@ -5,6 +5,9 @@ panzer user guide
 :Author: Mark Sprevak
 :Date:   14 May 2015
 
+panzer
+======
+
 panzer adds 'styles' to
 `pandoc <http://johnmacfarlane.net/pandoc/index.html>`__. Styles change
 the look of a document in a reusable way. Styles are combinations of
@@ -19,7 +22,7 @@ block of your document:
 
     style: Notes
 
-Multiple styles can be applied as a list.
+Multiple styles can be supplied as a list.
 
 Styles are defined in a ``style.yaml`` file (`example style
 definition <https://github.com/msprev/dot-panzer/blob/master/styles.yaml>`__).
@@ -203,6 +206,8 @@ Styles are defined:
 Overriding among styles:
 
 +-----+-----------------------------------------------------------------------------------------+
+| .   | Rule                                                                                    |
++=====+=========================================================================================+
 | 1   | Fields set outside a style definition override a style's setting                        |
 +-----+-----------------------------------------------------------------------------------------+
 | 2   | Local definitions inside a ``styledef`` override global definitions in ``style.yaml``   |
@@ -276,6 +281,8 @@ argument and "2" as its second argument.
 When panzer is searching for an executable ``foo.py``, it will look in:
 
 +-----+-----------------------------------------------------+
+| .   | Searching in                                        |
++=====+=====================================================+
 | 1   | ``./foo.py``                                        |
 +-----+-----------------------------------------------------+
 | 2   | ``./filter/foo.py``                                 |

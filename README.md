@@ -1,3 +1,6 @@
+panzer
+======
+
 panzer adds 'styles' to [pandoc](http://johnmacfarlane.net/pandoc/index.html). Styles change the look of a document in a reusable way. Styles are combinations of templates, metadata settings, filters, postprocessors, preflight and postflight scripts. These can be set on a per document or per writer basis. Styles bear inheritance relations to each other.
 
 To use a style, add a field with your style name to the yaml metadata block of your document:
@@ -6,7 +9,7 @@ To use a style, add a field with your style name to the yaml metadata block of y
 style: Notes
 ```
 
-Multiple styles can be applied as a list.
+Multiple styles can be supplied as a list.
 
 Styles are defined in a `style.yaml` file ([example style definition](https://github.com/msprev/dot-panzer/blob/master/styles.yaml)). The style definition file, plus associated executables, are placed in the `.panzer` directory in the user's home folder ([example .panzer directory](https://github.com/msprev/dot-panzer)).
 
@@ -141,6 +144,7 @@ Styles are defined:
 
 Overriding among styles:
 
+| .   | Rule                                                                              |
 |:----|:----------------------------------------------------------------------------------|
 | 1   | Fields set outside a style definition override a style's setting                  |
 | 2   | Local definitions inside a `styledef` override global definitions in `style.yaml` |
@@ -182,6 +186,7 @@ The filter `setbaseheader.py` receives the writer name as its first argument and
 
 When panzer is searching for an executable `foo.py`, it will look in:
 
+| .   | Searching in                                    |
 |:----|:------------------------------------------------|
 | 1   | `./foo.py`                                      |
 | 2   | `./filter/foo.py`                               |

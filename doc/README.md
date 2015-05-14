@@ -6,6 +6,8 @@ date: 14 May 2015
 style: Plain
 ...
 
+# panzer
+
 panzer adds 'styles' to [pandoc][].
     Styles change the look of a document in a reusable way.
     Styles are combinations of templates, metadata settings, filters, postprocessors, preflight and postflight scripts.
@@ -18,7 +20,7 @@ To use a style, add a field with your style name to the yaml metadata block of y
 style: Notes
 ```
 
-Multiple styles can be applied as a list.
+Multiple styles can be supplied as a list.
 
 Styles are defined in a `style.yaml` file ([example style definition][example-yaml]).
     The style definition file, plus associated executables, are placed in the `.panzer` directory in the user's home folder ([example .panzer directory][example-dot-panzer]).
@@ -176,13 +178,14 @@ Styles are defined:
 
 Overriding among styles:
 
+  .   Rule
   --- -----------------------------------------------------------------------------------
   1   Fields set outside a style definition override a style's setting
   2   Local definitions inside a `styledef` override global definitions in `style.yaml`
   3   Later styles in list override earlier ones
   4   Children override their parents
   5   Writer-specific settings override settings for `all`
-  --- -----------------------------------------------------------------------------------
+
 
 For fields that pertain to scripts/filters, overriding is *additive*; for other fields, it is *non-additive*:
 
@@ -234,6 +237,7 @@ The filter `setbaseheader.py` receives the writer name as its first argument and
 
 When panzer is searching for an executable `foo.py`, it will look in:
 
+  .   Searching in
   --- -------------------------------------------------
   1   `./foo.py`
   2   `./filter/foo.py`
@@ -241,7 +245,7 @@ When panzer is searching for an executable `foo.py`, it will look in:
   4   `~/.panzer/filter/foo.py`
   5   `~/.panzer/filter/foo/foo.py`
   6   `foo.py` in PATH defined by current environment
-  --- -------------------------------------------------
+
 
 The typical structure for the support directory `.panzer` is:
 
