@@ -340,17 +340,18 @@ JSON_MESSAGE = [{'metadata':  METADATA,
     `filter` and `template` only include the filters and template, if any, set on the command line (via `--filter` and `--template` command line options).
 
 Scripts read the json message above by deserialising json input on stdin. 
-    Filters can read the json message by extracting a special metadata field, `panzer_reserved`, from the AST:
+
+Filters can read the json message by extracting a special metadata field, `panzer_reserved`, from the AST:
 
 ``` {.yaml}
 panzer_reserved:
     json_message: |
-        ```
+        ``` {.json}
         JSON_MESSAGE
         ```
 ```
 
-which is sent to filters as the following:
+which appears to filters as the following structure:
 
       "panzer_reserved": {
         "t": "MetaMap",
@@ -365,7 +366,7 @@ which is sent to filters as the following:
 # Receiving messages from external processes
 
 panzer captures stderr output from all executables.
-    This is for pretty printing error messages.
+    This is for pretty printing of error messages.
     Scripts and filters should send json messages to panzer via stderr.
     If a message is sent to stderr that is not correctly formatted, panzer will print it verbatim prefixed by a '!'.
 
