@@ -306,9 +306,9 @@ JSON_MESSAGE = [{'metadata':  METADATA,
                         'postprocess'|
                         'postflight'|
                         'cleanup',
-                'command': 'my command',
+                'command':   'my command',
                 'arguments': ['argument1', 'argument2', ...]
-                'status': 'queued'|'running'|'failed'|'done'},
+                'status':    'queued'|'running'|'failed'|'done'},
                 ...
                 ...
             ]
@@ -319,20 +319,20 @@ JSON_MESSAGE = [{'metadata':  METADATA,
     ```
     OPTIONS = {
         'panzer': {
-            'panzer_support'  : const.DEFAULT_SUPPORT_DIR,
-            'debug'           : str(),
-            'silent'          : False,
-            'stdin_temp_file' : str()
+            'panzer_support':  const.DEFAULT_SUPPORT_DIR,
+            'debug':           str(),
+            'silent':          False,
+            'stdin_temp_file': str()
         },
         'pandoc': {
-            'input'      : list(),
-            'output'     : '-',
-            'pdf_output' : False,
-            'read'       : str(),
-            'write'      : str(),
-            'template'   : str(),
-            'filter'     : list(),
-            'options'    : list()
+            'input':      list(),
+            'output':     '-',
+            'pdf_output': False,
+            'read':       str(),
+            'write':      str(),
+            'template':   str(),
+            'filter':     list(),
+            'options':    list()
         }
     }
     ```
@@ -420,7 +420,7 @@ Pull requests welcome:
 
  [pandoc]: http://johnmacfarlane.net/pandoc/index.html
  [panzer]: https://github.com/msprev
- [python 3]: https://www.python.org/download/releases/3.0
+ [python 3]: https://www.python.org/downloads/
  [json filters]: http://johnmacfarlane.net/pandoc/scripting.html
  [template]: http://johnmacfarlane.net/pandoc/demo/example9/templates.html
  [example-yaml]:  https://github.com/msprev/dot-panzer/blob/master/styles.yaml
