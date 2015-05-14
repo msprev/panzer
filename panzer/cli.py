@@ -145,7 +145,7 @@ def panzer_parse():
                                action='store_true',
                                help='only print errors and warnings')
     panzer_parser.add_argument("---panzer-support",
-                               help='directory of support files')
+                               help='.panzer directory')
     panzer_parser.add_argument("---debug",
                                help='filename to write .log and .json debug files')
     panzer_known_raw, unknown = panzer_parser.parse_known_args()

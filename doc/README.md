@@ -86,7 +86,7 @@ panzer has additional command line options.
   ---version            show program's version number and exit
   ---silent             only print errors and warnings
   ---panzer-support PANZER_SUPPORT
-                        directory of support files
+                        .panzer directory
   ---debug DEBUG        filename to write .log and .json debug files
 ```
 
@@ -176,12 +176,14 @@ fontsize: 12pt
 ...
 ```
 
+## Details
+
 Styles are defined:
 
 -   'Globally' in the `styles.yaml` file (normally in `~/.panzer/`)
 -   'Locally' in a `styledef` field inside the document
 
-Overriding among styles:
+Overriding among styles is determined by the following rules:
 
   #   rule for overriding
   --- -----------------------------------------------------------------------------------
@@ -242,7 +244,7 @@ The filter `setbaseheader.py` receives the writer name as its first argument and
 
 When panzer is searching for an executable `foo.py`, it will look in:
 
-  #   searching in...
+  #   searching
   --- -------------------------------------------------
   1   `./foo.py`
   2   `./filter/foo.py`
