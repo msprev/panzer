@@ -229,6 +229,7 @@ Executables (scripts, filters, postprocessors) are specified by a list.
 
 Arguments can be passed to executables by listing them as the value of the `args` field of that item. 
     The value of the `args` field is passed as the command line options to the external process.
+    The value of `args` should be a quoted inline code span (e.g. ``"`--options`"``) to prevent the parser interpreting it as markdown.
     Note that filters always receive the writer name as their first argument.
 
 Example:
@@ -236,7 +237,7 @@ Example:
 ``` {.yaml}
 - filter:
     - run: setbaseheader.py
-      args: "2"
+      args: "`--level=2`"
 - postflight:
     - kill: open_pdf.py
 - cleanup:

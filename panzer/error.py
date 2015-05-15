@@ -12,6 +12,10 @@ class BadASTError(PanzerError):
     """ malformatted AST encountered (e.g. C or T fields missing) """
     pass
 
+class BadArgsFormat(PanzerError):
+    """ args field for item in run list has incorrect format """
+    pass
+
 class MissingField(PanzerError):
     """ looked for metadata field, did not find it """
     pass

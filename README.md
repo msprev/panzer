@@ -180,14 +180,14 @@ The run list
 
 Executables (scripts, filters, postprocessors) are specified by a list. The list determines what gets run when. Executables are run from first to last. If an item appears as the value of a `run:` field in the list, then it is added to the list of processes to be run (the 'run list'). If an item appears as the value of a `kill:` field, then any previous appearance is removed from the run list. Killing an item does not prevent them being added to the run list later. A run list can be completely emptied by adding the special item `- killall: true`.
 
-Arguments can be passed to executables by listing them as the value of the `args` field of that item. The value of the `args` field is passed as the command line options to the external process. Note that filters always receive the writer name as their first argument.
+Arguments can be passed to executables by listing them as the value of the `args` field of that item. The value of the `args` field is passed as the command line options to the external process. The value of `args` should be a quoted inline code span (e.g. `` "`--options`" ``) to prevent the parser interpreting it as markdown. Note that filters always receive the writer name as their first argument.
 
 Example:
 
 ``` yaml
 - filter:
     - run: setbaseheader.py
-      args: "2"
+      args: "`--level=2`"
 - postflight:
     - kill: open_pdf.py
 - cleanup:
