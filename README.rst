@@ -370,21 +370,19 @@ needing it, you should probably be using a filter).
 
 -  ``STYLEDEF`` is a copy of all style definitions employed in document
 
--  ``RUNLIST`` is a list with the following structure:
+-  ``RUNLIST`` is a list of processes to run, and it has the following
+   structure:
 
    ::
 
-       RUNLIST = [{'kind': 'preflight'|
-                           'filter'|
-                           'postprocess'|
-                           'postflight'|
-                           'cleanup',
+       RUNLIST = [{'kind':      'preflight'| 'filter'| 'postprocess'| 'postflight'| 'cleanup',
                    'command':   'my command',
-                   'arguments': ['argument1', 'argument2', ...]
-                   'status':    'queued'|'running'|'failed'|'done'},
+                   'arguments': ['argument1', 'argument2', ...],
+                   'status':    'queued'|'running'|'failed'|'done'
+                  },
                    ...
                    ...
-               ]
+                 ]
 
 -  ``OPTIONS`` is a dictionary containing panzer's and pandoc's command
    line options:
