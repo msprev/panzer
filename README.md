@@ -194,7 +194,7 @@ Example:
     - killall: true
 ```
 
-The filter `setbaseheader.py` receives the writer name as its first argument and "2" as its second argument.
+The filter `setbaseheader.py` receives the writer name as its first argument and `--level=2` as its second argument.
 
 When panzer is searching for an executable `foo.py`, it will look in:
 
