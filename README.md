@@ -248,9 +248,9 @@ External processes have just has much information as panzer does. panzer sends i
 
 -   `STYLEDEF` is a copy of all style definitions employed in document
 
--   `RUNLIST` is a list of processes to run, and it has the following structure:
+-   `RUNLIST` is a list of processes to run; it has the following structure:
 
-        RUNLIST = [{'kind':      'preflight'| 'filter'| 'postprocess'| 'postflight'| 'cleanup',
+        RUNLIST = [{'kind':      'preflight'|'filter'|'postprocess'|'postflight'|'cleanup',
                     'command':   'my command',
                     'arguments': ['argument1', 'argument2', ...],
                     'status':    'queued'|'running'|'failed'|'done'
