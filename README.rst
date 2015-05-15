@@ -2,7 +2,7 @@
 panzer user guide
 =================
 
-:Author: Mark Sprevak
+:Author: true
 :Date:   15 May 2015
 
 panzer
@@ -156,7 +156,7 @@ A special writer, ``all``, matches every writer.
 -  ``filter`` lists pandoc `json
    filters <http://johnmacfarlane.net/pandoc/scripting.html>`__. Filters
    gain two new properties from panzer. For more info, see section on
-   `compatibility <#pandoc_compatibility>`__ with pandoc.
+   `compatibility <#compatibility>`__ with pandoc.
 
 -  ``postprocessor`` lists executable to pipe pandoc's output through.
    Standard unix executables (``sed``, ``tr``, etc.) are examples of

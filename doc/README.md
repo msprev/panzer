@@ -3,7 +3,7 @@ title:  "panzer user guide"
 author: 
  - name: Mark Sprevak
 date: 15 May 2015
-style: Plain
+style: Notes
 ...
 
 # panzer
@@ -130,7 +130,7 @@ Style definitions are hierarchically structured by *name* and *writer*.
 
 - `filter` lists pandoc [json filters][].
     Filters gain two new properties from panzer.
-    For more info, see section on [compatibility](#pandoc_compatibility) with pandoc.
+    For more info, see section on [compatibility](#compatibility) with pandoc.
 
 - `postprocessor` lists executable to pipe pandoc's output through.
     Standard unix executables (`sed`, `tr`, etc.) are examples of possible use.
