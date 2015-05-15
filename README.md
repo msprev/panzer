@@ -1,7 +1,7 @@
 panzer
 ======
 
-panzer adds 'styles' to [pandoc](http://johnmacfarlane.net/pandoc/index.html). Styles are one level up in abstraction from pandoc templates. Styles change the look of a document in a reusable way. Styles are combinations of templates, metadata settings, filters, postprocessors, preflight and postflight scripts. These can be set on a per document or per writer basis. Styles can be combined and can bear inheritance relations to each other.
+panzer adds 'styles' to [pandoc](http://johnmacfarlane.net/pandoc/index.html). Styles provide a quick way to set all options for a pandoc document ('I want this document to be treated as an article/CV/notes/letter'). Styles allow you to reproduce the look of a document and to switch between huge sets of options (e.g. change notes to an article) with one line in your document. You can think of styles as one level up in abstraction from a pandoc template. Styles are combinations of templates, metadata settings, and instructions to run filters, postprocessors, preflight and postflight scripts. These can be customised on a per writer and per document basis. Styles can be combined and can bear inheritance relations to each other. panzer exposes a large amount of information to the external processes it runs, allowing pre/post processes and filters to be more powerful and to be customisable via metadata. Styles simplify makefiles, bundling everything related to the look of the document into one place in the style definition.
 
 To use a style, add a field with your style name to the yaml metadata block of your document:
 
