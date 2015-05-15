@@ -74,7 +74,7 @@ Installation
 
         git clone https://github.com/msprev/panzer
         cd panzer
-        python3 setup.py develop
+        python3 setup.py install
 
 *Requirements:*
 
