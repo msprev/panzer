@@ -3,17 +3,18 @@ panzer user guide
 =================
 
 :Author: Mark Sprevak
-:Date:   14 May 2015
+:Date:   15 May 2015
 
 panzer
 ======
 
 panzer adds 'styles' to
-`pandoc <http://johnmacfarlane.net/pandoc/index.html>`__. Styles change
-the look of a document in a reusable way. Styles are combinations of
-templates, metadata settings, filters, postprocessors, preflight and
-postflight scripts. These can be set on a per document or per writer
-basis. Styles bear inheritance relations to each other.
+`pandoc <http://johnmacfarlane.net/pandoc/index.html>`__. Styles are one
+level up in abstraction from pandoc templates. Styles change the look of
+a document in a reusable way. Styles are combinations of templates,
+metadata settings, filters, postprocessors, preflight and postflight
+scripts. These can be set on a per document or per writer basis. Styles
+can be combined and can bear inheritance relations to each other.
 
 To use a style, add a field with your style name to the yaml metadata
 block of your document:
@@ -77,11 +78,11 @@ Installation
 Use
 ===
 
-Run ``panzer`` on your document as you would have done ``pandoc``. If
-the document lacks a ``style`` field, this is equivalent to running
-``pandoc``. If the document has a ``style`` field, panzer will invoke
-pandoc plus any associated scripts, filters, and set the appropriate
-metadata fields.
+Run ``panzer`` on your document as you would ``pandoc``. If the document
+lacks a ``style`` field, this is equivalent to running ``pandoc``. If
+the document has a ``style`` field, panzer will invoke pandoc plus any
+associated scripts, filters, and populate the appropriate metadata
+fields.
 
 ``panzer`` accepts the same command line options as ``pandoc``. These
 options are passed to the underlying instance of pandoc.
@@ -127,42 +128,42 @@ A style definition may consist of:
 +-------------------+--------------------------------------+-----------------------------------+
 
 Style definitions are hierarchically structured by *name* and *writer*.
-Style names by convention should be MixedCase (``MyNotes``). Writer
-names are the same as those of the relevant pandoc writer (e.g.
-``latex``, ``html``, ``docx``, etc.) A special writer, ``all``, matches
-every writer.
+Style names by convention should be MixedCase (``MyNotes``) to avoid
+confusion with other metadata fields. Writer names are the same as those
+of the relevant pandoc writer (e.g. ``latex``, ``html``, ``docx``, etc.)
+A special writer, ``all``, matches every writer.
 
-``parent`` takes a list or single style. Children inherit the properties
-of their parents. Children may have multiple parents.
+-  ``parent`` takes a list or single style. Children inherit the
+   properties of their parents. Children may have multiple parents.
 
-``metadata`` contains default metadata set by the style. Any metadata
-field that can appear in a pandoc document can appear here.
+-  ``metadata`` contains default metadata set by the style. Any metadata
+   field that can appear in a pandoc document can appear here.
 
-``template`` specifies a pandoc
-`template <http://johnmacfarlane.net/pandoc/demo/example9/templates.html>`__
-for the document.
+-  ``template`` is a pandoc
+   `template <http://johnmacfarlane.net/pandoc/demo/example9/templates.html>`__
+   for the style.
 
-``preflight`` specifies executables run before the document is
-processed. Preflight scripts are run after panzer reads the input
-documents, but before pandoc is run to convert to the output.
+-  ``preflight`` lists executables run before the document is processed.
+   These are run after panzer reads the input, but before that input is
+   sent to pandoc.
 
-``filter`` specifies pandoc `json
-filters <http://johnmacfarlane.net/pandoc/scripting.html>`__. Filters
-gain two new properties from panzer. For more info, see section below on
-`compatibility <#pandoc_compatibility>`__ with pandoc.
+-  ``filter`` lists pandoc `json
+   filters <http://johnmacfarlane.net/pandoc/scripting.html>`__. Filters
+   gain two new properties from panzer. For more info, see section on
+   `compatibility <#pandoc_compatibility>`__ with pandoc.
 
-``postprocessor`` specifies executable to pipe pandoc's output through.
-Standard unix executables (``sed``, ``tr``, etc.) are examples of
-possible use. Postprocessors are skipped if a binary writer (e.g.
-``.docx``) is selected.
+-  ``postprocessor`` lists executable to pipe pandoc's output through.
+   Standard unix executables (``sed``, ``tr``, etc.) are examples of
+   possible use. Postprocessors are skipped if a binary writer (e.g.
+   ``.docx``) is used.
 
-``postflight`` specifies executables run after the output file has been
-written. If output is stdout, postflight scripts are run after output
-has been flushed.
+-  ``postflight`` lists executables run after the output has been
+   written. If output is stdout, postflight scripts are run after stdout
+   has been flushed.
 
-``cleanup`` specifies executables that are run before panzer exits and
-after postflight scripts. Cleanup scripts run irrespective of whether a
-fatal error has occurred earlier.
+-  ``cleanup`` lists executables run before panzer exits and after
+   postflight scripts. Cleanup scripts run irrespective of whether an
+   error has occurred earlier.
 
 Example:
 
@@ -202,72 +203,75 @@ it would run pandoc on the following input, and then execute
     fontsize: 12pt
     ...
 
-Details
--------
+Style overriding
+----------------
 
-Styles are defined:
+Styles may be defined:
 
 -  'Globally' in the ``styles.yaml`` file (normally in ``~/.panzer/``)
 -  'Locally' in a ``styledef`` field inside the document
 
-Overriding among styles is determined by the following rules:
+Overriding among style settings is determined by the following rules:
 
-+-----+-----------------------------------------------------------------------------------------+
-| #   | rule for overriding                                                                     |
-+=====+=========================================================================================+
-| 1   | Fields set outside a style definition override a style's setting                        |
-+-----+-----------------------------------------------------------------------------------------+
-| 2   | Local definitions inside a ``styledef`` override global definitions in ``style.yaml``   |
-+-----+-----------------------------------------------------------------------------------------+
-| 3   | Later styles in list override earlier ones                                              |
-+-----+-----------------------------------------------------------------------------------------+
-| 4   | Children override their parents                                                         |
-+-----+-----------------------------------------------------------------------------------------+
-| 5   | Writer-specific settings override settings for ``all``                                  |
-+-----+-----------------------------------------------------------------------------------------+
++-----+-------------------------------------------------------------------------------------+
+| #   | overriding rule                                                                     |
++=====+=====================================================================================+
+| 1   | Local definitions in a ``styledef`` override global definitions in ``style.yaml``   |
++-----+-------------------------------------------------------------------------------------+
+| 2   | Writer-specific settings override settings for ``all``                              |
++-----+-------------------------------------------------------------------------------------+
+| 3   | In a list, later styles override earlier ones                                       |
++-----+-------------------------------------------------------------------------------------+
+| 4   | Children override parents                                                           |
++-----+-------------------------------------------------------------------------------------+
+| 5   | Fields set outside a style definition override any style's setting                  |
++-----+-------------------------------------------------------------------------------------+
 
 For fields that pertain to scripts/filters, overriding is *additive*;
 for other fields, it is *non-additive*:
 
--  For ``metadata`` and ``template`` fields, if one style setting
-   overrides another (say, a parent and child set ``numbersections`` to
-   different values), then inheritance is non-additive, and only one
-   (the child) wins.
+-  For ``metadata`` and ``template``, if one style overrides another
+   (say, a parent and child set ``numbersections`` to different values),
+   then inheritance is non-additive, and only one (the child) wins.
 
--  For lists ``preflight``, ``filter``, ``postflight`` and ``cleanup``
-   if one style setting overrides another, then the 'winner' adds its
-   items after the 'loser'. For example, if the parent adds
-   ``latexmk.py`` as a postflight script, and the child adds
-   ``printlog.py`` as a postflight script, then both are run and
-   ``printlog.py`` is run after ``latexmk.py``
+-  For ``preflight``, ``filter``, ``postflight`` and ``cleanup`` if one
+   style overrides another, then the 'winner' adds its items after those
+   of the 'loser'. For example, if the parent adds to ``postflight`` an
+   item ``-run: latexmk.py``, and the child adds ``- run: printlog.py``,
+   then ``printlog.py`` will be run after ``latexmk.py``
 
--  To remove an item from an additive list, set it as the value a
-   ``kill`` field, instead of a ``run`` field.
+-  To remove an item from an additive list, add it with a ``kill``
+   field: for example, ``- kill: latexmk.py``
 
-Command line options trump any style settings, and cannot be overridden
-by a metadata setting. Filters specified on the command line (via
-``--filter``) are always run first, and cannot be removed by ``kill``.
+Command line options trump style settings, and cannot be overridden by
+any metadata setting. Filters specified on the command line (via
+``--filter``) are run first, and cannot be removed.
 
 Multiple input files are joined according to pandoc's rules. Metadata
 are merged using left-biased union. This means overriding behaviour when
-merging multiple input files is always non-additive.
+merging multiple input files is different from that of panzer, and
+always non-additive.
 
-panzer buffers stdin input, if present, to a temporary file in the
-current working directory. This allows preflight scripts to access the
-data. The temporary file is removed when panzer exits.
+If fed stdin input, panzer buffers this to a temporary file in the
+current working directory before proceeding. This is required to allow
+preflight scripts to access the data. The temporary file is removed when
+panzer exits.
+
+The run list
+------------
 
 Executables (scripts, filters, postprocessors) are specified by a list.
 The list determines what gets run when. Executables are run from first
-to last. If an item appears as the value of a ``run`` field in the list,
-then it is added to the list of processes to be run (the 'run list'). If
-an item appears as the value of a ``kill`` field, then any previous use
-is removed from the run list. Killing items does not prevent them being
-added later. A run list can be emptied entirely by adding the special
-item ``- killall: true``.
+to last. If an item appears as the value of a ``run:`` field in the
+list, then it is added to the list of processes to be run (the 'run
+list'). If an item appears as the value of a ``kill:`` field, then any
+previous appearance is removed from the run list. Killing an item does
+not prevent them being added to the run list later. A run list can be
+completely emptied by adding the special item ``- killall: true``.
 
 Arguments can be passed to executables by listing them as the value of
 the ``args`` field of that item. The value of the ``args`` field is
-passed as the command line argument to the external process. Note that
+passed as the command line options to the external process. Note that
 filters always receive the writer name as their first argument.
 
 Example:
@@ -317,7 +321,7 @@ The typical structure for the support directory ``.panzer`` is:
         template/
         shared/
 
-Within each directory, each executable has its named subdirectory:
+Within each directory, each executable should have a named subdirectory:
 
 ::
 
@@ -328,11 +332,12 @@ Within each directory, each executable has its named subdirectory:
 Passing messages to external processes
 ======================================
 
-panzer sends information to external processes via a json message. This
+External processes have just has much information as panzer does. panzer
+sends its information to external processes via a json message. This
 message is sent over stdin to scripts (preflight, postflight, cleanup
-scripts), and embedded in the AST for filters. Postprocessors do not
-receive a json message (if you need the message, you should probably be
-using a filter).
+scripts), and embedded in the AST for filters. Postprocessors are an
+exception: they do not receive a json message (if you find yourself
+needing it, you should probably be using a filter).
 
 ::
 
@@ -347,17 +352,16 @@ using a filter).
 -  ``METADATA`` is a copy of the metadata branch of the document's AST
    (useful for scripts, not useful for filters)
 
--  ``TEMPLATE`` is a string with full path to the current template
+-  ``TEMPLATE`` is a string with path to the current template
 
 -  ``STYLE`` is a list of current style(s)
 
 -  ``STYLEFULL`` is a list of current style(s) including all parents,
    grandparents, etc.
 
--  ``STYLEDEF`` is a copy of the metadata branch with all used style
-   definitions
+-  ``STYLEDEF`` is a copy of all style definitions employed in document
 
--  ``RUNLIST`` is a list with the current state of the run list:
+-  ``RUNLIST`` is a list with the following structure:
 
    ::
 
@@ -373,7 +377,8 @@ using a filter).
                    ...
                ]
 
--  ``OPTIONS`` is a dictionary containing panzer's command line options:
+-  ``OPTIONS`` is a dictionary containing panzer's and pandoc's command
+   line options:
 
    ::
 
@@ -396,9 +401,8 @@ using a filter).
            }
        }
 
-   ``filter`` and ``template`` only include the filters and template, if
-   any, set on the command line (via ``--filter`` and ``--template``
-   command line options).
+   ``filter`` and ``template`` list filters and template set via the
+   command line (via ``--filter`` and ``--template`` options).
 
 Scripts read the json message above by deserialising json input on
 stdin.
@@ -414,7 +418,7 @@ field, ``panzer_reserved``, from the AST:
             JSON_MESSAGE
             ```
 
-which appears to filters as the following structure:
+this is visible to filters as the following json structure:
 
 ::
 
@@ -432,7 +436,7 @@ Receiving messages from external processes
 ==========================================
 
 panzer captures stderr output from all executables. This is for pretty
-printing of error messages. Scripts and filters should send json
+printing of info and errors. Scripts and filters should send json
 messages to panzer via stderr. If a message is sent to stderr that is
 not correctly formatted, panzer will print it verbatim prefixed by a
 '!'.
@@ -472,7 +476,7 @@ new ways:
 Reserved fields
 ===============
 
-The following metadata fields are reserved by panzer.
+The following metadata fields are reserved for use by panzer:
 
 -  ``styledef``
 -  ``style``
@@ -492,5 +496,5 @@ Known issues
 Pull requests welcome:
 
 -  Slow (calls to subprocess slow in Python)
--  Calls to subprocesses (scripts, filters, etc.) are blocking
+-  Calls to subprocesses (scripts, filters, etc.) are currently blocking
 -  No Python 2 support
