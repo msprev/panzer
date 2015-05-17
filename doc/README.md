@@ -9,7 +9,7 @@ style: Notes
 # panzer
 
 panzer adds 'styles' to [pandoc][].
-    Styles provide a way to set all options for a pandoc document with one line ('I want this document to be treated as an article/CV/notes/letter').
+    Styles provide a way to set nearly all options for a pandoc document with one line ('I want this document to be treated as an article/CV/notes/letter').
     You can think of styles as one level up in abstraction from a pandoc template.
     Styles are combinations of templates, metadata settings, and instructions to run filters, postprocessors, preflight and postflight scripts.
     These can be customised on a per writer and per document basis.
@@ -170,7 +170,7 @@ style: Notes
 ```
 
 
-it would run pandoc, with filter `deemph.py`, on the following input and then execute `latexmk.py`.
+it would run pandoc with filter `deemph.py` on the following input and then execute `latexmk.py`.
 
 ``` {.yaml}
 ---
