@@ -3,7 +3,7 @@ title:  "panzer user guide"
 author: 
  - name: Mark Sprevak
 date: 17 May 2015
-style: Notes
+style: Plain
 ...
 
 # panzer

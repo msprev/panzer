@@ -2,7 +2,7 @@
 panzer user guide
 =================
 
-:Author: true
+:Author: Mark Sprevak
 :Date:   17 May 2015
 
 panzer
