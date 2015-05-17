@@ -1,2 +1,0 @@
-panzer README.md -o ../readme.md -t markdown_github --standalone ---quiet
-panzer README.md -o ../readme.rst -t rst --standalone ---quiet

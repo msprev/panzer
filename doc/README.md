@@ -2,7 +2,7 @@
 title:  "panzer user guide"
 author: 
  - name: Mark Sprevak
-date: 15 May 2015
+date: 17 May 2015
 style: Notes
 ...
 
@@ -153,6 +153,8 @@ Notes:
         metadata:
             numbersections: true
             fontsize: 12pt
+        filter:
+            - run: deemph.py
         postflight:
             - run: latexmk.py
 ```
@@ -168,7 +170,7 @@ style: Notes
 ```
 
 
-it would run pandoc on the following input, and then execute `latexmk.py`.
+it would run pandoc, with filter `deemph.py`, on the following input and then execute `latexmk.py`.
 
 ``` {.yaml}
 ---
@@ -206,7 +208,7 @@ For fields that pertain to scripts/filters, overriding is *additive*; for other 
     For example, if the parent adds to `postflight` an item `-run: latexmk.py`, and the child adds `- run: printlog.py`,
         then `printlog.py` will be run after `latexmk.py`
 
-- To remove an item from an additive list, add it with a `kill` field: for example, `- kill: latexmk.py`
+- To remove an item from an additive list, add it as the value of a `kill` field: for example, `- kill: latexmk.py`
 
 Command line options trump style settings, and cannot be overridden by any metadata setting.
     Filters specified on the command line (via `--filter`) are run first, and cannot be removed.
@@ -223,15 +225,15 @@ If fed stdin input, panzer buffers this to a temporary file in the current worki
 
 Executables (scripts, filters, postprocessors) are specified by a list.
     The list determines what gets run when.
-    Executables are run from first to last.
-    If an item appears as the value of a `run:` field in the list, then it is added to the list of processes to be run (the 'run list').
-    If an item appears as the value of a `kill:` field, then any previous appearance is removed from the run list.
-    Killing an item does not prevent them being added to the run list later.
+    Processes are executed from first to last in the list.
+    If an item appears as the value of a `run:` field, then it is added to the list of processes to be run (the 'run list').
+    If an item appears as the value of a `kill:` field, then any previous occurrence is removed from the run list.
+    Killing an item does not prevent them being added later.
     A run list can be completely emptied by adding the special item `- killall: true`.
 
 Arguments can be passed to executables by listing them as the value of the `args` field of that item. 
     The value of the `args` field is passed as the command line options to the external process.
-    The value of `args` should be a quoted inline code span (e.g. ``"`--options`"``) to prevent the parser interpreting it as markdown.
+    This value of `args` should be a quoted inline code span (e.g. ``"`--options`"``) to prevent the parser interpreting it as markdown.
     Note that filters always receive the writer name as their first argument.
 
 Example:
@@ -284,7 +286,7 @@ Within each directory, each executable should have a named subdirectory:
 External processes have just has much information as panzer does.
     panzer sends its information to external processes via a json message.
     This message is sent over stdin to scripts (preflight, postflight, cleanup scripts), and embedded in the AST for filters.
-    Postprocessors are an exception: they do not receive a json message (if you find yourself needing it, you should probably be using a filter).
+    Postprocessors are an exception; they do not receive a json message (if you find yourself needing it, you should probably be using a filter).
 
 ``` 
 JSON_MESSAGE = [{'metadata':  METADATA,
@@ -304,9 +306,9 @@ JSON_MESSAGE = [{'metadata':  METADATA,
 
 - `STYLEFULL` is a list of current style(s) including all parents, grandparents, etc.
 
-- `STYLEDEF` is a copy of all style definitions employed in document
+- `STYLEDEF` is a copy of all the style definitions employed in document
 
-- `RUNLIST` is a list of processes to run; it has the following structure:
+- `RUNLIST` is a list of processes in the run list; it has the following structure:
 
 
     ``` 
@@ -328,17 +330,17 @@ JSON_MESSAGE = [{'metadata':  METADATA,
             'panzer_support':  const.DEFAULT_SUPPORT_DIR,
             'debug':           str(),
             'quiet':           False,
-            'stdin_temp_file': str()
+            'stdin_temp_file': str()   # tempfile used to buffer stdin
         },
         'pandoc': {
-            'input':      list(),
-            'output':     '-',
-            'pdf_output': False,
-            'read':       str(),
-            'write':      str(),
+            'input':      list(),      # list of input files
+            'output':     '-',         # output file; '-' is stdout
+            'pdf_output': False,       # if pandoc will write a .pdf
+            'read':       str(),       # reader
+            'write':      str(),       # writer
             'template':   str(),
             'filter':     list(),
-            'options':    list()
+            'options':    list()       # list of other pandoc options
         }
     }
     ```
@@ -420,7 +422,7 @@ The pandoc writer name `all` is also occupied.
 
 Pull requests welcome:
 
-* Slow (calls to subprocess slow in Python)
+* Slower than I would like (calls to subprocess slow in Python)
 * Calls to subprocesses (scripts, filters, etc.) are currently blocking
 * No Python 2 support
 
