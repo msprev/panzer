@@ -253,7 +253,7 @@ def make_command(remit=str(),
     command += [target]
     # panzer-specific options
     if remit == 'panzer':
-        command += ['---silent']
+        command += ['---quiet']
         # support directory
         command += ['---panzer-support']
         target = os.path.join(os.getcwd(), '..', '..', 'dot-panzer')
