@@ -58,16 +58,16 @@ Styles can also be defined locally inside the document:
                 metadata:
                     numbersections: true
                     fontsize: 12pt
-                postflight:
-                    - run: latexmk.py
+                filter:
+                    - run: deemph.py
 
 Style settings can be overridden inside a document by adding the
 appropriate field outside a style definition:
 
 .. code:: yaml
 
-    postflight:
-        - run: open_pdf.py
+    filter:
+        - run: deemph.py
 
 Installation
 ============
