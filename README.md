@@ -182,7 +182,7 @@ If fed stdin input, panzer buffers this to a temporary file in the current worki
 The run list
 ------------
 
-Executables (scripts, filters, postprocessors) are specified by a list. The list determines what gets run when. Processes are executed from first to last in the list. If an item appears as the value of a `run:` field, then it is added to the list of processes to be run (the 'run list'). If an item appears as the value of a `kill:` field, then any previous occurrence is removed from the run list. Killing an item does not prevent them being added later. A run list can be completely emptied by adding the special item `- killall: true`.
+Executables (scripts, filters, postprocessors) are specified by a list (the 'run list'). The list determines what gets run when. Processes are executed from first to last in the run list. If an item appears as the value of a `run:` field, then it is added to the run list. If an item appears as the value of a `kill:` field, then any previous occurrence is removed from the run list. Killing an item does not prevent it from being added later. A run list can be completely emptied by adding the special item `- killall: true`.
 
 Arguments can be passed to executables by listing them as the value of the `args` field of that item. The value of the `args` field is passed as the command line options to the external process. This value of `args` should be a quoted inline code span (e.g. `` "`--options`" ``) to prevent the parser interpreting it as markdown. Note that filters always receive the writer name as their first argument.
 
