@@ -351,7 +351,7 @@ JSON_MESSAGE = [{'metadata':  METADATA,
 
 Scripts read the json message above by deserialising json input on stdin. 
 
-Filters can read the json message by inspecting the metadata field, `panzer_reserved`, in the AST's metadata branch:
+Filters can read the json message by reading the metadata field, `panzer_reserved`, in the AST:
 
 ``` {.yaml}
 panzer_reserved:
@@ -427,6 +427,10 @@ Pull requests welcome:
 * Slower than I would like (calls to subprocess slow in Python)
 * Calls to subprocesses (scripts, filters, etc.) block ui
 * No Python 2 support
+
+# Similar
+
+* <https://github.com/balachia/panopy>
 
  [pandoc]: http://johnmacfarlane.net/pandoc/index.html
  [panzer]: https://github.com/msprev

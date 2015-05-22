@@ -420,8 +420,8 @@ needing it, you should probably be using a filter).
 Scripts read the json message above by deserialising json input on
 stdin.
 
-Filters can read the json message by inspecting the metadata field,
-``panzer_reserved``, in the AST's metadata branch:
+Filters can read the json message by reading the metadata field,
+``panzer_reserved``, in the AST:
 
 .. code:: yaml
 
@@ -511,3 +511,8 @@ Pull requests welcome:
 -  Slower than I would like (calls to subprocess slow in Python)
 -  Calls to subprocesses (scripts, filters, etc.) block ui
 -  No Python 2 support
+
+Similar
+=======
+
+-  https://github.com/balachia/panopy
