@@ -3,7 +3,7 @@ panzer user guide
 =================
 
 :Author: Mark Sprevak
-:Date:   18 May 2015
+:Date:   22 May 2015
 
 panzer
 ======
@@ -163,7 +163,7 @@ A special writer, ``all``, matches every writer.
 -  ``postprocessor`` lists executable to pipe pandoc's output through.
    Standard unix executables (``sed``, ``tr``, etc.) are examples of
    possible use. Postprocessors are skipped if a binary writer (e.g.
-   ``.docx``) is used.
+   ``docx``) is used.
 
 -  ``postflight`` lists executables run after the output has been
    written. If output is stdout, postflight scripts are run after stdout
@@ -301,10 +301,10 @@ Example:
 The filter ``setbaseheader.py`` receives the writer name as its first
 argument and ``--level=2`` as its second argument.
 
-When panzer is searching for an executable ``foo.py``, it will look in:
+When panzer is searching for a filter ``foo.py``, it will look for:
 
 +-----+-----------------------------------------------------+
-| #   | searching                                           |
+| #   | look for                                            |
 +=====+=====================================================+
 | 1   | ``./foo.py``                                        |
 +-----+-----------------------------------------------------+
@@ -318,6 +318,8 @@ When panzer is searching for an executable ``foo.py``, it will look in:
 +-----+-----------------------------------------------------+
 | 6   | ``foo.py`` in PATH defined by current environment   |
 +-----+-----------------------------------------------------+
+
+Similar rules apply to other executables and to templates.
 
 The typical structure for the support directory ``.panzer`` is:
 
@@ -333,7 +335,7 @@ The typical structure for the support directory ``.panzer`` is:
         template/
         shared/
 
-Within each directory, each executable should have a named subdirectory:
+Within each directory, each executable may have a named subdirectory:
 
 ::
 
@@ -362,17 +364,17 @@ needing it, you should probably be using a filter).
                      'options':   OPTIONS}]
 
 -  ``METADATA`` is a copy of the metadata branch of the document's AST
-   (useful for scripts, not useful for filters)
+   (useful for scripts to access parsed metadata, not needed for
+   filters)
 
 -  ``TEMPLATE`` is a string with path to the current template
 
 -  ``STYLE`` is a list of current style(s)
 
 -  ``STYLEFULL`` is a list of current style(s) including all parents,
-   grandparents, etc.
+   grandparents, etc. in order of application
 
--  ``STYLEDEF`` is a copy of all the style definitions employed in
-   document
+-  ``STYLEDEF`` is a copy of all style definitions employed in document
 
 -  ``RUNLIST`` is a list of processes in the run list; it has the
    following structure:
@@ -408,7 +410,7 @@ needing it, you should probably be using a filter).
                'write':      str(),       # writer
                'template':   str(),
                'filter':     list(),
-               'options':    list()       # list of other pandoc options
+               'options':    list()       # list of remaining pandoc options
            }
        }
 
@@ -418,8 +420,8 @@ needing it, you should probably be using a filter).
 Scripts read the json message above by deserialising json input on
 stdin.
 
-Filters can read the json message by extracting a special metadata
-field, ``panzer_reserved``, from the AST:
+Filters can read the json message by inspecting the metadata field,
+``panzer_reserved``, in the AST's metadata branch:
 
 .. code:: yaml
 
@@ -507,5 +509,5 @@ Known issues
 Pull requests welcome:
 
 -  Slower than I would like (calls to subprocess slow in Python)
--  Calls to subprocesses (scripts, filters, etc.) are currently blocking
+-  Calls to subprocesses (scripts, filters, etc.) block ui
 -  No Python 2 support
