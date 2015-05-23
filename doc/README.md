@@ -9,11 +9,11 @@ style: Plain
 # panzer
 
 panzer adds 'styles' to [pandoc][].
-    Styles provide a way to set all options for a pandoc document with one line ('I want this document to be treated as an article/CV/notes/letter').
+    Styles provide a way to set all options for a pandoc document with one line ('I want this document be an article/CV/notes/letter').
 
 You can think of styles as a level up in abstraction from a pandoc template.
     Styles are combinations of templates, metadata settings, instructions to run filters, pre/postprocessors, and pandoc command line options.
-    These can be customised on a per writer and per document basis.
+    These settings can be customised on a per writer and per document basis.
     Styles can be combined and can bear inheritance relations to each other.
     panzer exposes a large amount of structured information to the external processes called by styles, allowing those processes to be both more powerful and themselves controllable via metadata.
     Styles simplify makefiles, bundling everything related to the look of the document in one place.
