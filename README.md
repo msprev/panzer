@@ -243,17 +243,17 @@ Within each directory, each executable may have a named subdirectory:
         latexmk/
             latexmk.py
 
-Setting pandoc options via metadata
+Setting pandoc command line options
 -----------------------------------
 
-Arbitrary pandoc command line options can be set via metadata using `commandline`. `commandline` can appear outside a style definition and in a document's metadata block, where it overrides the settings of any style.
+Arbitrary pandoc command line options can be set using metadata via `commandline`. `commandline` can appear outside a style definition and in a document's metadata block, where it overrides the settings of any style.
 
 `commandline` contains one field for each pandoc command line option. The field name is the unabbreviated name of the relevant pandoc command line option (e.g. `standalone`).
 
 -   For pandoc flags, the value should be boolean (`true`, `false`), e.g. `smart: true`.
 -   For pandoc key-values, the value should be a quoted inline code span, e.g. `` include-in-header: "`path/to/my/header`" ``.
 
-The value `false` plays a special role. `false` means that the pandoc command line option with the field's name, if already set, should be unset. `false` can be used for both flags and key-value options (e.g. `include-in-header: false`).
+`false` plays a special role. `false` means that the pandoc command line option with the field's name, if set, should be unset. `false` can be used for both flags and key-value options (e.g. `include-in-header: false`).
 
 Example:
 
@@ -262,6 +262,8 @@ Example:
         slide-number: "`3`"
         no-wrap: false
         include-in-header: false
+
+This passes the following options to pandoc `--smart --slide-number=3` and removes any `--no-wrap` and `--include-in-header=...` options.
 
 These pandoc command line options cannot be set via `commandline`:
 
