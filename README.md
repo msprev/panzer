@@ -1,9 +1,9 @@
 panzer
 ======
 
-panzer adds 'styles' to [pandoc](http://johnmacfarlane.net/pandoc/index.html). Styles provide a way to set every option for a pandoc document with one line ('I want this document to be treated as an article/CV/notes/letter').
+panzer adds 'styles' to [pandoc](http://johnmacfarlane.net/pandoc/index.html). Styles provide a way to set all options for a pandoc document with one line ('I want this document be an article/CV/notes/letter').
 
-You can think of styles as a level up in abstraction from a pandoc template. Styles are combinations of templates, metadata settings, instructions to run filters, pre/postprocessors, and pandoc command line options. These can be customised on a per writer and per document basis. Styles can be combined and can bear inheritance relations to each other. panzer exposes a large amount of structured information to the external processes called by styles, allowing those processes to be both more powerful and themselves controllable via metadata. Styles simplify makefiles, bundling everything related to the look of the document in one place.
+You can think of styles as a level up in abstraction from a pandoc template. Styles are combinations of templates, metadata settings, pandoc command line options, and instructions to run filters, pre/postprocessors. These settings can be customised on a per writer and per document basis. Styles can be combined and can bear inheritance relations to each other. panzer exposes a large amount of structured information to the external processes called by styles, allowing those processes to be both more powerful and themselves controllable via metadata. Styles simplify makefiles, bundling everything related to the look of the document in one place.
 
 To use a style, add a field with your style name to the yaml metadata block of your document:
 
@@ -19,7 +19,7 @@ style:
     - BoldHeadings
 ```
 
-Styles are defined in a `style.yaml` file ([example](https://github.com/msprev/dot-panzer/blob/master/styles.yaml)). The style definition file, plus associated executables, are placed in the `.panzer` directory in the user's home folder ([example](https://github.com/msprev/dot-panzer)).
+Styles are defined in a `styles.yaml` file ([example](https://github.com/msprev/dot-panzer/blob/master/styles.yaml)). The style definition file, plus associated executables, are placed in the `.panzer` directory in the user's home folder ([example](https://github.com/msprev/dot-panzer)).
 
 Styles can also be defined locally inside the document:
 
@@ -132,6 +132,8 @@ Notes:
         metadata:
             numbersections: true
             fontsize: 12pt
+        commandline:
+            smart: true
         filter:
             - run: deemph.py
         postflight:
@@ -148,7 +150,7 @@ style: Notes
 ...
 ```
 
-it would run pandoc with filter `deemph.py` on the following input and then execute `latexmk.py`.
+it would run pandoc with filter `deemph.py` and command line option `--smart` on the following input and then execute `latexmk.py`.
 
 ``` yaml
 ---
@@ -169,17 +171,17 @@ Styles may be defined:
 
 Overriding among style settings is determined by the following rules:
 
-| \#  | overriding rule                                                               |
-|:----|:------------------------------------------------------------------------------|
-| 1   | Local definitions in a `styledef` override global definitions in `style.yaml` |
-| 2   | Writer-specific settings override settings for `all`                          |
-| 3   | In a list, later styles override earlier ones                                 |
-| 4   | Children override parents                                                     |
-| 5   | Fields set outside a style definition override any style's setting            |
+| \#  | overriding rule                                                                |
+|:----|:-------------------------------------------------------------------------------|
+| 1   | Local definitions in a `styledef` override global definitions in `styles.yaml` |
+| 2   | Writer-specific settings override settings for `all`                           |
+| 3   | In a list, later styles override earlier ones                                  |
+| 4   | Children override parents                                                      |
+| 5   | Fields set outside a style definition override any style's setting             |
 
 For fields that pertain to scripts/filters, overriding is *additive*; for other fields, it is *non-additive*:
 
--   For `metadata` and `template`, if one style overrides another (say, a parent and child set `numbersections` to different values), then inheritance is non-additive, and only one (the child) wins.
+-   For `metadata`, `template`, and `commandline`, if one style overrides another (say, a parent and child set `numbersections` to different values), then inheritance is non-additive, and only one (the child) wins.
 
 -   For `preflight`, `filter`, `postflight` and `cleanup` if one style overrides another, then the 'winner' adds its items after those of the 'loser'. For example, if the parent adds to `postflight` an item `-run: latexmk.py`, and the child adds `- run: printlog.py`, then `printlog.py` will be run after `latexmk.py`
 
@@ -243,25 +245,27 @@ Within each directory, each executable may have a named subdirectory:
         latexmk/
             latexmk.py
 
-Setting pandoc options via metadata
+Setting pandoc command line options
 -----------------------------------
 
-Arbitrary pandoc command line options can be set via metadata using `commandline`. `commandline` can appear outside a style definition and in a document's metadata block, where it overrides the settings of any style.
+Arbitrary pandoc command line options can be set using metadata via `commandline`. `commandline` can appear outside a style definition and in a document's metadata block, where it overrides the settings of any style.
 
 `commandline` contains one field for each pandoc command line option. The field name is the unabbreviated name of the relevant pandoc command line option (e.g. `standalone`).
 
 -   For pandoc flags, the value should be boolean (`true`, `false`), e.g. `smart: true`.
 -   For pandoc key-values, the value should be a quoted inline code span, e.g. `` include-in-header: "`path/to/my/header`" ``.
 
-The value `false` plays a special role. `false` means that the pandoc command line option with the field's name, if already set, should be unset. `false` can be used for both flags and key-value options (e.g. `include-in-header: false`).
+`false` plays a special role. `false` means that the pandoc command line option with the field's name, if set, should be unset. `false` can be used for both flags and key-value options (e.g. `include-in-header: false`).
 
 Example:
 
     commandline:
         smart: true
-        slide-number: "`3`"
+        slide-level: "`3`"
         no-wrap: false
         include-in-header: false
+
+This passes the following options to pandoc `--smart --slide-level=3` and removes any `--no-wrap` and `--include-in-header=...` options.
 
 These pandoc command line options cannot be set via `commandline`:
 
@@ -276,7 +280,7 @@ These pandoc command line options cannot be set via `commandline`:
 Passing messages to external processes
 ======================================
 
-External processes have just has much information as panzer does. panzer sends its information to external processes via a json message. This message is sent over stdin to scripts (preflight, postflight, cleanup scripts), and embedded in the AST for filters. Postprocessors are an exception; they do not receive a json message (if you find yourself needing it, you should probably be using a filter).
+External processes have just as much information as panzer does. panzer sends its information to external processes via a json message. This message is sent over stdin to scripts (preflight, postflight, cleanup scripts), and embedded in the AST for filters. Postprocessors are an exception; they do not receive a json message (if you need it, you should probably be using a filter).
 
     JSON_MESSAGE = [{'metadata':    METADATA,
                      'template':    TEMPLATE,
@@ -287,7 +291,7 @@ External processes have just has much information as panzer does. panzer sends i
                      'commandline': COMMANDLINE,
                      'options':     OPTIONS}]
 
--   `METADATA` is a copy of the metadata branch of the document's AST (useful for scripts to access parsed metadata, not needed for filters)
+-   `METADATA` is a copy of the metadata branch of the document's AST (useful for scripts, not useful for filters)
 
 -   `TEMPLATE` is a string with path to the current template
 
@@ -333,7 +337,7 @@ External processes have just has much information as panzer does. panzer sends i
 
     `filter` and `template` list filters and template set via the command line (via `--filter` and `--template` options).
 
-    `options` only lists pandoc options set via the command line (not via `commandline` metadata). The full command line options with which pandoc will be run is the union of `options` and `COMMANDLINE`.
+    `options` lists pandoc options set via the command line (not those set via `commandline`). The set of command line options passed to pandoc is the union of `options` and `COMMANDLINE`.
 
 Scripts read the json message above by deserialising json input on stdin.
 
@@ -423,6 +427,6 @@ Release notes
 =============
 
 -   1.0b2 (23 May 2015):
-    -   new: `commandline` in style definition -- set pandoc command line options via metadata
+    -   new: `commandline` - set arbitrary pandoc command line options via metadata
 -   1.0b1 (14 May 2015):
     -   initial release

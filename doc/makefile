@@ -12,41 +12,21 @@ OUT_BASENAME := $(basename $(SOURCE))
 ########################################################################
 
 doc:	$(SOURCE)
-	$(PANZER) $(SOURCE) -o ../$(OUT_BASENAME).md -t markdown_github --standalone ---quiet; \
-	$(PANZER) $(SOURCE) -o ../$(OUT_BASENAME).rst -t rst --standalone ---quiet
+	$(PANZER) $(SOURCE) -o ../$(OUT_BASENAME).md -t markdown_github ---quiet; \
+	$(PANZER) $(SOURCE) -o ../$(OUT_BASENAME).rst -t rst ---quiet
 
 ########################################################################
 #                 Standard makefile for markdown file                  #
 ########################################################################
 
 html:	$(SOURCE)
-	$(PANZER) \
-		$(SOURCE) \
-		-o $(OUT_BASENAME).html \
-		--smart \
-		--standalone
+	$(PANZER) $(SOURCE) -o $(OUT_BASENAME).html
 
 pdf:	$(SOURCE)
-	$(PANZER) \
-		$(SOURCE) \
-		-o $(OUT_BASENAME).tex \
-		--smart \
-		--standalone
-
-pdf-refs:	$(SOURCE)
-	$(PANZER) \
-		$(SOURCE) \
-		-o $(OUT_BASENAME).tex \
-		--natbib \
-		--smart \
-		--standalone
+	$(PANZER) $(SOURCE) -o $(OUT_BASENAME).tex
 
 docx:	$(SOURCE)
-	$(PANZER) \
-		$(SOURCE) \
-		-o $(OUT_BASENAME).docx \
-		--smart \
-		--standalone
+	$(PANZER) $(SOURCE) -o $(OUT_BASENAME).docx
 
 pandoc-html:	$(SOURCE)
 	$(PANDOC) \
