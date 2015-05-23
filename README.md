@@ -280,7 +280,7 @@ These pandoc command line options cannot be set via `commandline`:
 Passing messages to external processes
 ======================================
 
-External processes have as much information as panzer does. panzer sends its information to external processes via a json message. This message is sent over stdin to scripts (preflight, postflight, cleanup scripts), and embedded in the AST for filters. Postprocessors are an exception; they do not receive a json message (if you need it, you should probably be using a filter).
+External processes have just as much information as panzer does. panzer sends its information to external processes via a json message. This message is sent over stdin to scripts (preflight, postflight, cleanup scripts), and embedded in the AST for filters. Postprocessors are an exception; they do not receive a json message (if you need it, you should probably be using a filter).
 
     JSON_MESSAGE = [{'metadata':    METADATA,
                      'template':    TEMPLATE,
