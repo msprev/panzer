@@ -202,9 +202,8 @@ def get_runlist(metadata, kind, options):
                 if get_type(item_content, 'args') != 'MetaInlines':
                     raise error.BadArgsFormat
                 args_content = get_content(item_content, 'args', 'MetaInlines')
-                if len(args_content) != 1:
-                    raise error.BadArgsFormat
-                if args_content[0][const.T] != 'Code':
+                if len(args_content) != 1 \
+                or args_content[0][const.T] != 'Code':
                     raise error.BadArgsFormat
                 arguments_raw = args_content[0][const.C][1]
                 entry['arguments'] = shlex.split(arguments_raw)
