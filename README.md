@@ -132,6 +132,8 @@ Notes:
         metadata:
             numbersections: true
             fontsize: 12pt
+        commandline:
+            smart: true
         filter:
             - run: deemph.py
         postflight:
@@ -148,7 +150,7 @@ style: Notes
 ...
 ```
 
-it would run pandoc with filter `deemph.py` on the following input and then execute `latexmk.py`.
+it would run pandoc with filter `deemph.py` and command line option `--smart` on the following input and then execute `latexmk.py`.
 
 ``` yaml
 ---
