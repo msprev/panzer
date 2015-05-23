@@ -3,7 +3,7 @@ panzer
 
 panzer adds 'styles' to [pandoc](http://johnmacfarlane.net/pandoc/index.html). Styles provide a way to set all options for a pandoc document with one line ('I want this document be an article/CV/notes/letter').
 
-You can think of styles as a level up in abstraction from a pandoc template. Styles are combinations of templates, metadata settings, instructions to run filters, pre/postprocessors, and pandoc command line options. These settings can be customised on a per writer and per document basis. Styles can be combined and can bear inheritance relations to each other. panzer exposes a large amount of structured information to the external processes called by styles, allowing those processes to be both more powerful and themselves controllable via metadata. Styles simplify makefiles, bundling everything related to the look of the document in one place.
+You can think of styles as a level up in abstraction from a pandoc template. Styles are combinations of templates, metadata settings, pandoc command line options, and instructions to run filters, pre/postprocessors. These settings can be customised on a per writer and per document basis. Styles can be combined and can bear inheritance relations to each other. panzer exposes a large amount of structured information to the external processes called by styles, allowing those processes to be both more powerful and themselves controllable via metadata. Styles simplify makefiles, bundling everything related to the look of the document in one place.
 
 To use a style, add a field with your style name to the yaml metadata block of your document:
 
@@ -280,7 +280,7 @@ These pandoc command line options cannot be set via `commandline`:
 Passing messages to external processes
 ======================================
 
-External processes have just has much information as panzer does. panzer sends its information to external processes via a json message. This message is sent over stdin to scripts (preflight, postflight, cleanup scripts), and embedded in the AST for filters. Postprocessors are an exception; they do not receive a json message (if you find yourself needing it, you should probably be using a filter).
+External processes have as much information as panzer does. panzer sends its information to external processes via a json message. This message is sent over stdin to scripts (preflight, postflight, cleanup scripts), and embedded in the AST for filters. Postprocessors are an exception; they do not receive a json message (if you need it, you should probably be using a filter).
 
     JSON_MESSAGE = [{'metadata':    METADATA,
                      'template':    TEMPLATE,
@@ -291,7 +291,7 @@ External processes have just has much information as panzer does. panzer sends i
                      'commandline': COMMANDLINE,
                      'options':     OPTIONS}]
 
--   `METADATA` is a copy of the metadata branch of the document's AST (useful for scripts to access parsed metadata, not needed for filters)
+-   `METADATA` is a copy of the metadata branch of the document's AST (useful for scripts, not useful for filters)
 
 -   `TEMPLATE` is a string with path to the current template
 
@@ -337,7 +337,7 @@ External processes have just has much information as panzer does. panzer sends i
 
     `filter` and `template` list filters and template set via the command line (via `--filter` and `--template` options).
 
-    `options` only lists pandoc options set via the command line (not via `commandline` metadata). The full command line options with which pandoc will be run is the union of `options` and `COMMANDLINE`.
+    `options` lists pandoc options set via the command line (not those set via `commandline`). The set of command line options passed to pandoc is the union of `options` and `COMMANDLINE`.
 
 Scripts read the json message above by deserialising json input on stdin.
 
@@ -427,6 +427,6 @@ Release notes
 =============
 
 -   1.0b2 (23 May 2015):
-    -   new: `commandline` in style definition - sets arbitrary pandoc command line options via metadata
+    -   new: `commandline` - set arbitrary pandoc command line options via metadata
 -   1.0b1 (14 May 2015):
     -   initial release
