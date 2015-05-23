@@ -437,10 +437,9 @@ class Document(object):
             command += ['--output', '-']
         # - template specified on cli has precedence
         if self.options['pandoc']['template']:
-            command += ['--template=%s' % self.options['pandoc']['template']]
+            command += ['--template="%s"' % self.options['pandoc']['template']]
         elif self.template:
-            command += ['--template=%s' % self.template]
-        # - remaining options
+            command += ['--template="%s"' % self.template]
         command += self.options['pandoc']['options']
         # 2. Prefill input and output pipes
         in_pipe = json.dumps(self.ast)
