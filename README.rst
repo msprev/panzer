@@ -39,7 +39,7 @@ Multiple styles can be supplied as a list:
         - Notes
         - BoldHeadings
 
-Styles are defined in a ``style.yaml`` file
+Styles are defined in a ``styles.yaml`` file
 (`example <https://github.com/msprev/dot-panzer/blob/master/styles.yaml>`__).
 The style definition file, plus associated executables, are placed in
 the ``.panzer`` directory in the user's home folder
@@ -241,19 +241,19 @@ Styles may be defined:
 
 Overriding among style settings is determined by the following rules:
 
-+-----+-------------------------------------------------------------------------------------+
-| #   | overriding rule                                                                     |
-+=====+=====================================================================================+
-| 1   | Local definitions in a ``styledef`` override global definitions in ``style.yaml``   |
-+-----+-------------------------------------------------------------------------------------+
-| 2   | Writer-specific settings override settings for ``all``                              |
-+-----+-------------------------------------------------------------------------------------+
-| 3   | In a list, later styles override earlier ones                                       |
-+-----+-------------------------------------------------------------------------------------+
-| 4   | Children override parents                                                           |
-+-----+-------------------------------------------------------------------------------------+
-| 5   | Fields set outside a style definition override any style's setting                  |
-+-----+-------------------------------------------------------------------------------------+
++-----+--------------------------------------------------------------------------------------+
+| #   | overriding rule                                                                      |
++=====+======================================================================================+
+| 1   | Local definitions in a ``styledef`` override global definitions in ``styles.yaml``   |
++-----+--------------------------------------------------------------------------------------+
+| 2   | Writer-specific settings override settings for ``all``                               |
++-----+--------------------------------------------------------------------------------------+
+| 3   | In a list, later styles override earlier ones                                        |
++-----+--------------------------------------------------------------------------------------+
+| 4   | Children override parents                                                            |
++-----+--------------------------------------------------------------------------------------+
+| 5   | Fields set outside a style definition override any style's setting                   |
++-----+--------------------------------------------------------------------------------------+
 
 For fields that pertain to scripts/filters, overriding is *additive*;
 for other fields, it is *non-additive*:
