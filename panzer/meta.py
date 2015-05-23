@@ -15,11 +15,37 @@ def update_metadata(old, new):
         pass
     except error.WrongType as err:
         info.log('WARNING', 'panzer', err)
-    # 2. Update with values in fields for additive lists
+    # 2. Update with values in 'commandline' field
+    old = update_commandline(old, new)
+    # 3. Update with values in fields for additive lists
     old = update_additive_lists(old, new)
-    # 3. 'template' field
+    # 4. Update 'template' field
     if 'template' in new:
         old['template'] = new['template']
+    return old
+
+def update_commandline(old, new):
+    """ return old updated with info from `commandline` in new """
+    try:
+        try:
+            new_commandline = get_content(new, 'commandline', 'MetaMap')
+        except error.MissingField:
+            # field not in incoming metadata, quit
+            return old
+        try:
+            old_commandline = get_content(old, 'commandline', 'MetaMap')
+        except error.MissingField:
+            # field not in old metadata, start with an empty dict
+            old_commandline = dict()
+    except error.WrongType as err:
+        # wrong type of value under field, quit
+        info.log('WARNING', 'panzer', err)
+        return
+    old_commandline.update(new_commandline)
+    if old_commandline == dict():
+        # if still empty, don't bother adding it
+        return
+    set_content(old, 'commandline', old_commandline, 'MetaMap')
     return old
 
 def update_additive_lists(old, new):
@@ -208,8 +234,8 @@ def get_runlist(metadata, kind, options):
                 arguments_raw = args_content[0][const.C][1]
                 entry['arguments'] = shlex.split(arguments_raw)
             except error.BadArgsFormat:
-                info.log('ERROR', 'panzer', 'Cannot read "args" of "%s" --- '
-                         'should be formatted: args: "`--arguments`"'
+                info.log('ERROR', 'panzer', 'Cannot read "args" of "%s". '
+                         'Syntax should be args: "`--ARGUMENTS`"'
                          % command_str)
                 entry['arguments'] = list()
         runlist.append(entry)

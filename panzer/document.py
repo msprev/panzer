@@ -12,14 +12,15 @@ from . import const
 
 class Document(object):
     """ representation of pandoc/panzer documents
-    - ast       : pandoc abstract syntax tree of document
-    - style     : list of styles for document
-    - stylefull : full list of styles including all parents
-    - styledef  : style definitions
-    - runlist   : run list for document
-    - options   : cli options for document
-    - template  : template for document
-    - output    : string filled with output when processing complete
+    - ast:         pandoc abstract syntax tree of document
+    - style:       list of styles for document
+    - stylefull:   full list of styles including all parents
+    - styledef:    style definitions
+    - runlist:     run list for document
+    - options:     options passed to panzer on commandline
+    - commandline: list of cli options set via `commandline` field
+    - template:    template for document
+    - output:      string filled with output when processing complete
     """
     #
     # disable pylint warnings:
@@ -52,6 +53,7 @@ class Document(object):
                 'options'    : list()
             }
         }
+        self.commandline = list()
         self.template = None
         self.output = None
 
@@ -63,7 +65,7 @@ class Document(object):
         if ast:
             self.ast = ast
         else:
-            info.log('DEBUG', 'panzer', 'source document(s) empty')
+            info.log('ERROR', 'panzer', 'source document(s) empty')
         # - check if panzer_reserved key already exists in metadata
         metadata = self.get_metadata()
         try:
@@ -186,6 +188,74 @@ class Document(object):
             info.log('INFO', 'panzer', line)
         self.runlist = runlist
 
+    def build_commandline(self):
+        """
+        parse `commandline` metadata field and use it to build the
+        self.commandline list of options
+        """
+        # 1. read content of `commandline` field
+        metadata = self.get_metadata()
+        if 'commandline' not in metadata:
+            return
+        field_type = meta.get_type(metadata, 'commandline')
+        if field_type != 'MetaMap':
+            info.log('ERROR', 'panzer',
+                     'Value of field "%s" should be of type "MetaMap"'
+                     '---found value of type "%s", ignoring it'
+                     % ('commandline', field_type))
+            return
+        content = meta.get_content(metadata, 'commandline')
+        # 2. remove bad options from `commandline`
+        # - first, fixed list of forbidden options
+        bad_opts = ['write', 'read', 'from', 'to', 'filter', 'template', 'output']
+        for key in content:
+            if key in bad_opts:
+                info.log('ERROR', 'panzer',
+                         '"%s" forbidden entry in panzer "commandline" '
+                         'map---ignoring' % key)
+        # - second, options options already set via panzer command line
+        for key in content:
+            for opt in self.options['pandoc']['options']:
+                k = key.lower()
+                o = opt.lower()
+                if o == '--%s' % k or o.startswith('--%s=' % k):
+                    info.log('WARNING', 'panzer',
+                             '"%s" setting in "commandline" field overriden '
+                             'by "%s" via panzer command line'
+                             % (key, opt))
+                    bad_opts += [key]
+        content = {key: content[key]
+                   for key in content
+                   if key not in bad_opts}
+        # 3. parse remaining opts into self.commandline list
+        commandline = list()
+        for key in content:
+            val_t = meta.get_type(content, key)
+            val_c = meta.get_content(content, key)
+            # if value is 'false', ignore
+            if val_c == False:
+                continue
+            # if value is 'true', add --OPTION
+            elif val_t == 'MetaBool' and val_c == True:
+                commandline += ['--%s' % key]
+            # if type is inline code span, add --OPTION=VAL
+            elif val_t == 'MetaInlines':
+                if len(val_c) != 1 \
+                or val_c[0][const.T] != 'Code':
+                    info.log('ERROR', 'panzer',
+                             'Cannot read option "%s" in "commandline" field. '
+                             'Syntax should be OPTION: "`VALUE`"' % key)
+                    continue
+                code_c = val_c[0][const.C][1]
+                commandline += ['--%s=%s' % (key, code_c)]
+            else:
+                info.log('ERROR', 'panzer',
+                         'Cannot read entry "%s" with type "%s" in '
+                         '"commandline"---ignoring'
+                         % (key, val_t))
+                continue
+        self.commandline = commandline
+
     def json_message(self):
         """ return json message to pass to executables
             and inject json message into `panzer_reserved` field """
@@ -194,13 +264,14 @@ class Document(object):
         if 'panzer_reserved' in metadata:
             del metadata['panzer_reserved']
         # - build new json_message
-        data = [{'metadata':  metadata,
-                 'template':  self.template,
-                 'style':     self.style,
-                 'stylefull': self.stylefull,
-                 'styledef':  self.styledef,
-                 'runlist':   self.runlist,
-                 'options':   self.options}]
+        data = [{'metadata':    metadata,
+                 'template':    self.template,
+                 'style':       self.style,
+                 'stylefull':   self.stylefull,
+                 'styledef':    self.styledef,
+                 'runlist':     self.runlist,
+                 'options':     self.options,
+                 'commandline': self.commandline}]
         json_message = json.dumps(data)
         # - inject into metadata
         content = {"json_message": {
@@ -217,6 +288,7 @@ class Document(object):
         kill_list += ['style']
         kill_list += ['styledef']
         kill_list += ['template']
+        kill_list += ['commandline']
         metadata = self.get_metadata()
         new_metadata = {key: metadata[key]
                         for key in metadata
@@ -242,37 +314,31 @@ class Document(object):
         # 1. Do transform
         # - start with blank metadata
         new_metadata = dict()
-        # - add styles one by one
+        # - apply styles, first to last
         for style in self.stylefull:
-            new_metadata = meta.update_metadata(new_metadata,
-                                                meta.get_nested_content(
-                                                    self.styledef,
-                                                    [style, 'all'],
-                                                    'MetaMap'))
-            new_metadata = meta.update_metadata(new_metadata,
-                                                meta.get_nested_content(
-                                                    self.styledef,
-                                                    [style, writer],
-                                                    'MetaMap'))
+            all_s = meta.get_nested_content(self.styledef, [style, 'all'], 'MetaMap')
+            new_metadata = meta.update_metadata(new_metadata, all_s)
+            cur_s = meta.get_nested_content(self.styledef, [style, writer], 'MetaMap')
+            new_metadata = meta.update_metadata(new_metadata, cur_s)
         # - add local metadata in document
         local_data = self.get_metadata()
         # -- add items from additive fields in local metadata
         new_metadata = meta.update_additive_lists(new_metadata, local_data)
+        # -- add items from local `commandline` field
+        new_metadata = meta.update_commandline(new_metadata, local_data)
         # -- delete those fields
         local_data = {key: local_data[key]
                       for key in local_data
-                      if key not in const.RUNLIST_KIND}
+                      if key not in const.RUNLIST_KIND and key != 'commandline'}
         # -- add all other (non-additive) fields in
         new_metadata.update(local_data)
-        # 2. Apply kill rules to trim lists
+        # 2. Apply kill rules to trim run lists
         for field in const.RUNLIST_KIND:
             try:
-                original_list = meta.get_content(new_metadata,
-                                                 field, 'MetaList')
+                original_list = meta.get_content(new_metadata, field, 'MetaList')
                 trimmed_list = meta.apply_kill_rules(original_list)
                 if trimmed_list:
-                    meta.set_content(new_metadata, field,
-                                     trimmed_list, 'MetaList')
+                    meta.set_content(new_metadata, field, trimmed_list, 'MetaList')
                 else:
                     # if all items killed, delete field
                     del new_metadata[field]
@@ -283,18 +349,16 @@ class Document(object):
                 continue
         # 3. Set template
         try:
-            template_raw = meta.get_content(new_metadata, 'template',
-                                            'MetaInlines')
+            template_raw = meta.get_content(new_metadata, 'template', 'MetaInlines')
             template_str = pandocfilters.stringify(template_raw)
             self.template = util.resolve_path(template_str, 'template',
                                               self.options)
         except (error.MissingField, error.WrongType) as err:
             info.log('DEBUG', 'panzer', err)
         if self.template:
-
             info.log('INFO', 'panzer', info.pretty_title('template'))
             info.log('INFO', 'panzer', '  %s' % info.pretty_path(self.template))
-        # 4. Update document
+        # 4. Update document's metadata
         self.set_metadata(new_metadata)
 
     def run_scripts(self, kind, do_not_stop=False):
@@ -411,8 +475,8 @@ class Document(object):
                     self.ast = json.loads(out_pipe)
                 except ValueError:
                     info.log('ERROR', 'panzer',
-                            'failed to receive json object from filter'
-                            '---skipping filter')
+                             'failed to receive json object from filter'
+                             '---skipping filter')
                     continue
             elif kind == 'postprocess':
                 self.output = out_pipe
@@ -437,21 +501,24 @@ class Document(object):
             command += ['--output', '-']
         # - template specified on cli has precedence
         if self.options['pandoc']['template']:
-            command += ['--template="%s"' % self.options['pandoc']['template']]
+            command += ['--template=%s' % self.options['pandoc']['template']]
         elif self.template:
-            command += ['--template="%s"' % self.template]
+            command += ['--template=%s' % self.template]
+        # - remaining options pooled from `commandline` field and
+        # - passed direct to panzer on the command line
         command += self.options['pandoc']['options']
+        command += self.commandline
         # 2. Prefill input and output pipes
         in_pipe = json.dumps(self.ast)
         out_pipe = str()
         stderr = str()
         # 3. Run pandoc command
         info.log('INFO', 'panzer', info.pretty_title('pandoc'))
-        if self.options['pandoc']['options']:
+        if self.options['pandoc']['options'] or self.commandline:
             info.log('INFO', 'panzer', 'running pandoc with options:')
             info.log('INFO', 'panzer',
-                     info.pretty_list(self.options['pandoc']['options'],
-                                      separator=' '))
+                     info.pretty_list(self.options['pandoc']['options'] +
+                                      self.commandline, separator=' '))
         else:
             info.log('INFO', 'panzer', 'running')
         info.log('DEBUG', 'panzer', 'run "%s"' % ' '.join(command))

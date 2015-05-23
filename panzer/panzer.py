@@ -45,6 +45,7 @@ def main():
         doc.populate(ast, global_styledef)
         doc.transform()
         doc.build_runlist()
+        doc.build_commandline()
         doc.purge_style_fields()
         info.time_stamp('document transformed')
         doc.run_scripts('preflight')
