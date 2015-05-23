@@ -9,7 +9,7 @@ style: Plain
 # panzer
 
 panzer adds 'styles' to [pandoc][].
-    Styles provide a way to set a vast range of options for a pandoc document with one line ('I want this document to be treated as an article/CV/notes/letter').
+    Styles provide a way to set all options for a pandoc document with one line ('I want this document to be treated as an article/CV/notes/letter').
 
 You can think of styles as a level up in abstraction from a pandoc template.
     Styles are combinations of templates, metadata settings, instructions to run filters, pre/postprocessors, and pandoc command line options.

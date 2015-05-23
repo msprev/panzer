@@ -10,8 +10,8 @@ panzer
 
 panzer adds 'styles' to
 `pandoc <http://johnmacfarlane.net/pandoc/index.html>`__. Styles provide
-a way to set a vast range of options for a pandoc document with one line
-('I want this document to be treated as an article/CV/notes/letter').
+a way to set all options for a pandoc document with one line ('I want
+this document to be treated as an article/CV/notes/letter').
 
 You can think of styles as a level up in abstraction from a pandoc
 template. Styles are combinations of templates, metadata settings,
