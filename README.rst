@@ -361,10 +361,10 @@ Within each directory, each executable may have a named subdirectory:
         latexmk/
             latexmk.py
 
-pandoc command line options
----------------------------
+Setting pandoc options via metadata
+-----------------------------------
 
-pandoc command line options can be set using metadata in
+Arbitrary pandoc command line options can be set via metadata using
 ``commandline``. ``commandline`` can appear outside a style definition
 and in a document's metadata block, where it overrides the settings of
 any style.
