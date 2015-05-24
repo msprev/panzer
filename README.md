@@ -181,7 +181,7 @@ Overriding among style settings is determined by the following rules:
 
 For fields that pertain to scripts/filters, overriding is *additive*; for other fields, it is *non-additive*:
 
--   For `metadata` and `template`, if one style overrides another (say, a parent and child set `numbersections` to different values), then inheritance is non-additive, and only one (the child) wins.
+-   For `metadata`, `template`, and `commandline`, if one style overrides another (say, a parent and child set `numbersections` to different values), then inheritance is non-additive, and only one (the child) wins.
 
 -   For `preflight`, `filter`, `postflight` and `cleanup` if one style overrides another, then the 'winner' adds its items after those of the 'loser'. For example, if the parent adds to `postflight` an item `-run: latexmk.py`, and the child adds `- run: printlog.py`, then `printlog.py` will be run after `latexmk.py`
 
@@ -261,11 +261,11 @@ Example:
 
     commandline:
         smart: true
-        slide-number: "`3`"
+        slide-level: "`3`"
         no-wrap: false
         include-in-header: false
 
-This passes the following options to pandoc `--smart --slide-number=3` and removes any `--no-wrap` and `--include-in-header=...` options.
+This passes the following options to pandoc `--smart --slide-level=3` and removes any `--no-wrap` and `--include-in-header=...` options.
 
 These pandoc command line options cannot be set via `commandline`:
 
