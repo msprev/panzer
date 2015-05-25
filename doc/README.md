@@ -2,7 +2,7 @@
 title:  "panzer user guide"
 author: 
  - name: Mark Sprevak
-date: 24 May 2015
+date: 25 May 2015
 style: Plain
 ...
 
@@ -48,7 +48,6 @@ styledef:
                 numbersections: true
                 fontsize: 12pt
             commandline:
-                smart: true
                 columns: "`75`"
             filter:
                 - run: deemph.py
@@ -73,6 +72,7 @@ filter:
 
 * [pandoc][]
 * [Python 3][]
+* [setuptools for Python3][] (included in some Python 3 distributions)
 
 *To upgrade an existing installation:*
 
@@ -171,7 +171,7 @@ Notes:
             numbersections: true
             fontsize: 12pt
         commandline:
-            smart: true
+            no-wrap: true
         filter:
             - run: deemph.py
         postflight:
@@ -188,7 +188,7 @@ style: Notes
 ...
 ```
 
-it would run pandoc with filter `deemph.py` and command line option `--smart` on the following input and then execute `latexmk.py`.
+it would run pandoc with filter `deemph.py` and command line option `--no-wrap` on the following input and then execute `latexmk.py`.
 
 ``` {.yaml}
 ---
@@ -309,7 +309,7 @@ Arbitrary pandoc command line options can be set using metadata via `commandline
 `commandline` contains one field for each pandoc command line option.
     The field name is the unabbreviated name of the relevant pandoc command line option (e.g. `standalone`).
 
-- For pandoc flags, the value should be boolean (`true`, `false`), e.g. `smart: true`.
+- For pandoc flags, the value should be boolean (`true`, `false`), e.g. `no-wrap: true`.
 - For pandoc key-values, the value should be a quoted inline code span, e.g. ``include-in-header: "`path/to/my/header`"``.
 
 `false` plays a special role. 
@@ -320,13 +320,13 @@ Example:
 
 ```
 commandline:
-    smart: true
+    no-wrap: true
     slide-level: "`3`"
-    no-wrap: false
+    number-sections: false
     include-in-header: false
 ```
 
-This passes the following options to pandoc `--smart --slide-level=3` and removes any `--no-wrap` and `--include-in-header=...` options.
+This passes the following options to pandoc `--no-wrap --slide-level=3` and removes any `--number-sections` and `--include-in-header=...` options.
 
 These pandoc command line options cannot be set via `commandline`:
 
@@ -337,7 +337,9 @@ These pandoc command line options cannot be set via `commandline`:
 -   `filter`
 -   `template`
 -   `output`
-
+-   `help`
+-   `version`
+-   *pandoc reader options* -- fix in progress
 
 
 # Passing messages to external processes
@@ -511,3 +513,4 @@ Pull requests welcome:
  [template]: http://johnmacfarlane.net/pandoc/demo/example9/templates.html
  [example-yaml]:  https://github.com/msprev/dot-panzer/blob/master/styles.yaml
  [example-dot-panzer]: https://github.com/msprev/dot-panzer
+ [setuptools for Python3]: http://stackoverflow.com/questions/14426491/python-3-importerror-no-module-named-setuptools
