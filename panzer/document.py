@@ -207,7 +207,7 @@ class Document(object):
         content = meta.get_content(metadata, 'commandline')
         # 2. remove bad options from `commandline`
         # - first, fixed list of forbidden options
-        bad_opts = ['write', 'read', 'from', 'to', 'filter', 'template', 'output']
+        bad_opts = list(const.PANDOC_BAD_COMMANDLINE)
         for key in content:
             if key in bad_opts:
                 info.log('ERROR', 'panzer',

@@ -22,48 +22,6 @@ This is free software; see the source for copying conditions. There is no
 warranty, not even for merchantability or fitness for a particular purpose.
 '''
 
-# Adapted from https://github.com/jgm/pandoc/blob/master/pandoc.hs#L841
-
-PANDOC_WRITER_MAPPING = {
-    ""          : "markdown",
-    ".tex"      : "latex",
-    ".latex"    : "latex",
-    ".ltx"      : "latex",
-    ".context"  : "context",
-    ".ctx"      : "context",
-    ".rtf"      : "rtf",
-    ".rst"      : "rst",
-    ".s5"       : "s5",
-    ".native"   : "native",
-    ".json"     : "json",
-    ".txt"      : "markdown",
-    ".text"     : "markdown",
-    ".md"       : "markdown",
-    ".markdown" : "markdown",
-    ".textile"  : "textile",
-    ".lhs"      : "markdown+lhs",
-    ".texi"     : "texinfo",
-    ".texinfo"  : "texinfo",
-    ".db"       : "docbook",
-    ".odt"      : "odt",
-    ".docx"     : "docx",
-    ".epub"     : "epub",
-    ".org"      : "org",
-    ".asciidoc" : "asciidoc",
-    ".pdf"      : "latex",
-    ".fb2"      : "fb2",
-    ".opml"     : "opml",
-    ".1"        : "man",
-    ".2"        : "man",
-    ".3"        : "man",
-    ".4"        : "man",
-    ".5"        : "man",
-    ".6"        : "man",
-    ".7"        : "man",
-    ".8"        : "man",
-    ".9"        : "man"
-}
-
 def parse_cli_options(options):
     """ parse command line options """
     #
@@ -100,7 +58,7 @@ def parse_cli_options(options):
     # - third case: writer set via output filename extension
     else:
         ext = os.path.splitext(options['pandoc']['output'])[1].lower()
-        implicit_writer = PANDOC_WRITER_MAPPING.get(ext)
+        implicit_writer = const.PANDOC_WRITER_MAPPING.get(ext)
         if implicit_writer is not None:
             options['pandoc']['write'] = implicit_writer
         else:
@@ -126,6 +84,7 @@ def parse_cli_options(options):
                 options['pandoc']['input'][index] = options['panzer']['stdin_temp_file']
     # 6. Remaining options for pandoc
     options['pandoc']['options'] = unknown
+    print(options['pandoc'])
     return options
 
 def panzer_parse():
@@ -138,7 +97,7 @@ def panzer_parse():
     panzer_parser.add_argument("-h", "--help", '---help', '---h',
                                action="help",
                                help="show this help message and exit")
-    panzer_parser.add_argument('---version',
+    panzer_parser.add_argument('-v', '--version', '---version', '---v',
                                action='version',
                                version=('%(prog)s ' + version.VERSION))
     panzer_parser.add_argument("---quiet",
@@ -156,20 +115,11 @@ def pandoc_parse(args):
     """ return list of arguments recognised by pandoc + unknowns """
     pandoc_parser = argparse.ArgumentParser(prog='pandoc')
     pandoc_parser.add_argument('input', nargs='*')
-    pandoc_parser.add_argument("--read", "-r",
-                               "--from", "-f",
-                               help='reader')
-    pandoc_parser.add_argument("--write", "-w",
-                               "--to", "-t",
-                               help='writer')
-    pandoc_parser.add_argument("--output", "-o",
-                               help='output')
-    pandoc_parser.add_argument("--template",
-                               help='template')
-    pandoc_parser.add_argument("--filter", "-F",
-                               nargs=1,
-                               action='append',
-                               help='filter')
+    pandoc_parser.add_argument("--read", "-r", "--from", "-f")
+    pandoc_parser.add_argument("--write", "-w", "--to", "-t")
+    pandoc_parser.add_argument("--output", "-o")
+    pandoc_parser.add_argument("--template")
+    pandoc_parser.add_argument("--filter", nargs=1, action='append')
     pandoc_known_raw, unknown = pandoc_parser.parse_known_args(args)
     pandoc_known = vars(pandoc_known_raw)
     return (pandoc_known, unknown)

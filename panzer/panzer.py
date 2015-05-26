@@ -38,14 +38,17 @@ def main():
         info.time_stamp('logger started')
         util.check_support_directory(doc.options)
         info.time_stamp('support directory checked')
+
         global_styledef = load.load_styledef(doc.options)
         info.time_stamp('global styledef loaded')
         ast = load.load(doc.options)
         info.time_stamp('document loaded')
         doc.populate(ast, global_styledef)
         doc.transform()
-        doc.build_runlist()
         doc.build_commandline()
+        # check if commandline contains any reader options, if so, then re-read document!
+
+        doc.build_runlist()
         doc.purge_style_fields()
         info.time_stamp('document transformed')
         doc.run_scripts('preflight')
