@@ -41,7 +41,10 @@ PANDOC_BAD_COMMANDLINE = ['write',
                           'help',
                           'version',
                           'dump-args',
-                          'ignore-args']
+                          'ignore-args',
+                          'print-default-template',
+                          'print-default-data-file']
+
 
 PANDOC_BAD_OPTS = ['--dump-args',
                    '--ignore-args',
