@@ -99,6 +99,7 @@ def parse_cli_options(options):
             options['pandoc']['options']['w'][opt] = opt_known[opt]
         else:
             options['pandoc']['options'][opt_type][opt] = opt_known[opt]
+    print(repr(options['pandoc']))
     # 7. print error messages for unknown options
     for opt in unknown:
         if opt in const.PANDOC_BAD_OPTS:
@@ -150,21 +151,21 @@ def pandoc_opt_parse(args):
     # general options
     opt_parser.add_argument("--data-dir")
     # reader options
-    opt_parser.add_argument('--parse-raw', '-R')
-    opt_parser.add_argument('--smart', '-S')
-    opt_parser.add_argument('--old-dashes')
+    opt_parser.add_argument('--parse-raw', '-R', action='store_true')
+    opt_parser.add_argument('--smart', '-S', action='store_true')
+    opt_parser.add_argument('--old-dashes', action='store_true')
     opt_parser.add_argument('--base-header-level')
     opt_parser.add_argument('--indented-code-classes')
     opt_parser.add_argument('--default-image-extension')
-    opt_parser.add_argument('--metadata', '-M')
-    opt_parser.add_argument('--normalize')
-    opt_parser.add_argument('--preserve-tabs', '-p')
+    opt_parser.add_argument('--metadata', '-M', nargs=1, action='append')
+    opt_parser.add_argument('--normalize', action='store_true')
+    opt_parser.add_argument('--preserve-tabs', '-p', action='store_true')
     opt_parser.add_argument('--tab-stop')
     opt_parser.add_argument('--track-changes')
     opt_parser.add_argument('--extract-media')
     # writer options
-    opt_parser.add_argument('--standalone', '-s')
-    opt_parser.add_argument('--variable', '-V')
+    opt_parser.add_argument('--standalone', '-s', action='store_true')
+    opt_parser.add_argument('--variable', '-V', nargs=1, action='append')
     opt_parser.add_argument('--print-default-template', '-D')
     opt_parser.add_argument('--print-default-data-file')
     opt_parser.add_argument('--no-wrap')
