@@ -17,8 +17,7 @@ class Document(object):
     - stylefull:   full list of styles including all parents
     - styledef:    style definitions
     - runlist:     run list for document
-    - options:     options passed to panzer on commandline
-    - commandline: list of cli options set via `commandline` field
+    - options:     pandoc command line options
     - template:    template for document
     - output:      string filled with output when processing complete
     """
@@ -53,7 +52,6 @@ class Document(object):
                 'options'    : { 'r': dict(), 'w': dict() }
             }
         }
-        self.commandline = list()
         self.template = None
         self.output = None
 
@@ -188,10 +186,10 @@ class Document(object):
             info.log('INFO', 'panzer', line)
         self.runlist = runlist
 
-    def build_commandline(self):
+    def apply_commandline(self):
         """
-        parse `commandline` metadata field and use it to build the
-        self.commandline list of options
+        parse `commandline` metadata field and apply it to update the command
+        line options for calling pandoc
         """
         # 1. read content of `commandline` field
         metadata = self.get_metadata()
@@ -254,7 +252,6 @@ class Document(object):
                          '"commandline"---ignoring'
                          % (key, val_t))
                 continue
-        self.commandline = commandline
 
     def json_message(self):
         """ return json message to pass to executables
@@ -270,8 +267,7 @@ class Document(object):
                  'stylefull':   self.stylefull,
                  'styledef':    self.styledef,
                  'runlist':     self.runlist,
-                 'options':     self.options,
-                 'commandline': self.commandline}]
+                 'options':     self.options}]
         json_message = json.dumps(data)
         # - inject into metadata
         content = {"json_message": {
@@ -504,8 +500,6 @@ class Document(object):
             command += ['--template=%s' % self.options['pandoc']['template']]
         elif self.template:
             command += ['--template=%s' % self.template]
-        # - remaining options pooled from `commandline` field and
-        # - passed direct to panzer on the command line
         opts =  meta.build_cli_options(self.options['pandoc']['options']['w'])
         command += opts
         # 2. Prefill input and output pipes

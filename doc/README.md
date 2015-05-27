@@ -359,7 +359,6 @@ JSON_MESSAGE = [{'metadata':    METADATA,
                  'stylefull':   STYLEFULL,
                  'styledef':    STYLEDEF,
                  'runlist':     RUNLIST,
-                 'commandline': COMMANDLINE,
                  'options':     OPTIONS}]
 ```
 
@@ -387,8 +386,6 @@ JSON_MESSAGE = [{'metadata':    METADATA,
               ]
     ```
 
-- `COMMANDLINE` is a list of pandoc command line options derived from `commandline` metadata
-
 - `OPTIONS` is a dictionary containing panzer's and pandoc's command line options:
 
     ```
@@ -407,15 +404,18 @@ JSON_MESSAGE = [{'metadata':    METADATA,
             'write':      str(),       # writer
             'template':   str(),
             'filter':     list(),
-            'options':    list()       # list of remaining pandoc options
+            'options'    : { 'r': dict(), 'w': dict() }
         }
     }
     ```
 
     `filter` and `template` list filters and template set via the command line (via `--filter` and `--template` options).
 
-    `options` lists pandoc options set via the command line (not those set via `commandline`).
-    The set of command line options passed to pandoc is the union of `options` and `COMMANDLINE`.
+    `options` contains the remaining command line options with which pandoc is called.
+    `options` is the result of merging, using the rules described above, options set via the command line and those set via the `commandline` metadata field.
+    It consists of two separate dictionaries.
+    The dictionary under the 'r' key contains all pandoc options pertaining to reading the source documents to the ast.
+    The dictionary under the 'w' key contains all pandoc options pertaining to writing the ast to the output document.
 
 Scripts read the json message above by deserialising json input on stdin. 
 

@@ -45,7 +45,7 @@ def main():
         info.time_stamp('document loaded')
         doc.populate(ast, global_styledef)
         doc.transform()
-        doc.build_commandline()
+        doc.apply_commandline()
         # check if commandline contains any reader options, if so, then re-read document!
 
         doc.build_runlist()
