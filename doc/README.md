@@ -2,7 +2,7 @@
 title:  "panzer user guide"
 author: 
  - name: Mark Sprevak
-date: 25 May 2015
+date: 27 May 2015
 style: Plain
 ...
 
@@ -339,7 +339,10 @@ These pandoc command line options cannot be set via `commandline`:
 -   `output`
 -   `help`
 -   `version`
--   *pandoc reader options* -- fix in progress
+-   `dump-args`
+-   `ignore-args`
+-   `print-default-template`
+-   `print-default-data-file`
 
 
 # Passing messages to external processes
@@ -468,6 +471,16 @@ panzer accepts pandoc filters.
 
 1. Filters can take more than one command line argument (first argument still reserved for the writer).
 2. A `panzer_reserved` field is added to the AST metadata branch with goodies for filters to mine.
+
+The follow pandoc command line options cannot be used with panzer:
+
+-   `--dump-args`, `-D`
+-   `--ignore-args`
+-   `--print-default-template`
+-   `--print-default-data-file`
+-   `--version`, `-v`
+-   `--help`, `-h`
+
 
 # Reserved fields
 
