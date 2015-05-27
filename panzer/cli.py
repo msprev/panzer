@@ -99,6 +99,7 @@ def parse_cli_options(options):
             options['pandoc']['options']['w'][opt_name] = opt_known[opt]
         else:
             options['pandoc']['options'][opt_type][opt_name] = opt_known[opt]
+    options['pandoc'] = set_quirky_dependencies(options['pandoc'])
     # 7. print error messages for unknown options
     for opt in unknown:
         if opt in const.PANDOC_BAD_OPTS:
@@ -218,4 +219,17 @@ def pandoc_opt_parse(args):
     opt_known_raw, unknown = opt_parser.parse_known_args(args)
     opt_known = vars(opt_known_raw)
     return (opt_known, unknown)
+
+def set_quirky_dependencies(pandoc):
+    """ Set defaults for pandoc options that are dependent in a quirky way,
+        and that panzer route via json would disrupt.
+        Quirky here means that pandoc would have to know the writer to
+        set the reader to the correct defaults or vice versa """
+    # --smart: reader setting
+    # True when the output format is latex or context, unless --no-tex-ligatures
+    # is used.
+    if (pandoc['write'] == 'latex' or pandoc['write'] == 'context') \
+            and pandoc['options']['w']['no-tex-ligatures'] == False:
+        pandoc['options']['r']['smart'] = True
+    return pandoc
 
