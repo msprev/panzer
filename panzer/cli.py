@@ -83,8 +83,28 @@ def parse_cli_options(options):
             if val == '-':
                 options['pandoc']['input'][index] = options['panzer']['stdin_temp_file']
     # 6. Remaining options for pandoc
-    options['pandoc']['options'] = unknown
-    print(options['pandoc'])
+    opt_known, unknown = pandoc_opt_parse(unknown)
+    # - sort them into reader and writer phase options
+    for opt in opt_known:
+        # undo weird transform that argparse does to match option name
+        # https://docs.python.org/dev/library/argparse.html#dest
+        opt_name = str(opt).replace('_', '-')
+        if opt_name not in const.PANDOC_OPT_TYPE:
+            print('ERROR:   do not reader/writer type of command line option "--%s"' % opt_name)
+            continue
+        opt_type = const.PANDOC_OPT_TYPE[opt_name]
+        if opt_type == 'rw':
+            # in both reader and writer phases
+            options['pandoc']['options']['r'][opt] = opt_known[opt]
+            options['pandoc']['options']['w'][opt] = opt_known[opt]
+        else:
+            options['pandoc']['options'][opt_type][opt] = opt_known[opt]
+    # 7. print error messages for unknown options
+    for opt in unknown:
+        if opt in const.PANDOC_BAD_OPTS:
+            print('ERROR:   pandoc command line option "%s" not supported by panzer' % opt)
+        else:
+            print('ERROR:   do not recognize command line option "%s"' % opt)
     return options
 
 def panzer_parse():
@@ -124,3 +144,79 @@ def pandoc_parse(args):
     pandoc_known = vars(pandoc_known_raw)
     return (pandoc_known, unknown)
 
+def pandoc_opt_parse(args):
+    """ return list of pandoc command line options """
+    opt_parser = argparse.ArgumentParser(prog='pandoc')
+    # general options
+    opt_parser.add_argument("--data-dir")
+    # reader options
+    opt_parser.add_argument('--parse-raw', '-R')
+    opt_parser.add_argument('--smart', '-S')
+    opt_parser.add_argument('--old-dashes')
+    opt_parser.add_argument('--base-header-level')
+    opt_parser.add_argument('--indented-code-classes')
+    opt_parser.add_argument('--default-image-extension')
+    opt_parser.add_argument('--metadata', '-M')
+    opt_parser.add_argument('--normalize')
+    opt_parser.add_argument('--preserve-tabs', '-p')
+    opt_parser.add_argument('--tab-stop')
+    opt_parser.add_argument('--track-changes')
+    opt_parser.add_argument('--extract-media')
+    # writer options
+    opt_parser.add_argument('--standalone', '-s')
+    opt_parser.add_argument('--variable', '-V')
+    opt_parser.add_argument('--print-default-template', '-D')
+    opt_parser.add_argument('--print-default-data-file')
+    opt_parser.add_argument('--no-wrap')
+    opt_parser.add_argument('--columns')
+    opt_parser.add_argument('--table-of-contents', '--toc')
+    opt_parser.add_argument('--toc-depth')
+    opt_parser.add_argument('--no-highlight')
+    opt_parser.add_argument('--highlight-style')
+    opt_parser.add_argument('--include-in-header', '-H')
+    opt_parser.add_argument('--include-before-body', '-B')
+    opt_parser.add_argument('--include-after-body', '-A')
+    opt_parser.add_argument('--self-contained')
+    opt_parser.add_argument('--offline')
+    opt_parser.add_argument('--html5', '-5')
+    opt_parser.add_argument('--html-q-tags')
+    opt_parser.add_argument('--ascii')
+    opt_parser.add_argument('--reference-links')
+    opt_parser.add_argument('--atx-headers')
+    opt_parser.add_argument('--chapters')
+    opt_parser.add_argument('--number-sections', '-N')
+    opt_parser.add_argument('--number-offset')
+    opt_parser.add_argument('--no-tex-ligatures')
+    opt_parser.add_argument('--listings')
+    opt_parser.add_argument('--incremental', '-i')
+    opt_parser.add_argument('--slide-level')
+    opt_parser.add_argument('--section-divs')
+    opt_parser.add_argument('--email-obfuscation')
+    opt_parser.add_argument('--id-prefix')
+    opt_parser.add_argument('--title-prefix', '-T')
+    opt_parser.add_argument('--css', '-c')
+    opt_parser.add_argument('--reference-odt')
+    opt_parser.add_argument('--reference-docx')
+    opt_parser.add_argument('--epub-stylesheet')
+    opt_parser.add_argument('--epub-cover-image')
+    opt_parser.add_argument('--epub-metadata')
+    opt_parser.add_argument('--epub-embed-font')
+    opt_parser.add_argument('--epub-chapter-level')
+    opt_parser.add_argument('--latex-engine')
+    opt_parser.add_argument('--bibliography')
+    opt_parser.add_argument('--csl')
+    opt_parser.add_argument('--citation-abbreviations')
+    opt_parser.add_argument('--natbib')
+    opt_parser.add_argument('--biblatex')
+    opt_parser.add_argument('--latexmathml', '-m')
+    opt_parser.add_argument('--mathml')
+    opt_parser.add_argument('--jsmath')
+    opt_parser.add_argument('--mathjax')
+    opt_parser.add_argument('--gladtex')
+    opt_parser.add_argument('--mimetex')
+    opt_parser.add_argument('--webtex')
+    opt_parser.add_argument('--katex')
+    opt_parser.add_argument('--katex-stylesheet')
+    opt_known_raw, unknown = opt_parser.parse_known_args(args)
+    opt_known = vars(opt_known_raw)
+    return (opt_known, unknown)

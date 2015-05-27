@@ -50,7 +50,7 @@ class Document(object):
                 'write'      : str(),
                 'template'   : str(),
                 'filter'     : list(),
-                'options'    : list()
+                'options'    : { 'r': dict(), 'w': dict() }
             }
         }
         self.commandline = list()
@@ -506,7 +506,7 @@ class Document(object):
             command += ['--template=%s' % self.template]
         # - remaining options pooled from `commandline` field and
         # - passed direct to panzer on the command line
-        command += self.options['pandoc']['options']
+        command += self.options['pandoc']['options']['w']
         command += self.commandline
         # 2. Prefill input and output pipes
         in_pipe = json.dumps(self.ast)
@@ -514,10 +514,10 @@ class Document(object):
         stderr = str()
         # 3. Run pandoc command
         info.log('INFO', 'panzer', info.pretty_title('pandoc'))
-        if self.options['pandoc']['options'] or self.commandline:
-            info.log('INFO', 'panzer', 'running pandoc with options:')
+        if self.options['pandoc']['options']['w'] or self.commandline:
+            info.log('INFO', 'panzer', 'pandoc write with options:')
             info.log('INFO', 'panzer',
-                     info.pretty_list(self.options['pandoc']['options'] +
+                     info.pretty_list(self.options['pandoc']['options']['w'] +
                                       self.commandline, separator=' '))
         else:
             info.log('INFO', 'panzer', 'running')
