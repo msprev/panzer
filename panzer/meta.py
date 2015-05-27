@@ -267,3 +267,19 @@ def expand_style_hierarchy(stylelist, styledef):
             expanded_list.extend(expand_style_hierarchy(parents, styledef))
         expanded_list.append(style)
     return expanded_list
+
+def build_cli_options(dic):
+    """ return a list of command line options specified in the dictionary dic """
+    cli = list()
+    for opt in dic:
+        if dic[opt] == None:
+            pass
+        elif dic[opt] == True:
+            cli += ['--%s' % opt]
+        elif type(dic[opt]) is str:
+            cli += ['--%s=%s' % (opt, dic[opt])]
+        elif type(dic[opt]) is list:
+            for val in dic[opt]:
+                cli += ['--%s=%s' % (opt, val[0])]
+    return cli
+

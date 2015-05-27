@@ -44,7 +44,10 @@ PANDOC_BAD_COMMANDLINE = ['write',
                           'ignore-args']
 
 PANDOC_BAD_OPTS = ['--dump-args',
-                   '--ignore-args']
+                   '--ignore-args',
+                   '-D',
+                   '--print-default-template',
+                   '--print-default-data-file']
 
 # pandoc's command line options, divided by reader or writer
 PANDOC_OPT_TYPE = { # general options
@@ -65,8 +68,6 @@ PANDOC_OPT_TYPE = { # general options
                    # writer options
                    'standalone':              'w',
                    'variable':                'w',
-                   'print-default-template':  'w',
-                   'print-default-data-file': 'w',
                    'no-wrap':                 'w',
                    'columns':                 'w',
                    'table-of-contents':       'w',

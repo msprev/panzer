@@ -95,11 +95,10 @@ def parse_cli_options(options):
         opt_type = const.PANDOC_OPT_TYPE[opt_name]
         if opt_type == 'rw':
             # in both reader and writer phases
-            options['pandoc']['options']['r'][opt] = opt_known[opt]
-            options['pandoc']['options']['w'][opt] = opt_known[opt]
+            options['pandoc']['options']['r'][opt_name] = opt_known[opt]
+            options['pandoc']['options']['w'][opt_name] = opt_known[opt]
         else:
-            options['pandoc']['options'][opt_type][opt] = opt_known[opt]
-    print(repr(options['pandoc']))
+            options['pandoc']['options'][opt_type][opt_name] = opt_known[opt]
     # 7. print error messages for unknown options
     for opt in unknown:
         if opt in const.PANDOC_BAD_OPTS:
@@ -166,8 +165,6 @@ def pandoc_opt_parse(args):
     # writer options
     opt_parser.add_argument('--standalone', '-s', action='store_true')
     opt_parser.add_argument('--variable', '-V', nargs=1, action='append')
-    opt_parser.add_argument('--print-default-template', '-D')
-    opt_parser.add_argument('--print-default-data-file')
     opt_parser.add_argument('--no-wrap')
     opt_parser.add_argument('--columns')
     opt_parser.add_argument('--table-of-contents', '--toc')
@@ -221,3 +218,4 @@ def pandoc_opt_parse(args):
     opt_known_raw, unknown = opt_parser.parse_known_args(args)
     opt_known = vars(opt_known_raw)
     return (opt_known, unknown)
+

@@ -16,9 +16,16 @@ def load(options):
     if options['pandoc']['read']:
         command += ['--read', options['pandoc']['read']]
     command += ['--write', 'json', '--output', '-']
-    command += options['pandoc']['options']
+    opts =  meta.build_cli_options(options['pandoc']['options']['r'])
+    command += opts
+    info.log('INFO', 'panzer', info.pretty_title('pandoc read'))
     info.log('DEBUG', 'panzer', 'loading source document(s)')
     info.log('DEBUG', 'panzer', 'run "%s"' % ' '.join(command))
+    if opts:
+        info.log('INFO', 'panzer', 'pandoc read with options:')
+        info.log('INFO', 'panzer', info.pretty_list(opts, separator=' '))
+    else:
+        info.log('INFO', 'panzer', 'running')
     out_pipe = str()
     stderr = str()
     ast = None

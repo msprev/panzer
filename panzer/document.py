@@ -506,19 +506,17 @@ class Document(object):
             command += ['--template=%s' % self.template]
         # - remaining options pooled from `commandline` field and
         # - passed direct to panzer on the command line
-        command += self.options['pandoc']['options']['w']
-        command += self.commandline
+        opts =  meta.build_cli_options(self.options['pandoc']['options']['w'])
+        command += opts
         # 2. Prefill input and output pipes
         in_pipe = json.dumps(self.ast)
         out_pipe = str()
         stderr = str()
         # 3. Run pandoc command
-        info.log('INFO', 'panzer', info.pretty_title('pandoc'))
-        if self.options['pandoc']['options']['w'] or self.commandline:
+        info.log('INFO', 'panzer', info.pretty_title('pandoc write'))
+        if opts:
             info.log('INFO', 'panzer', 'pandoc write with options:')
-            info.log('INFO', 'panzer',
-                     info.pretty_list(self.options['pandoc']['options']['w'] +
-                                      self.commandline, separator=' '))
+            info.log('INFO', 'panzer', info.pretty_list(opts, separator=' '))
         else:
             info.log('INFO', 'panzer', 'running')
         info.log('DEBUG', 'panzer', 'run "%s"' % ' '.join(command))
