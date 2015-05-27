@@ -22,7 +22,7 @@ def load(options):
     info.log('DEBUG', 'panzer', 'loading source document(s)')
     info.log('DEBUG', 'panzer', 'run "%s"' % ' '.join(command))
     if opts:
-        info.log('INFO', 'panzer', 'pandoc read with options:')
+        info.log('INFO', 'panzer', 'pandoc reading with options:')
         info.log('INFO', 'panzer', info.pretty_list(opts, separator=' '))
     else:
         info.log('INFO', 'panzer', 'running')
@@ -68,6 +68,8 @@ def load_styledef(options):
     command += ['-']
     command += ['--write', 'json']
     command += ['--output', '-']
+    opts =  meta.build_cli_options(options['pandoc']['options']['r'])
+    command += opts
     info.log('DEBUG', 'panzer', 'run "%s"' % ' '.join(command))
     # - send to pandoc to convert to json
     in_pipe = data_string
