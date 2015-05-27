@@ -515,7 +515,7 @@ class Document(object):
         # 3. Run pandoc command
         info.log('INFO', 'panzer', info.pretty_title('pandoc write'))
         if opts:
-            info.log('INFO', 'panzer', 'pandoc write with options:')
+            info.log('INFO', 'panzer', 'pandoc writing with options:')
             info.log('INFO', 'panzer', info.pretty_list(opts, separator=' '))
         else:
             info.log('INFO', 'panzer', 'running')
