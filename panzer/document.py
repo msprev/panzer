@@ -191,67 +191,20 @@ class Document(object):
         parse `commandline` metadata field and apply it to update the command
         line options for calling pandoc
         """
+        if 'commandline' not in self.metadata:
+            return
+        commandline = meta.parse_commandline(metadata)
         # 1. read content of `commandline` field
-        metadata = self.get_metadata()
-        if 'commandline' not in metadata:
-            return
-        field_type = meta.get_type(metadata, 'commandline')
-        if field_type != 'MetaMap':
-            info.log('ERROR', 'panzer',
-                     'Value of field "%s" should be of type "MetaMap"'
-                     '---found value of type "%s", ignoring it'
-                     % ('commandline', field_type))
-            return
-        content = meta.get_content(metadata, 'commandline')
-        # 2. remove bad options from `commandline`
-        # - first, fixed list of forbidden options
-        bad_opts = list(const.PANDOC_BAD_COMMANDLINE)
-        for key in content:
-            if key in bad_opts:
-                info.log('ERROR', 'panzer',
-                         '"%s" forbidden entry in panzer "commandline" '
-                         'map---ignoring' % key)
-        # - second, options options already set via panzer command line
-        for key in content:
-            for opt in self.options['pandoc']['options']:
-                k = key.lower()
-                o = opt.lower()
-                if o == '--%s' % k or o.startswith('--%s=' % k):
-                    info.log('WARNING', 'panzer',
-                             '"%s" setting in "commandline" field overriden '
-                             'by "%s" via panzer command line'
-                             % (key, opt))
-                    bad_opts += [key]
-        content = {key: content[key]
-                   for key in content
-                   if key not in bad_opts}
-        # 3. parse remaining opts into self.commandline list
-        commandline = list()
-        for key in content:
-            val_t = meta.get_type(content, key)
-            val_c = meta.get_content(content, key)
-            # if value is 'false', ignore
-            if val_c == False:
-                continue
-            # if value is 'true', add --OPTION
-            elif val_t == 'MetaBool' and val_c == True:
-                commandline += ['--%s' % key]
-            # if type is inline code span, add --OPTION=VAL
-            elif val_t == 'MetaInlines':
-                if len(val_c) != 1 \
-                or val_c[0][const.T] != 'Code':
-                    info.log('ERROR', 'panzer',
-                             'Cannot read option "%s" in "commandline" field. '
-                             'Syntax should be OPTION: "`VALUE`"' % key)
-                    continue
-                code_c = val_c[0][const.C][1]
-                commandline += ['--%s=%s' % (key, code_c)]
-            else:
-                info.log('ERROR', 'panzer',
-                         'Cannot read entry "%s" with type "%s" in '
-                         '"commandline"---ignoring'
-                         % (key, val_t))
-                continue
+        # 4. update self.options['pandoc'] with commandline
+        # for p in ['r', 'w']:
+        #     for key in self.options['pandoc']['options'][p]:
+        #         val = self.options['pandoc']['options'][p][key]
+        #         print(key + ': ' + str(type(val)))
+        #     for key in commandline[p]:
+        #         current = self.options['pandoc']['options'][p][key]
+        #         if type(current) == bool:
+        #             self.options['pandoc']['options'][p][key] = commandline[p][key]
+
 
     def json_message(self):
         """ return json message to pass to executables

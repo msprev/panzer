@@ -283,3 +283,74 @@ def build_cli_options(dic):
                 cli += ['--%s=%s' % (opt, val[0])]
     return cli
 
+
+def parse_commandline(metadata):
+    """ return a dictiory of command line options by parsing `commandline`
+    field in metadata, or None if `commandline` is absent in metadata
+    """
+    if 'commandline' not in metadata:
+        return None
+    field_type = get_type(metadata, 'commandline')
+    if field_type != 'MetaMap':
+        info.log('ERROR', 'panzer',
+                    'Value of field "%s" should be of type "MetaMap"'
+                    '---found value of type "%s", ignoring it'
+                    % ('commandline', field_type))
+        return None
+    content = get_content(metadata, 'commandline')
+    # 2. remove bad options from `commandline`
+    # - first, fixed list of forbidden options
+    bad_opts = list(const.PANDOC_BAD_COMMANDLINE)
+    for key in content:
+        if key in bad_opts:
+            info.log('ERROR', 'panzer',
+                        '"%s" forbidden entry in panzer "commandline" '
+                        'map---ignoring' % key)
+        if key not in const.PANDOC_OPT_TYPE:
+            info.log('ERROR', 'panzer',
+                        'do not recognise pandoc command line option "--%s" in "commandline" '
+                        'map---ignoring' % key)
+            bad_opts += key
+    content = {key: content[key]
+                for key in content
+                if key not in bad_opts}
+    commandline = {'r': dict(), 'w': dict()}
+    # 3. parse remaining opts
+    for key in content:
+        # 1. extract value of field with name 'key'
+        val = None
+        val_t = get_type(content, key)
+        val_c = get_content(content, key)
+        # if value is 'false', ignore
+        if val_c == False:
+            continue
+        # if value is 'true', add --OPTION
+        elif val_t == 'MetaBool' and val_c == True:
+            val = True
+        # if value type is inline code span, add --OPTION=VAL
+        elif val_t == 'MetaInlines':
+            if len(val_c) != 1 or val_c[0][const.T] != 'Code':
+                info.log('ERROR', 'panzer',
+                            'Cannot read option "%s" in "commandline" field. '
+                            'Syntax should be OPTION: "`VALUE`"' % key)
+                continue
+            val = val_c[0][const.C][1]
+        # if value type list of inline code spans, add repeated --OPTION=VAL
+        elif val_t == 'MetaList':
+            pass
+        # otherwise, signal error
+        else:
+            info.log('ERROR', 'panzer',
+                        'Cannot read entry "%s" with type "%s" in '
+                        '"commandline"---ignoring' % (key, val_t))
+            continue
+        # 2. update commandline dictionary with key, val
+        opt_type = const.PANDOC_OPT_TYPE[key]
+        if opt_type == 'rw':
+            # in both reader and writer phases
+            commandline['r'][key] = val
+            commandline['w'][key] = val
+        else:
+            commandline[opt_type][key] = val
+    return commandline
+

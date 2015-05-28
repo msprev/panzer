@@ -90,7 +90,7 @@ def parse_cli_options(options):
         # https://docs.python.org/dev/library/argparse.html#dest
         opt_name = str(opt).replace('_', '-')
         if opt_name not in const.PANDOC_OPT_TYPE:
-            print('ERROR:   do not reader/writer type of command line option "--%s"' % opt_name)
+            print('ERROR:   do not know reader/writer type of command line option "--%s"' % opt_name)
             continue
         opt_type = const.PANDOC_OPT_TYPE[opt_name]
         if opt_type == 'rw':
