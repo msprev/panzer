@@ -2,7 +2,7 @@
 title:  "panzer user guide"
 author: 
  - name: Mark Sprevak
-date: 27 May 2015
+date: 29 May 2015
 style: Plain
 ...
 
@@ -320,13 +320,13 @@ Example:
 
 ```
 commandline:
-    no-wrap: true
+    smart: true
     slide-level: "`3`"
     number-sections: false
     include-in-header: false
 ```
 
-This passes the following options to pandoc `--no-wrap --slide-level=3` and removes any `--number-sections` and `--include-in-header=...` options.
+This passes the following options to pandoc `--smart --slide-level=3` and removes any `--number-sections` and `--include-in-header=...` options.
 
 These pandoc command line options cannot be set via `commandline`:
 
@@ -337,6 +337,8 @@ These pandoc command line options cannot be set via `commandline`:
 -   `filter`
 -   `template`
 -   `output`
+-   `variable`
+-   `metadata`
 -   `help`
 -   `version`
 -   `dump-args`

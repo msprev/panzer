@@ -3,15 +3,15 @@ panzer user guide
 =================
 
 :Author: Mark Sprevak
-:Date:   25 May 2015
+:Date:   29 May 2015
 
 panzer
 ======
 
-panzer adds 'styles' to
+panzer adds ‘styles’ to
 `pandoc <http://johnmacfarlane.net/pandoc/index.html>`__. Styles provide
-a way to set all options for a pandoc document with one line ('I want
-this document be an article/CV/notes/letter').
+a way to set all options for a pandoc document with one line (‘I want
+this document be an article/CV/notes/letter’).
 
 You can think of styles as a level up in abstraction from a pandoc
 template. Styles are combinations of templates, metadata settings,
@@ -42,7 +42,7 @@ Multiple styles can be supplied as a list:
 Styles are defined in a ``styles.yaml`` file
 (`example <https://github.com/msprev/dot-panzer/blob/master/styles.yaml>`__).
 The style definition file, plus associated executables, are placed in
-the ``.panzer`` directory in the user's home folder
+the ``.panzer`` directory in the user’s home folder
 (`example <https://github.com/msprev/dot-panzer>`__).
 
 Styles can also be defined locally inside the document:
@@ -144,7 +144,7 @@ A style definition may consist of:
 +-------------------+--------------------------------------+-----------------------------------+
 | ``filter``        | pandoc filters                       | ``MetaList``                      |
 +-------------------+--------------------------------------+-----------------------------------+
-| ``postprocess``   | run on pandoc's output               | ``MetaList``                      |
+| ``postprocess``   | run on pandoc’s output               | ``MetaList``                      |
 +-------------------+--------------------------------------+-----------------------------------+
 | ``postflight``    | run after output file written        | ``MetaList``                      |
 +-------------------+--------------------------------------+-----------------------------------+
@@ -163,7 +163,7 @@ A special writer, ``all``, matches every writer.
 -  ``metadata`` contains default metadata set by the style. Any metadata
    field that can appear in a pandoc document can appear here.
 
--  ``commandline`` specifies pandoc's command line options.
+-  ``commandline`` specifies pandoc’s command line options.
 
 -  ``template`` is a pandoc
    `template <http://johnmacfarlane.net/pandoc/demo/example9/templates.html>`__
@@ -178,7 +178,7 @@ A special writer, ``all``, matches every writer.
    gain two new properties from panzer. For more info, see section on
    `compatibility <#compatibility>`__ with pandoc.
 
--  ``postprocessor`` lists executable to pipe pandoc's output through.
+-  ``postprocessor`` lists executable to pipe pandoc’s output through.
    Standard unix executables (``sed``, ``tr``, etc.) are examples of
    possible use. Postprocessors are skipped if a binary writer (e.g.
    ``docx``) is used.
@@ -238,8 +238,8 @@ Style overriding
 
 Styles may be defined:
 
--  'Globally' in the ``styles.yaml`` file (normally in ``~/.panzer/``)
--  'Locally' in a ``styledef`` field inside the document
+-  ‘Globally’ in the ``styles.yaml`` file (normally in ``~/.panzer/``)
+-  ‘Locally’ in a ``styledef`` field inside the document
 
 Overriding among style settings is determined by the following rules:
 
@@ -254,7 +254,7 @@ Overriding among style settings is determined by the following rules:
 +-----+--------------------------------------------------------------------------------------+
 | 4   | Children override parents                                                            |
 +-----+--------------------------------------------------------------------------------------+
-| 5   | Fields set outside a style definition override any style's setting                   |
+| 5   | Fields set outside a style definition override any style’s setting                   |
 +-----+--------------------------------------------------------------------------------------+
 
 For fields that pertain to scripts/filters, overriding is *additive*;
@@ -266,8 +266,8 @@ for other fields, it is *non-additive*:
    (the child) wins.
 
 -  For ``preflight``, ``filter``, ``postflight`` and ``cleanup`` if one
-   style overrides another, then the 'winner' adds its items after those
-   of the 'loser'. For example, if the parent adds to ``postflight`` an
+   style overrides another, then the ‘winner’ adds its items after those
+   of the ‘loser’. For example, if the parent adds to ``postflight`` an
    item ``-run: latexmk.py``, and the child adds ``- run: printlog.py``,
    then ``printlog.py`` will be run after ``latexmk.py``
 
@@ -277,10 +277,10 @@ for other fields, it is *non-additive*:
 Command line options trump style settings, and cannot be overridden by
 any metadata setting. Filters specified on the command line (via
 ``--filter``) are run first, and cannot be removed. pandoc options set
-via panzer's command line invocation override any set via
+via panzer’s command line invocation override any set via
 ``commandline``.
 
-Multiple input files are joined according to pandoc's rules. Metadata
+Multiple input files are joined according to pandoc’s rules. Metadata
 are merged using left-biased union. This means overriding behaviour when
 merging multiple input files is different from that of panzer, and
 always non-additive.
@@ -294,7 +294,7 @@ The run list
 ------------
 
 Executables (scripts, filters, postprocessors) are specified by a list
-(the 'run list'). The list determines what gets run when. Processes are
+(the ‘run list’). The list determines what gets run when. Processes are
 executed from first to last in the run list. If an item appears as the
 value of a ``run:`` field, then it is added to the run list. If an item
 appears as the value of a ``kill:`` field, then any previous occurrence
@@ -371,7 +371,7 @@ Setting pandoc command line options
 
 Arbitrary pandoc command line options can be set using metadata via
 ``commandline``. ``commandline`` can appear outside a style definition
-and in a document's metadata block, where it overrides the settings of
+and in a document’s metadata block, where it overrides the settings of
 any style.
 
 ``commandline`` contains one field for each pandoc command line option.
@@ -384,7 +384,7 @@ line option (e.g. ``standalone``).
    e.g. ``include-in-header: "`path/to/my/header`"``.
 
 ``false`` plays a special role. ``false`` means that the pandoc command
-line option with the field's name, if set, should be unset. ``false``
+line option with the field’s name, if set, should be unset. ``false``
 can be used for both flags and key-value options (e.g.
 ``include-in-header: false``).
 
@@ -393,14 +393,14 @@ Example:
 ::
 
     commandline:
-        no-wrap: true
+        smart: true
         slide-level: "`3`"
         number-sections: false
         include-in-header: false
 
-This passes the following options to pandoc
-``--no-wrap --slide-level=3`` and removes any ``--number-sections`` and
-``--include-in-header=...`` options.
+This passes the following options to pandoc ``--smart --slide-level=3``
+and removes any ``--number-sections`` and ``--include-in-header=...``
+options.
 
 These pandoc command line options cannot be set via ``commandline``:
 
@@ -411,9 +411,14 @@ These pandoc command line options cannot be set via ``commandline``:
 -  ``filter``
 -  ``template``
 -  ``output``
+-  ``variable``
+-  ``metadata``
 -  ``help``
 -  ``version``
--  *pandoc reader options* -- fix in progress
+-  ``dump-args``
+-  ``ignore-args``
+-  ``print-default-template``
+-  ``print-default-data-file``
 
 Passing messages to external processes
 ======================================
@@ -433,10 +438,9 @@ should probably be using a filter).
                      'stylefull':   STYLEFULL,
                      'styledef':    STYLEDEF,
                      'runlist':     RUNLIST,
-                     'commandline': COMMANDLINE,
                      'options':     OPTIONS}]
 
--  ``METADATA`` is a copy of the metadata branch of the document's AST
+-  ``METADATA`` is a copy of the metadata branch of the document’s AST
    (useful for scripts, not useful for filters)
 
 -  ``TEMPLATE`` is a string with path to the current template
@@ -462,10 +466,7 @@ should probably be using a filter).
                    ...
                  ]
 
--  ``COMMANDLINE`` is a list of pandoc command line options derived from
-   ``commandline`` metadata
-
--  ``OPTIONS`` is a dictionary containing panzer's and pandoc's command
+-  ``OPTIONS`` is a dictionary containing panzer’s and pandoc’s command
    line options:
 
    ::
@@ -485,16 +486,21 @@ should probably be using a filter).
                'write':      str(),       # writer
                'template':   str(),
                'filter':     list(),
-               'options':    list()       # list of remaining pandoc options
+               'options'    : { 'r': dict(), 'w': dict() }
            }
        }
 
    ``filter`` and ``template`` list filters and template set via the
    command line (via ``--filter`` and ``--template`` options).
 
-   ``options`` lists pandoc options set via the command line (not those
-   set via ``commandline``). The set of command line options passed to
-   pandoc is the union of ``options`` and ``COMMANDLINE``.
+   ``options`` contains the remaining command line options with which
+   pandoc is called. ``options`` is the result of merging, using the
+   rules described above, options set via the command line and those set
+   via the ``commandline`` metadata field. It consists of two separate
+   dictionaries. The dictionary under the ‘r’ key contains all pandoc
+   options pertaining to reading the source documents to the ast. The
+   dictionary under the ‘w’ key contains all pandoc options pertaining
+   to writing the ast to the output document.
 
 Scripts read the json message above by deserialising json input on
 stdin.
@@ -531,7 +537,7 @@ panzer captures stderr output from all executables. This is for pretty
 printing of info and errors. Scripts and filters should send json
 messages to panzer via stderr. If a message is sent to stderr that is
 not correctly formatted, panzer will print it verbatim prefixed by a
-'!'.
+‘!’.
 
 The json message that panzer expects is a newline-separated sequence of
 utf-8 encoded json dictionaries, each with the following structure:
@@ -564,6 +570,15 @@ new ways:
    still reserved for the writer).
 2. A ``panzer_reserved`` field is added to the AST metadata branch with
    goodies for filters to mine.
+
+The follow pandoc command line options cannot be used with panzer:
+
+-  ``--dump-args``, ``-D``
+-  ``--ignore-args``
+-  ``--print-default-template``
+-  ``--print-default-data-file``
+-  ``--version``, ``-v``
+-  ``--help``, ``-h``
 
 Reserved fields
 ===============
