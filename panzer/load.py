@@ -69,6 +69,9 @@ def load_styledef(options):
     command += ['--write', 'json']
     command += ['--output', '-']
     opts =  meta.build_cli_options(options['pandoc']['options']['r'])
+    # - remove inappropriate options for styles.yaml
+    bad_opts = ['metadata', 'track-changes', 'extract-media']
+    opts = [x for x in opts if x not in bad_opts]
     command += opts
     info.log('DEBUG', 'panzer', 'run "%s"' % ' '.join(command))
     # - send to pandoc to convert to json
