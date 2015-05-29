@@ -463,7 +463,7 @@ class Document(object):
             command += ['--template=%s' % self.options['pandoc']['template']]
         elif self.template:
             command += ['--template=%s' % self.template]
-        opts =  meta.build_cli_options(self.options['pandoc']['options']['w'])
+        opts = meta.build_cli_options(self.options['pandoc']['options']['w'])
         command += opts
         # 2. Prefill input and output pipes
         in_pipe = json.dumps(self.ast)
