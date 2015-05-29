@@ -384,6 +384,18 @@ line option (e.g. ``standalone``).
    e.g. ``no-wrap: true``.
 -  For pandoc key-values, the value should be a quoted inline code span,
    e.g. ``include-in-header: "`path/to/my/header`"``.
+-  For pandoc repeated key-values, the value should be a list of inline
+   code spans, e.g.
+
+::
+
+    include-in-header:
+        - "`file1.txt`"
+        - "`file2.txt`"
+        - "`file3.txt`"
+
+Repeated key-value options in ``comandline`` are added after any
+provided from the command line.
 
 ``false`` plays a special role. ``false`` means that the pandoc command
 line option with the field’s name, if set, should be unset. ``false``

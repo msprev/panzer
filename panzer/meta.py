@@ -315,10 +315,10 @@ def parse_commandline(metadata):
                      'map---ignoring' % key)
             bad_opts += key
     content = {key: content[key]
-                for key in content
-                if key not in bad_opts}
-    commandline = {'r': dict(), 'w': dict()}
+               for key in content
+               if key not in bad_opts}
     # 2. parse remaining opts
+    commandline = {'r': dict(), 'w': dict()}
     for key in content:
         # 1. extract value of field with name 'key'
         val = None
@@ -339,13 +339,23 @@ def parse_commandline(metadata):
                          'Syntax should be OPTION: "`VALUE`"' % key)
                 continue
             if key in const.PANDOC_OPT_ADDITIVE:
-                val = [[val_c[0][const.C][1]]]
+                val = [get_list_or_inline(content, key)]
             else:
-                val = val_c[0][const.C][1]
+                val = get_list_or_inline(content, key)[0]
         # if value type is list of inline codes, add repeated --OPTION=VAL
         elif val_t == 'MetaList' and key in const.PANDOC_OPT_ADDITIVE:
-            # TODO
-            pass
+            errs = False
+            for item in val_c:
+                if item[const.T] != 'MetaInlines' \
+                        or item[const.C][0][const.T] != 'Code':
+                    info.log('ERROR', 'panzer',
+                             'Cannot read option "%s" in "commandline" field. '
+                             'Syntax should be - OPTION: "`VALUE`"' % key)
+                    errs = True
+            if not errs:
+                val = [[x] for x in get_list_or_inline(content, key)]
+            else:
+                continue
         # otherwise, signal error
         else:
             info.log('ERROR', 'panzer',
