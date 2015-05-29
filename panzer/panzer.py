@@ -17,6 +17,7 @@ from . import document
 from . import error
 from . import info
 from . import load
+from . import meta
 from . import util
 from . import version
 
@@ -45,9 +46,23 @@ def main():
         info.time_stamp('document loaded')
         doc.populate(ast, global_styledef)
         doc.transform()
+        # check if `commandline` contains any new reader options
+        old_reader_opts = dict(doc.options['pandoc']['options']['r'])
         doc.apply_commandline()
-        # check if commandline contains any reader options, if so, then re-read document!
-
+        new_reader_opts = doc.options['pandoc']['options']['r']
+        if new_reader_opts != old_reader_opts:
+            # re-read input documents with new reader settings
+            opts =  meta.build_cli_options(new_reader_opts)
+            info.log('INFO', 'panzer', info.pretty_title('pandoc read with metadata options'))
+            info.log('INFO', 'panzer', 'pandoc reading with options:')
+            info.log('INFO', 'panzer', info.pretty_list(opts, separator=' '))
+            info.go_quiet()
+            doc.empty()
+            global_styledef = load.load_styledef(doc.options)
+            ast = load.load(doc.options)
+            doc.populate(ast, global_styledef)
+            doc.transform()
+            info.go_loud(doc.options)
         doc.build_runlist()
         doc.purge_style_fields()
         info.time_stamp('document transformed')

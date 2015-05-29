@@ -6,6 +6,16 @@ import os
 import time
 from . import const
 
+# - lookup table for internal strings to logging levels
+LEVELS = {
+    'CRITICAL' : logging.CRITICAL,
+    'ERROR'    : logging.ERROR,
+    'WARNING'  : logging.WARNING,
+    'INFO'     : logging.INFO,
+    'DEBUG'    : logging.DEBUG,
+    'NOTSET'   : logging.NOTSET
+}
+
 def start_logger(options):
     """ start the logger """
     config = {
@@ -67,15 +77,6 @@ def start_logger(options):
 def log(level_str, sender, message):
     """ send a log message """
     my_logger = logging.getLogger(__name__)
-    # - lookup table for internal strings to logging levels
-    levels = {
-        'CRITICAL' : logging.CRITICAL,
-        'ERROR'    : logging.ERROR,
-        'WARNING'  : logging.WARNING,
-        'INFO'     : logging.INFO,
-        'DEBUG'    : logging.DEBUG,
-        'NOTSET'   : logging.NOTSET
-    }
     # - lookup table for internal strings to pretty output strings
     pretty_levels = {
         'CRITICAL' : 'FATAL:   ',
@@ -88,7 +89,7 @@ def log(level_str, sender, message):
     message = str(message)
     sender_str = ''
     message_str = ''
-    level = levels.get(level_str, levels['ERROR'])
+    level = LEVELS.get(level_str, LEVELS['ERROR'])
     # -- level
     pretty_level_str = pretty_levels.get(level_str, pretty_levels['ERROR'])
     # -- sender
@@ -102,6 +103,20 @@ def log(level_str, sender, message):
     output += sender_str
     output += message_str
     my_logger.log(level, output)
+
+def go_quiet():
+    """ force logging level to be --quiet """
+    my_logger = logging.getLogger(__name__)
+    my_logger.setLevel(LEVELS['WARNING'])
+
+def go_loud(options):
+    """ return logging level to that set in options """
+    my_logger = logging.getLogger(__name__)
+    if options['panzer']['quiet']:
+        verbosity_level = 'WARNING'
+    else:
+        verbosity_level = 'INFO'
+    my_logger.setLevel(LEVELS[verbosity_level])
 
 def decode_stderr_json(stderr):
     """ return a list of decoded json messages in stderr """

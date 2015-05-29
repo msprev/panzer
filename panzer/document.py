@@ -34,6 +34,8 @@ class Document(object):
         self.stylefull = list()
         self.styledef = dict()
         self.runlist = list()
+        self.template = None
+        self.output = None
         self.options = {
             'panzer': {
                 'panzer_support'  : const.DEFAULT_SUPPORT_DIR,
@@ -52,6 +54,15 @@ class Document(object):
                 'options'    : { 'r': dict(), 'w': dict() }
             }
         }
+
+    def empty(self):
+        """ empty document of all content but options """
+        # - defaults
+        self.ast = const.EMPTY_DOCUMENT
+        self.style = list()
+        self.stylefull = list()
+        self.styledef = dict()
+        self.runlist = list()
         self.template = None
         self.output = None
 
