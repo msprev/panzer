@@ -40,11 +40,11 @@ def update_commandline(old, new):
     except error.WrongType as err:
         # wrong type of value under field, quit
         info.log('WARNING', 'panzer', err)
-        return
+        return old
     old_commandline.update(new_commandline)
     if old_commandline == dict():
         # if still empty, don't bother adding it
-        return
+        return old
     set_content(old, 'commandline', old_commandline, 'MetaMap')
     return old
 
