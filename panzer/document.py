@@ -207,6 +207,8 @@ class Document(object):
         if 'commandline' not in metadata:
             return
         commandline = meta.parse_commandline(metadata)
+        if not commandline:
+            return
         self.options['pandoc']['options'] = \
             meta.update_pandoc_options(self.options['pandoc']['options'], commandline)
 
