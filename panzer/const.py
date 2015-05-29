@@ -29,6 +29,12 @@ EMPTY_DOCUMENT = [{'unMeta': {}}, []]
 # these cannot be written to stdout
 BINARY_WRITERS = ['odt', 'docx', 'epub', 'epub3']
 
+# forbidden options for panzer command line
+PANDOC_BAD_OPTS = ['--dump-args',
+                   '--ignore-args',
+                   '-D',
+                   '--print-default-template',
+                   '--print-default-data-file']
 
 # forbidden options for 'commandline' metadata field
 PANDOC_BAD_COMMANDLINE = ['write',
@@ -47,12 +53,13 @@ PANDOC_BAD_COMMANDLINE = ['write',
                           'print-default-template',
                           'print-default-data-file']
 
-
-PANDOC_BAD_OPTS = ['--dump-args',
-                   '--ignore-args',
-                   '-D',
-                   '--print-default-template',
-                   '--print-default-data-file']
+# additive command line options
+PANDOC_OPT_ADDITIVE = ['metadata',
+                       'variable',
+                       'include-in-header',
+                       'include-before-header',
+                       'include-after-header',
+                       'css']
 
 # pandoc's command line options, divided by reader or writer
 PANDOC_OPT_TYPE = { # general options
@@ -123,13 +130,6 @@ PANDOC_OPT_TYPE = { # general options
                    'webtex':                  'w',
                    'katex':                   'w',
                    'katex-stylesheet':        'w'}
-
-# reverse dependencies for pandoc's command line options
-# - workaround for a pandoc quirk:
-#   - sometimes *reader* options are set conditional on a *writer* being selected
-#   - see https://github.com/msprev/panzer/issues/1#issuecomment-105168125
-PANDOC_REV_DEPS = [{'writer': ['latex', 'context'], 'reader': '*', 'opt_reader': ['--smart']}]
-
 
 # Adapted from https://github.com/jgm/pandoc/blob/master/pandoc.hs#L841
 PANDOC_WRITER_MAPPING = {
