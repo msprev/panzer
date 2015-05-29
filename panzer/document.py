@@ -130,9 +130,10 @@ class Document(object):
         # - try to extract value of style field
         try:
             self.style = meta.get_list_or_inline(self.get_metadata(), 'style')
+            if self.style == ['']:
+                raise error.MissingField
         except error.MissingField:
-            info.log('INFO', 'panzer',
-                     'no "style" field found, run only pandoc')
+            info.log('INFO', 'panzer', 'no "style" field found, run only pandoc')
             return
         except error.WrongType as err:
             info.log('ERROR', 'panzer', err)
@@ -208,7 +209,6 @@ class Document(object):
         commandline = meta.parse_commandline(metadata)
         self.options['pandoc']['options'] = \
             meta.update_pandoc_options(self.options['pandoc']['options'], commandline)
-
 
     def json_message(self):
         """ return json message to pass to executables

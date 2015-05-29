@@ -363,8 +363,7 @@ def parse_commandline(metadata):
     return commandline
 
 def update_pandoc_options(old, new):
-    """ return dictionary of pandoc command line options 'old' updated with
-    entry in 'new'
+    """ return dictionary of pandoc command line options 'old' updated with 'new'
     """
     for p in ['r', 'w']:
         for key in old[p]:
@@ -379,7 +378,7 @@ def update_pandoc_options(old, new):
                 elif old[p][key] == new[p][key]:
                     continue
                 else:
-                # warn if already set, and being changed
+                # warn if new being overriden by old
                     if type(old[p][key]) is bool:
                         message = "--%s" % key
                     elif type(old[p][key]) is str:
