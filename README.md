@@ -21,7 +21,7 @@ style:
 
 Styles are defined in a `styles.yaml` file ([example](https://github.com/msprev/dot-panzer/blob/master/styles.yaml)). The style definition file, plus associated executables, are placed in the `.panzer` directory in the user’s home folder ([example](https://github.com/msprev/dot-panzer)).
 
-Styles can also be defined locally inside the document:
+A style can also be defined locally, inside the document metadata block:
 
 ``` yaml
 styledef:
@@ -44,6 +44,8 @@ Style settings can be overridden inside a document by adding the appropriate fie
 ``` yaml
 filter:
     - run: deemph.py
+commandline:
+    - latex-engine: "`xelatex`"
 ```
 
 Installation
@@ -150,7 +152,7 @@ style: Notes
 ...
 ```
 
-it would run pandoc with filter `deemph.py` and command line option `--no-wrap` on the following input and then execute `latexmk.py`.
+it would run pandoc with filter `deemph.py` and command line option `--no-wrap` on the following and then execute `latexmk.py`.
 
 ``` yaml
 ---
@@ -342,7 +344,7 @@ External processes have just as much information as panzer does. panzer sends it
 
     `filter` and `template` list filters and template set via the command line (via `--filter` and `--template` options).
 
-    `options` contains the remaining command line options with which pandoc is called. `options` is the result of merging, using the rules described above, options set via the command line and those set via the `commandline` metadata field. It consists of two separate dictionaries. The dictionary under the ‘r’ key contains all pandoc options pertaining to reading the source documents to the ast. The dictionary under the ‘w’ key contains all pandoc options pertaining to writing the ast to the output document.
+    `options` contains the remaining command line options with which pandoc is called. It consists of two separate dictionaries. The dictionary under the `'r'` key contains all pandoc options pertaining to reading the source documents to the AST. The dictionary under the `'w'` key contains all pandoc options pertaining to writing the AST to the output document.
 
 Scripts read the json message above by deserialising json input on stdin.
 

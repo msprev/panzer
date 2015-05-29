@@ -45,7 +45,7 @@ The style definition file, plus associated executables, are placed in
 the ``.panzer`` directory in the user’s home folder
 (`example <https://github.com/msprev/dot-panzer>`__).
 
-Styles can also be defined locally inside the document:
+A style can also be defined locally, inside the document metadata block:
 
 .. code:: yaml
 
@@ -70,6 +70,8 @@ appropriate field outside a style definition:
 
     filter:
         - run: deemph.py
+    commandline:
+        - latex-engine: "`xelatex`"
 
 Installation
 ============
@@ -222,7 +224,7 @@ selected,
     ...
 
 it would run pandoc with filter ``deemph.py`` and command line option
-``--no-wrap`` on the following input and then execute ``latexmk.py``.
+``--no-wrap`` on the following and then execute ``latexmk.py``.
 
 .. code:: yaml
 
@@ -494,13 +496,11 @@ should probably be using a filter).
    command line (via ``--filter`` and ``--template`` options).
 
    ``options`` contains the remaining command line options with which
-   pandoc is called. ``options`` is the result of merging, using the
-   rules described above, options set via the command line and those set
-   via the ``commandline`` metadata field. It consists of two separate
-   dictionaries. The dictionary under the ‘r’ key contains all pandoc
-   options pertaining to reading the source documents to the ast. The
-   dictionary under the ‘w’ key contains all pandoc options pertaining
-   to writing the ast to the output document.
+   pandoc is called. It consists of two separate dictionaries. The
+   dictionary under the ``'r'`` key contains all pandoc options
+   pertaining to reading the source documents to the AST. The dictionary
+   under the ``'w'`` key contains all pandoc options pertaining to
+   writing the AST to the output document.
 
 Scripts read the json message above by deserialising json input on
 stdin.
