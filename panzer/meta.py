@@ -340,17 +340,8 @@ def parse_commandline(metadata):
                 val = val_c[0][const.C][1]
         # if value type is list of inline codes, add repeated --OPTION=VAL
         elif val_t == 'MetaList' and key in const.PANDOC_OPT_ADDITIVE:
-            val = []
-            for item in val_c:
-                val_tt = item[const.C]
-                val_cc = item[const.T]
-                if len(val_cc) != 1 or val_cc[0][const.T] != 'Code':
-                    info.log('ERROR', 'panzer',
-                            'Cannot read option "%s" in "commandline" field. '
-                            'Syntax should be OPTION: "`VALUE`"' % key)
-                    continue
-                val += [val_cc[0][const.C][1]]
-
+            # TODO
+            pass
         # otherwise, signal error
         else:
             info.log('ERROR', 'panzer',
@@ -380,7 +371,11 @@ def update_pandoc_options(old, new):
                 # if already set and a list, then add new at end of list
                 elif type(old[p][key]) is list:
                     old[p][key].extend(new[p][key])
+                # if already set and same as new, then just continue quietly
+                elif old[p][key] == new[p][key]:
+                    continue
                 else:
+                # warn if already set, and being changed
                     if type(old[p][key]) is bool:
                         message = "--%s" % key
                     elif type(old[p][key]) is str:
