@@ -188,22 +188,15 @@ class Document(object):
 
     def apply_commandline(self):
         """
-        parse `commandline` metadata field and apply it to update the command
-        line options for calling pandoc
+        parse `commandline` metadata field and apply result to update
+        command line options for calling pandoc
         """
-        if 'commandline' not in self.metadata:
+        metadata = self.get_metadata()
+        if 'commandline' not in metadata:
             return
         commandline = meta.parse_commandline(metadata)
-        # 1. read content of `commandline` field
-        # 4. update self.options['pandoc'] with commandline
-        # for p in ['r', 'w']:
-        #     for key in self.options['pandoc']['options'][p]:
-        #         val = self.options['pandoc']['options'][p][key]
-        #         print(key + ': ' + str(type(val)))
-        #     for key in commandline[p]:
-        #         current = self.options['pandoc']['options'][p][key]
-        #         if type(current) == bool:
-        #             self.options['pandoc']['options'][p][key] = commandline[p][key]
+        self.options['pandoc']['options'] = \
+            meta.update_pandoc_options(self.options['pandoc']['options'], commandline)
 
 
     def json_message(self):

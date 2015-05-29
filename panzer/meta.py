@@ -283,39 +283,38 @@ def build_cli_options(dic):
                 cli += ['--%s=%s' % (opt, val[0])]
     return cli
 
-
 def parse_commandline(metadata):
-    """ return a dictiory of command line options by parsing `commandline`
-    field in metadata, or None if `commandline` is absent in metadata
+    """ return a dictiory of pandoc command line options by parsing
+    `commandline` field in metadata; return None if `commandline` is absent in
+    metadata
     """
     if 'commandline' not in metadata:
         return None
     field_type = get_type(metadata, 'commandline')
     if field_type != 'MetaMap':
         info.log('ERROR', 'panzer',
-                    'Value of field "%s" should be of type "MetaMap"'
-                    '---found value of type "%s", ignoring it'
-                    % ('commandline', field_type))
+                 'Value of field "%s" should be of type "MetaMap"'
+                 '---found value of type "%s", ignoring it'
+                 % ('commandline', field_type))
         return None
     content = get_content(metadata, 'commandline')
-    # 2. remove bad options from `commandline`
-    # - first, fixed list of forbidden options
+    # 1. remove bad options from `commandline`
     bad_opts = list(const.PANDOC_BAD_COMMANDLINE)
     for key in content:
         if key in bad_opts:
             info.log('ERROR', 'panzer',
-                        '"%s" forbidden entry in panzer "commandline" '
-                        'map---ignoring' % key)
+                     '"%s" forbidden entry in panzer "commandline" '
+                     'map---ignoring' % key)
         if key not in const.PANDOC_OPT_TYPE:
             info.log('ERROR', 'panzer',
-                        'do not recognise pandoc command line option "--%s" in "commandline" '
-                        'map---ignoring' % key)
+                     'do not recognise pandoc command line option "--%s" in "commandline" '
+                     'map---ignoring' % key)
             bad_opts += key
     content = {key: content[key]
                 for key in content
                 if key not in bad_opts}
     commandline = {'r': dict(), 'w': dict()}
-    # 3. parse remaining opts
+    # 2. parse remaining opts
     for key in content:
         # 1. extract value of field with name 'key'
         val = None
@@ -325,24 +324,38 @@ def parse_commandline(metadata):
         if val_c == False:
             continue
         # if value is 'true', add --OPTION
-        elif val_t == 'MetaBool' and val_c == True:
+        elif val_t == 'MetaBool' and val_c == True \
+            and key not in const.PANDOC_OPT_ADDITIVE:
             val = True
-        # if value type is inline code span, add --OPTION=VAL
+        # if value type is inline code, add --OPTION=VAL
         elif val_t == 'MetaInlines':
             if len(val_c) != 1 or val_c[0][const.T] != 'Code':
                 info.log('ERROR', 'panzer',
+                         'Cannot read option "%s" in "commandline" field. '
+                         'Syntax should be OPTION: "`VALUE`"' % key)
+                continue
+            if key in const.PANDOC_OPT_ADDITIVE:
+                val = [[val_c[0][const.C][1]]]
+            else:
+                val = val_c[0][const.C][1]
+        # if value type is list of inline codes, add repeated --OPTION=VAL
+        elif val_t == 'MetaList' and key in const.PANDOC_OPT_ADDITIVE:
+            val = []
+            for item in val_c:
+                val_tt = item[const.C]
+                val_cc = item[const.T]
+                if len(val_cc) != 1 or val_cc[0][const.T] != 'Code':
+                    info.log('ERROR', 'panzer',
                             'Cannot read option "%s" in "commandline" field. '
                             'Syntax should be OPTION: "`VALUE`"' % key)
-                continue
-            val = val_c[0][const.C][1]
-        # if value type list of inline code spans, add repeated --OPTION=VAL
-        elif val_t == 'MetaList':
-            pass
+                    continue
+                val += [val_cc[0][const.C][1]]
+
         # otherwise, signal error
         else:
             info.log('ERROR', 'panzer',
-                        'Cannot read entry "%s" with type "%s" in '
-                        '"commandline"---ignoring' % (key, val_t))
+                     'Cannot read entry "%s" with type "%s" in '
+                     '"commandline"---ignoring' % (key, val_t))
             continue
         # 2. update commandline dictionary with key, val
         opt_type = const.PANDOC_OPT_TYPE[key]
@@ -353,4 +366,27 @@ def parse_commandline(metadata):
         else:
             commandline[opt_type][key] = val
     return commandline
+
+def update_pandoc_options(old, new):
+    """ return dictionary of pandoc command line options 'old' updated with
+    entry in 'new'
+    """
+    for p in ['r', 'w']:
+        for key in old[p]:
+            if key in new[p]:
+                # if not already set in old, then override with new
+                if old[p][key] == None or old[p][key] == False:
+                    old[p][key] = new[p][key]
+                # if already set and a list, then add new at end of list
+                elif type(old[p][key]) is list:
+                    old[p][key].extend(new[p][key])
+                else:
+                    if type(old[p][key]) is bool:
+                        message = "--%s" % key
+                    elif type(old[p][key]) is str:
+                        message = "--%s=%s" % (key, old[p][key])
+                    info.log('WARNING', 'panzer',
+                             'command line option "%s" overriding setting '
+                             'in "commandline" metadata' % message)
+    return old
 
