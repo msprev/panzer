@@ -118,7 +118,7 @@ A style definition may consist of:
   `parent`        parent(s) of style                   `MetaList` or `MetaInlines`
   `metadata`      default metadata fields              `MetaMap`
   `commandline`   pandoc command line options          `MetaMap`
-  `template`      pandoc template                      `MetaInlines`
+  `template`      pandoc template                      `MetaInlines` or `MetaString`
   `preflight`     run before input doc is processed    `MetaList`
   `filter`        pandoc filters                       `MetaList`
   `postprocess`   run on pandoc's output               `MetaList`

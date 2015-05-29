@@ -183,14 +183,18 @@ def get_list_or_inline(metadata, field):
         content_raw = get_content(metadata, field, 'MetaInlines')
         content = [pandocfilters.stringify(content_raw)]
         return content
+    elif field_type == 'MetaString':
+        content_raw = get_content(metadata, field, 'MetaString')
+        content = [content_raw]
+        return content
     elif field_type == 'MetaList':
         content = list()
         for content_raw in get_content(metadata, field, 'MetaList'):
             content.append(pandocfilters.stringify(content_raw))
         return content
     else:
-        raise error.WrongType('"%s" value must be of type "MetaInlines"'
-                              'or "MetaList"' % field)
+        raise error.WrongType('"%s" value must be of type "MetaInlines", '
+                              '"MetaList", or "MetaString"' % field)
 
 def get_metadata(ast):
     """ returns metadata branch of ast or {} if not present """

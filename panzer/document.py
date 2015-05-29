@@ -302,10 +302,16 @@ class Document(object):
                 continue
         # 3. Set template
         try:
-            template_raw = meta.get_content(new_metadata, 'template', 'MetaInlines')
-            template_str = pandocfilters.stringify(template_raw)
-            self.template = util.resolve_path(template_str, 'template',
-                                              self.options)
+            if meta.get_type(new_metadata, 'template') == 'MetaInlines':
+                template_raw = meta.get_content(new_metadata, 'template', 'MetaInlines')
+                template_str = pandocfilters.stringify(template_raw)
+            elif meta.get_type(new_metadata, 'template') == 'MetaString':
+                template_str = meta.get_content(new_metadata, 'template', 'MetaString')
+                if template_str == '':
+                    raise error.MissingField
+            else:
+                raise error.WrongType
+            self.template = util.resolve_path(template_str, 'template', self.options)
         except (error.MissingField, error.WrongType) as err:
             info.log('DEBUG', 'panzer', err)
         if self.template:

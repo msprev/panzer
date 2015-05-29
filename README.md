@@ -89,17 +89,17 @@ Style definition
 
 A style definition may consist of:
 
-| field         | value                              | value type                  |
-|:--------------|:-----------------------------------|:----------------------------|
-| `parent`      | parent(s) of style                 | `MetaList` or `MetaInlines` |
-| `metadata`    | default metadata fields            | `MetaMap`                   |
-| `commandline` | pandoc command line options        | `MetaMap`                   |
-| `template`    | pandoc template                    | `MetaInlines`               |
-| `preflight`   | run before input doc is processed  | `MetaList`                  |
-| `filter`      | pandoc filters                     | `MetaList`                  |
-| `postprocess` | run on pandoc’s output             | `MetaList`                  |
-| `postflight`  | run after output file written      | `MetaList`                  |
-| `cleanup`     | run on exit irrespective of errors | `MetaList`                  |
+| field         | value                              | value type                    |
+|:--------------|:-----------------------------------|:------------------------------|
+| `parent`      | parent(s) of style                 | `MetaList` or `MetaInlines`   |
+| `metadata`    | default metadata fields            | `MetaMap`                     |
+| `commandline` | pandoc command line options        | `MetaMap`                     |
+| `template`    | pandoc template                    | `MetaInlines` or `MetaString` |
+| `preflight`   | run before input doc is processed  | `MetaList`                    |
+| `filter`      | pandoc filters                     | `MetaList`                    |
+| `postprocess` | run on pandoc’s output             | `MetaList`                    |
+| `postflight`  | run after output file written      | `MetaList`                    |
+| `cleanup`     | run on exit irrespective of errors | `MetaList`                    |
 
 Style definitions are hierarchically structured by *name* and *writer*. Style names by convention should be MixedCase (`MyNotes`) to avoid confusion with other metadata fields. Writer names are the same as those of the relevant pandoc writer (e.g. `latex`, `html`, `docx`, etc.) A special writer, `all`, matches every writer.
 
