@@ -59,10 +59,11 @@ PANDOC_OPT_ADDITIVE = ['metadata',
                        'include-in-header',
                        'include-before-header',
                        'include-after-header',
-                       'css']
+                       'css',
+                       'latex-engine-opt']
 
 # pandoc's command line options, divided by reader or writer
-PANDOC_OPT_TYPE = { # general options
+PANDOC_OPT_TYPE = {# general options
                    'data-dir':                'rw',
                    # reader options
                    'parse-raw':               'r',
@@ -116,6 +117,7 @@ PANDOC_OPT_TYPE = { # general options
                    'epub-embed-font':         'w',
                    'epub-chapter-level':      'w',
                    'latex-engine':            'w',
+                   'latex-engine-opt':        'w',
                    'bibliography':            'w',
                    'csl':                     'w',
                    'citation-abbreviations':  'w',
