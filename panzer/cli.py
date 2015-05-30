@@ -202,6 +202,7 @@ def pandoc_opt_parse(args):
     opt_parser.add_argument('--epub-embed-font')
     opt_parser.add_argument('--epub-chapter-level')
     opt_parser.add_argument('--latex-engine')
+    opt_parser.add_argument('--latex-engine-opt', '-B', nargs=1, action='append')
     opt_parser.add_argument('--bibliography')
     opt_parser.add_argument('--csl')
     opt_parser.add_argument('--citation-abbreviations')
