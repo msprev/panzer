@@ -56,6 +56,7 @@ PANDOC_BAD_COMMANDLINE = ['write',
 # additive command line options
 PANDOC_OPT_ADDITIVE = ['metadata',
                        'variable',
+                       'bibliography',
                        'include-in-header',
                        'include-before-header',
                        'include-after-header',
