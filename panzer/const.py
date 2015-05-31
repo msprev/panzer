@@ -58,8 +58,8 @@ PANDOC_OPT_ADDITIVE = ['metadata',
                        'variable',
                        'bibliography',
                        'include-in-header',
-                       'include-before-header',
-                       'include-after-header',
+                       'include-before-body',
+                       'include-after-body',
                        'css',
                        'latex-engine-opt']
 
