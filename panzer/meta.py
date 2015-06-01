@@ -309,7 +309,7 @@ def parse_commandline(metadata):
             info.log('ERROR', 'panzer',
                      '"%s" forbidden entry in panzer "commandline" '
                      'map---ignoring' % key)
-        if key not in const.PANDOC_OPT_TYPE:
+        if key not in const.PANDOC_OPT_PHASE:
             info.log('ERROR', 'panzer',
                      'do not recognise pandoc command line option "--%s" in "commandline" '
                      'map---ignoring' % key)
@@ -363,13 +363,8 @@ def parse_commandline(metadata):
                      '"commandline"---ignoring' % (key, val_t))
             continue
         # 2. update commandline dictionary with key, val
-        opt_type = const.PANDOC_OPT_TYPE[key]
-        if opt_type == 'rw':
-            # in both reader and writer phases
-            commandline['r'][key] = val
-            commandline['w'][key] = val
-        else:
-            commandline[opt_type][key] = val
+        for phase in const.PANDOC_OPT_PHASE[key]:
+            commandline[phase][key] = val
     return commandline
 
 def update_pandoc_options(old, new):

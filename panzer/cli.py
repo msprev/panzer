@@ -89,16 +89,11 @@ def parse_cli_options(options):
         # undo weird transform that argparse does to match option name
         # https://docs.python.org/dev/library/argparse.html#dest
         opt_name = str(opt).replace('_', '-')
-        if opt_name not in const.PANDOC_OPT_TYPE:
+        if opt_name not in const.PANDOC_OPT_PHASE:
             print('ERROR:   do not know reader/writer type of command line option "--%s"' % opt_name)
             continue
-        opt_type = const.PANDOC_OPT_TYPE[opt_name]
-        if opt_type == 'rw':
-            # in both reader and writer phases
-            options['pandoc']['options']['r'][opt_name] = opt_known[opt]
-            options['pandoc']['options']['w'][opt_name] = opt_known[opt]
-        else:
-            options['pandoc']['options'][opt_type][opt_name] = opt_known[opt]
+        for phase in const.PANDOC_OPT_PHASE[opt_name]:
+            options['pandoc']['options'][phase][opt_name] = opt_known[opt]
     options['pandoc'] = set_quirky_dependencies(options['pandoc'])
     # 7. print error messages for unknown options
     for opt in unknown:
