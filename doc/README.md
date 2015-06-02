@@ -1,8 +1,8 @@
 ---
 title:  "panzer user guide"
-author: 
+author:
  - name: Mark Sprevak
-date: 29 May 2015
+date:  3 June 2015
 style: Plain
 ...
 
@@ -27,15 +27,15 @@ style: Notes
 Multiple styles can be supplied as a list:
 
 ``` {.yaml}
-style: 
+style:
     - Notes
     - BoldHeadings
 ```
 
-Styles are defined in a `styles.yaml` file ([example][example-yaml]).
+Styles are defined in a `yaml` file ([example][example-yaml]).
     The style definition file, plus associated executables, are placed in the `.panzer` directory in the user's home folder ([example][example-dot-panzer]).
 
-A style can also be defined locally, inside the document metadata block:
+A style can also be defined inside the document's metadata block:
 
 ``` {.yaml}
 styledef:
@@ -102,7 +102,8 @@ panzer has additional command line options.
 ```
   -h, --help, ---help, ---h
                         show this help message and exit
-  ---version            show program's version number and exit
+  -v, --version, ---version, ---v
+                        show program's version number and exit
   ---quiet              only print errors and warnings
   ---panzer-support PANZER_SUPPORT
                         .panzer directory
@@ -205,23 +206,25 @@ fontsize: 12pt
 
 Styles may be defined:
 
--   'Globally' in the `styles.yaml` file (normally in `~/.panzer/`)
--   'Locally' in a `styledef` field inside the document
+-   'Globally' in `.yaml` files in `.panzer/styles/`
+-   'Locally' in `.yaml` files in `./styles/`)
+-   'In document' inside a `styledef` field in the document's yaml metadata block
 
 Overriding among style settings is determined by the following rules:
 
   \#   overriding rule
   ---- -------------------------------------------------------------------------------
-  1    Local definitions in a `styledef` override global definitions in `styles.yaml`
-  2    Writer-specific settings override settings for `all`
-  3    In a list, later styles override earlier ones
-  4    Children override parents
+  1    Local style definitions override global style definitions
+  2    In document style definitions override local style definitions
+  3    Writer-specific settings override settings for `all`
+  4    In a list, later styles override earlier ones
+  5    Children override parents
   5    Fields set outside a style definition override any style's setting
 
 
 For fields that pertain to scripts/filters, overriding is *additive*; for other fields, it is *non-additive*:
 
-- For `metadata`, `template`, and `commandline`, if one style overrides another (say, a parent and child set `numbersections` to different values), 
+- For `metadata`, `template`, and `commandline`, if one style overrides another (say, a parent and child set `numbersections` to different values),
     then inheritance is non-additive, and only one (the child) wins.
 
 - For `preflight`, `filter`, `postflight` and `cleanup` if one style overrides another, then the 'winner' adds its items after those of the 'loser'.
@@ -252,7 +255,7 @@ Executables (scripts, filters, postprocessors) are specified by a list (the 'run
     Killing an item does not prevent it from being added later.
     A run list can be completely emptied by adding the special item `- killall: true`.
 
-Arguments can be passed to executables by listing them as the value of the `args` field of that item. 
+Arguments can be passed to executables by listing them as the value of the `args` field of that item.
     The value of the `args` field is passed as the command line options to the external process.
     This value of `args` should be a quoted inline code span (e.g. ``"`--options`"``) to prevent the parser interpreting it as markdown.
     Note that filters always receive the writer name as their first argument.
@@ -287,7 +290,6 @@ Similar rules apply to other executables and to templates.
 The typical structure for the support directory `.panzer` is:
 
     .panzer/
-        styles.yaml
         cleanup/
         filter/
         postflight/
@@ -295,6 +297,7 @@ The typical structure for the support directory `.panzer` is:
         preflight/
         template/
         shared/
+        styles/
 
 Within each directory, each executable may have a named subdirectory:
 
@@ -324,7 +327,7 @@ include-in-header:
 
 Repeated key-value options in `comandline` are added after any provided from the command line.
 
-`false` plays a special role. 
+`false` plays a special role.
     `false` means that the pandoc command line option with the field's name, if set, should be unset.
     `false` can be used for both flags and key-value options (e.g. `include-in-header: false`).
 
@@ -366,7 +369,7 @@ External processes have just as much information as panzer does.
     This message is sent over stdin to scripts (preflight, postflight, cleanup scripts), and embedded in the AST for filters.
     Postprocessors are an exception; they do not receive a json message (if you need it, you should probably be using a filter).
 
-``` 
+```
 JSON_MESSAGE = [{'metadata':    METADATA,
                  'template':    TEMPLATE,
                  'style':       STYLE,
@@ -380,7 +383,7 @@ JSON_MESSAGE = [{'metadata':    METADATA,
 
 - `TEMPLATE` is a string with path to the current template
 
-- `STYLE` is a list of current style(s) 
+- `STYLE` is a list of current style(s)
 
 - `STYLEFULL` is a list of current style(s) including all parents, grandparents, etc. in order of application
 
@@ -389,7 +392,7 @@ JSON_MESSAGE = [{'metadata':    METADATA,
 - `RUNLIST` is a list of processes in the run list; it has the following structure:
 
 
-    ``` 
+    ```
     RUNLIST = [{'kind':      'preflight'|'filter'|'postprocess'|'postflight'|'cleanup',
                 'command':   'my command',
                 'arguments': ['argument1', 'argument2', ...],
@@ -430,7 +433,7 @@ JSON_MESSAGE = [{'metadata':    METADATA,
     The dictionary under the `'r'` key contains all pandoc options pertaining to reading the source documents to the AST.
     The dictionary under the `'w'` key contains all pandoc options pertaining to writing the AST to the output document.
 
-Scripts read the json message above by deserialising json input on stdin. 
+Scripts read the json message above by deserialising json input on stdin.
 
 Filters can read the json message by reading the metadata field, `panzer_reserved`, in the AST:
 
@@ -477,7 +480,7 @@ The json message that panzer expects is a newline-separated sequence of utf-8 en
 - `MESSAGE` is a string with your message
 
 
-# Compatibility 
+# Compatibility
 
 panzer accepts pandoc filters.
     panzer allows filters to behave in two new ways:
@@ -529,7 +532,7 @@ Pull requests welcome:
 -   1.0b2 (23 May 2015):
     -   new: `commandline` - set arbitrary pandoc command line options via metadata
 
--   1.0b1 (14 May 2015): 
+-   1.0b1 (14 May 2015):
     -   initial release
 
  [pandoc]: http://johnmacfarlane.net/pandoc/index.html
@@ -537,6 +540,6 @@ Pull requests welcome:
  [python 3]: https://www.python.org/downloads/
  [json filters]: http://johnmacfarlane.net/pandoc/scripting.html
  [template]: http://johnmacfarlane.net/pandoc/demo/example9/templates.html
- [example-yaml]:  https://github.com/msprev/dot-panzer/blob/master/styles.yaml
+ [example-yaml]:  https://github.com/msprev/dot-panzer/blob/master/styles/styles.yaml
  [example-dot-panzer]: https://github.com/msprev/dot-panzer
  [setuptools for Python3]: http://stackoverflow.com/questions/14426491/python-3-importerror-no-module-named-setuptools

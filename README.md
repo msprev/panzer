@@ -14,14 +14,14 @@ style: Notes
 Multiple styles can be supplied as a list:
 
 ``` yaml
-style: 
+style:
     - Notes
     - BoldHeadings
 ```
 
-Styles are defined in a `styles.yaml` file ([example](https://github.com/msprev/dot-panzer/blob/master/styles.yaml)). The style definition file, plus associated executables, are placed in the `.panzer` directory in the user’s home folder ([example](https://github.com/msprev/dot-panzer)).
+Styles are defined in a `yaml` file ([example](https://github.com/msprev/dot-panzer/blob/master/styles/styles.yaml)). The style definition file, plus associated executables, are placed in the `.panzer` directory in the user’s home folder ([example](https://github.com/msprev/dot-panzer)).
 
-A style can also be defined locally, inside the document metadata block:
+A style can also be defined inside the document’s metadata block:
 
 ``` yaml
 styledef:
@@ -78,7 +78,8 @@ panzer has additional command line options. These are prefixed by triple dashes 
 
       -h, --help, ---help, ---h
                             show this help message and exit
-      ---version            show program's version number and exit
+      -v, --version, ---version, ---v
+                            show program's version number and exit
       ---quiet              only print errors and warnings
       ---panzer-support PANZER_SUPPORT
                             .panzer directory
@@ -168,18 +169,20 @@ Style overriding
 
 Styles may be defined:
 
--   ‘Globally’ in the `styles.yaml` file (normally in `~/.panzer/`)
--   ‘Locally’ in a `styledef` field inside the document
+-   ‘Globally’ in `.yaml` files in `.panzer/styles/`
+-   ‘Locally’ in `.yaml` files in `./styles/`)
+-   ‘In document’ inside a `styledef` field in the document’s yaml metadata block
 
 Overriding among style settings is determined by the following rules:
 
-| \#  | overriding rule                                                                |
-|:----|:-------------------------------------------------------------------------------|
-| 1   | Local definitions in a `styledef` override global definitions in `styles.yaml` |
-| 2   | Writer-specific settings override settings for `all`                           |
-| 3   | In a list, later styles override earlier ones                                  |
-| 4   | Children override parents                                                      |
-| 5   | Fields set outside a style definition override any style’s setting             |
+| \#  | overriding rule                                                    |
+|:----|:-------------------------------------------------------------------|
+| 1   | Local style definitions override global style definitions          |
+| 2   | In document style definitions override local style definitions     |
+| 3   | Writer-specific settings override settings for `all`               |
+| 4   | In a list, later styles override earlier ones                      |
+| 5   | Children override parents                                          |
+| 5   | Fields set outside a style definition override any style’s setting |
 
 For fields that pertain to scripts/filters, overriding is *additive*; for other fields, it is *non-additive*:
 
@@ -232,7 +235,6 @@ Similar rules apply to other executables and to templates.
 The typical structure for the support directory `.panzer` is:
 
     .panzer/
-        styles.yaml
         cleanup/
         filter/
         postflight/
@@ -240,6 +242,7 @@ The typical structure for the support directory `.panzer` is:
         preflight/
         template/
         shared/
+        styles/
 
 Within each directory, each executable may have a named subdirectory:
 
