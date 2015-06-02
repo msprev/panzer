@@ -53,13 +53,13 @@ def load_all_styledefs(options):
         finds global styledef from `.panzer/styles/*.{yaml,yml}`
         finds local styledef from `./styles/*.{yaml,yml}`
     """
-    support_dir = doc.options['panzer']['panzer_support']
+    support_dir = options['panzer']['panzer_support']
     info.log('DEBUG', 'panzer', 'loading global style definitions file')
-    global_styledef = load_styledef(support_dir, doc.options)
+    global_styledef = load_styledef(support_dir, options)
     if global_styledef == {}:
         info.log('WARNING', 'panzer', 'no global style definitions found')
     info.log('DEBUG', 'panzer', 'loading local style definitions file')
-    local_styledef = load.load_styledef('.', doc.options)
+    local_styledef = load_styledef('.', options)
     return global_styledef, local_styledef
 
 def load_styledef(path, options):
