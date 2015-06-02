@@ -47,18 +47,46 @@ def load(options):
                                 'json object from pandoc')
     return ast
 
-def load_styledef(options):
-    """ return metadata branch of styles.yaml as dict """
+def load_all_styledefs(options):
+    """
+        return global, local styledef pair
+        finds global styledef from `.panzer/styles/*.{yaml,yml}`
+        finds local styledef from `./styles/*.{yaml,yml}`
+    """
+    support_dir = doc.options['panzer']['panzer_support']
     info.log('DEBUG', 'panzer', 'loading global style definitions file')
-    filename = os.path.join(options['panzer']['panzer_support'], 'styles.yaml')
-    if not os.path.exists(filename):
-        info.log('ERROR', 'panzer',
-                 'default styles file not found: %s' % filename)
+    global_styledef = load_styledef(support_dir, doc.options)
+    if global_styledef == {}:
+        info.log('WARNING', 'panzer', 'no global style definitions found')
+    info.log('DEBUG', 'panzer', 'loading local style definitions file')
+    local_styledef = load.load_styledef('.', doc.options)
+    return global_styledef, local_styledef
+
+def load_styledef(path, options):
+    """
+        return metadata branch as dict of styledef file at `path`
+        reads from `path/styles/*.{yaml,yaml}`
+        (if this fails, checks `path/styles.yaml` as legacy option)
+        returns {} if no metadata found
+    """
+    # - read in style definition data from yaml files
+    styles_dir = os.path.join(path, 'styles')
+    filenames = list()
+    # - read from .panzer/styles/*.{yaml,yml}
+    if os.path.exists(styles_dir):
+        filenames = [os.path.join(path, 'styles', f)
+                     for f in os.listdir(styles_dir)
+                     if f.endswith('.yaml')
+                     or f.endswith('.yml')]
+    # - read .panzer/style.yaml -- legacy option
+    elif os.path.exists(os.path.join(path, 'styles.yaml')):
+        filenames = [os.path.join(path, 'styles.yaml')]
+    data = list()
+    for f in filenames:
+        with open(f, 'r', encoding=const.ENCODING) as styles_file:
+            data += styles_file.readlines()
+    if data == []:
         return dict()
-    # - slurp styles.yaml
-    data = []
-    with open(filename, 'r', encoding=const.ENCODING) as styles_file:
-        data = styles_file.readlines()
     # - top and tail with metadata markings
     data.insert(0, "---\n")
     data.append("...\n")
@@ -70,8 +98,8 @@ def load_styledef(options):
     command += ['--output', '-']
     opts =  meta.build_cli_options(options['pandoc']['options']['r'])
     # - remove inappropriate options for styles.yaml
-    bad_opts = ['metadata', 'track-changes', 'extract-media']
-    opts = [x for x in opts if x not in bad_opts]
+    BAD_OPTS = ['metadata', 'track-changes', 'extract-media']
+    opts = [x for x in opts if x not in BAD_OPTS]
     command += opts
     info.log('DEBUG', 'panzer', 'run "%s"' % ' '.join(command))
     # - send to pandoc to convert to json
