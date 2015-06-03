@@ -66,7 +66,7 @@ class Document(object):
         self.template = None
         self.output = None
 
-    def populate(self, ast, global_styledef):
+    def populate(self, ast, global_styledef, local_styledef):
         """ populate document with data """
         # - self.template : set after 'transform' applied
         # - self.output   : set after 'pandoc' applied
@@ -85,7 +85,7 @@ class Document(object):
         except error.MissingField:
             pass
         # - set self.styledef
-        self.populate_styledef(global_styledef)
+        self.populate_styledef(global_styledef, local_styledef)
         # - set self.style and self.stylefull
         self.populate_style()
         # - remove any styledef not used in doc
@@ -93,36 +93,57 @@ class Document(object):
                          for key in self.styledef
                          if key in self.stylefull}
 
-    def populate_styledef(self, global_styledef):
+    def populate_styledef(self, global_styledef, local_styledef):
         """ populate self.styledef applying global_styledef defaults """
         info.log('INFO', 'panzer', info.pretty_title('style definitions'))
-        # - add global style definitions
+        # - print global style definitions
         if global_styledef:
             info.log('INFO', 'panzer', 'global:')
             for line in info.pretty_keys(global_styledef):
                 info.log('INFO', 'panzer', '  ' + line)
-            self.styledef = dict(global_styledef)
         else:
             info.log('INFO', 'panzer', 'no global definitions loaded')
-        # - add local style definitions in doc
-        local_styledef = dict()
-        try:
-            local_styledef = meta.get_content(self.get_metadata(),
-                                              'styledef',
-                                              'MetaMap')
+        # - print local style definitions
+        overridden = dict()
+        if local_styledef:
             info.log('INFO', 'panzer', 'local:')
             for line in info.pretty_keys(local_styledef):
                 info.log('INFO', 'panzer', '  ' + line)
-            overridden = [key for key in local_styledef
-                          if key in global_styledef]
-            for key in overridden:
-                info.log('INFO', 'panzer',
-                         'local definition "%s" overrides global' % key)
-            (self.styledef).update(local_styledef)
+        # - extract and print in document style definitions
+        indoc_styledef = dict()
+        try:
+            indoc_styledef = meta.get_content(self.get_metadata(), 'styledef', 'MetaMap')
+            info.log('INFO', 'panzer', 'in document:')
+            for line in info.pretty_keys(indoc_styledef):
+                info.log('INFO', 'panzer', '  ' + line)
         except error.MissingField as err:
             info.log('DEBUG', 'panzer', err)
         except error.WrongType as err:
             info.log('ERROR', 'panzer', err)
+        # - update the style definitions
+        (self.styledef).update(global_styledef)
+        (self.styledef).update(local_styledef)
+        (self.styledef).update(indoc_styledef)
+        # - print messages about overriding
+        messages = list()
+        messages += ['local document definition of "%s" overrides global definition of "%s"'
+                     % (key, key)
+                     for key in self.styledef
+                     if key in local_styledef
+                     and key in global_styledef]
+        messages += ['in document definition of "%s" overrides local definition of "%s"'
+                     % (key, key)
+                     for key in self.styledef
+                     if key in indoc_styledef
+                     and key in local_styledef]
+        messages += ['in document definition of "%s" overrides global definition of "%s"'
+                     % (key, key)
+                     for key in self.styledef
+                     if key in indoc_styledef
+                     and key in global_styledef
+                     and key not in local_styledef]
+        for m in messages:
+            info.log('INFO', 'panzer', m)
 
     def populate_style(self):
         """ populate self.style and stylefull, expanding style hierarchy """
@@ -275,18 +296,18 @@ class Document(object):
             new_metadata = meta.update_metadata(new_metadata, all_s)
             cur_s = meta.get_nested_content(self.styledef, [style, writer], 'MetaMap')
             new_metadata = meta.update_metadata(new_metadata, cur_s)
-        # - add local metadata in document
-        local_data = self.get_metadata()
-        # -- add items from additive fields in local metadata
-        new_metadata = meta.update_additive_lists(new_metadata, local_data)
-        # -- add items from local `commandline` field
-        new_metadata = meta.update_commandline(new_metadata, local_data)
+        # - add in document metadata in document
+        indoc_data = self.get_metadata()
+        # -- add items from additive fields in indoc metadata
+        new_metadata = meta.update_additive_lists(new_metadata, indoc_data)
+        # -- add items from indoc `commandline` field
+        new_metadata = meta.update_commandline(new_metadata, indoc_data)
         # -- delete those fields
-        local_data = {key: local_data[key]
-                      for key in local_data
+        indoc_data = {key: indoc_data[key]
+                      for key in indoc_data
                       if key not in const.RUNLIST_KIND and key != 'commandline'}
         # -- add all other (non-additive) fields in
-        new_metadata.update(local_data)
+        new_metadata.update(indoc_data)
         # 2. Apply kill rules to trim run lists
         for field in const.RUNLIST_KIND:
             try:

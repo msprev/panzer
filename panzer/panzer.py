@@ -43,7 +43,7 @@ def main():
         info.time_stamp('local + global styledefs loaded')
         ast = load.load(doc.options)
         info.time_stamp('document loaded')
-        doc.populate(ast, global_styledef)
+        doc.populate(ast, global_styledef, local_styledef)
         doc.transform()
         # check if `commandline` contains any new reader options
         old_reader_opts = dict(doc.options['pandoc']['options']['r'])
@@ -59,7 +59,7 @@ def main():
             doc.empty()
             global_styledef, local_styledef = load.load_all_styledefs(doc.options)
             ast = load.load(doc.options)
-            doc.populate(ast, global_styledef)
+            doc.populate(ast, global_styledef, local_styledef)
             doc.transform()
             info.go_loud(doc.options)
         doc.build_runlist()
