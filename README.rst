@@ -3,7 +3,7 @@ panzer user guide
 =================
 
 :Author: Mark Sprevak
-:Date:   3 June 2015
+:Date:   6 June 2015
 
 panzer
 ======
@@ -394,10 +394,11 @@ line option (e.g. ``standalone``).
 
 ::
 
-    include-in-header:
-        - "`file1.txt`"
-        - "`file2.txt`"
-        - "`file3.txt`"
+    commandline:
+        include-in-header:
+            - "`file1.txt`"
+            - "`file2.txt`"
+            - "`file3.txt`"
 
 Repeated key-value options in ``comandline`` are added after any
 provided from the command line.

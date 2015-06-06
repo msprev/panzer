@@ -2,7 +2,7 @@
 title:  "panzer user guide"
 author:
  - name: Mark Sprevak
-date:  3 June 2015
+date:  6 June 2015
 style: Plain
 ...
 
@@ -319,10 +319,11 @@ Arbitrary pandoc command line options can be set using metadata via `commandline
 - For pandoc repeated key-values, the value should be a list of inline code spans, e.g.
 
 ```
-include-in-header:
-    - "`file1.txt`"
-    - "`file2.txt`"
-    - "`file3.txt`"
+commandline:
+    include-in-header:
+        - "`file1.txt`"
+        - "`file2.txt`"
+        - "`file3.txt`"
 ```
 
 Repeated key-value options in `comandline` are added after any provided from the command line.

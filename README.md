@@ -263,10 +263,11 @@ Arbitrary pandoc command line options can be set using metadata via `commandline
 
 <!-- -->
 
-    include-in-header:
-        - "`file1.txt`"
-        - "`file2.txt`"
-        - "`file3.txt`"
+    commandline:
+        include-in-header:
+            - "`file1.txt`"
+            - "`file2.txt`"
+            - "`file3.txt`"
 
 Repeated key-value options in `comandline` are added after any provided from the command line.
 
