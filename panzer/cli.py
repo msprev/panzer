@@ -224,7 +224,9 @@ def set_quirky_dependencies(pandoc):
     # --smart: reader setting
     # True when the output format is latex or context, unless --no-tex-ligatures
     # is used.
-    if (pandoc['write'] == 'latex' or pandoc['write'] == 'context') \
+    if (pandoc['write'] == 'latex' or \
+        pandoc['write'] == 'beamer' or \
+        pandoc['write'] == 'context') \
             and pandoc['options']['w']['no-tex-ligatures'] == False:
         pandoc['options']['r']['smart'] = True
     return pandoc
