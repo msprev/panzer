@@ -17,7 +17,7 @@ class Document(object):
     - stylefull:   full list of styles including all parents
     - styledef:    style definitions
     - runlist:     run list for document
-    - options:     pandoc command line options
+    - options:     panzer and pandoc command line options
     - template:    template for document
     - output:      string filled with output when processing complete
     """
@@ -56,7 +56,10 @@ class Document(object):
         }
 
     def empty(self):
-        """ empty document of all content but options """
+        """
+        empty document of all its content but `self.options`
+        (used when re-reading from input with new reader command line options)
+        """
         # - defaults
         self.ast = const.EMPTY_DOCUMENT
         self.style = list()
@@ -67,9 +70,17 @@ class Document(object):
         self.output = None
 
     def populate(self, ast, global_styledef, local_styledef):
-        """ populate document with data """
-        # - self.template : set after 'transform' applied
-        # - self.output   : set after 'pandoc' applied
+        """
+        populate document's:
+            `self.ast`,
+            `self.styledef`,
+            `self.style`,
+            `self.stylefull`
+        remaining fields:
+            `self.template` - set after 'transform' applied
+            `self.runlist`  - set after 'transform' applied
+            `self.output`   - set after 'pandoc' applied
+        """
         # - set self.ast:
         if ast:
             self.ast = ast
@@ -94,7 +105,12 @@ class Document(object):
                          if key in self.stylefull}
 
     def populate_styledef(self, global_styledef, local_styledef):
-        """ populate self.styledef applying global_styledef defaults """
+        """
+        populate `self.styledef` from
+            `global_styledef`
+            `local_styledef`
+            in document style definition inside `styledef` metadata field
+        """
         info.log('INFO', 'panzer', info.pretty_title('style definitions'))
         # - print global style definitions
         if global_styledef:
@@ -146,7 +162,9 @@ class Document(object):
             info.log('INFO', 'panzer', m)
 
     def populate_style(self):
-        """ populate self.style and stylefull, expanding style hierarchy """
+        """
+        populate `self.style` and `self.stylefull`
+        """
         info.log('INFO', 'panzer', info.pretty_title('document style'))
         # - try to extract value of style field
         try:
@@ -167,7 +185,7 @@ class Document(object):
         info.log('INFO', 'panzer', info.pretty_list(self.stylefull))
 
     def build_runlist(self):
-        """ populate runlist with metadata """
+        """ populate `self.runlist` using `self.ast`'s metadata """
         info.log('INFO', 'panzer', info.pretty_title('run list'))
         metadata = self.get_metadata()
         runlist = self.runlist
@@ -221,8 +239,9 @@ class Document(object):
 
     def apply_commandline(self):
         """
-        parse `commandline` metadata field and apply result to update
-        command line options for calling pandoc
+        1. parse `self.ast`'s `commandline` field
+        2. apply result to update self.options['pandoc']['options']
+        (these are the command line options used for calling pandoc)
         """
         metadata = self.get_metadata()
         if 'commandline' not in metadata:
@@ -234,8 +253,12 @@ class Document(object):
             meta.update_pandoc_options(self.options['pandoc']['options'], commandline)
 
     def json_message(self):
-        """ return json message to pass to executables
-            and inject json message into `panzer_reserved` field """
+        """
+        create json message to pass to executables. This method does 2 things:
+
+        1. injects json message into `panzer_reserved` field of `self.ast`
+        2. returns json message as a string
+        """
         metadata = self.get_metadata()
         # - delete old 'panzer_reserved' key
         if 'panzer_reserved' in metadata:
@@ -259,7 +282,7 @@ class Document(object):
         return json_message
 
     def purge_style_fields(self):
-        """ remove metadata fields specific to panzer """
+        """ remove metadata fields from `self.ast` used to call panzer """
         kill_list = const.RUNLIST_KIND
         kill_list += ['style']
         kill_list += ['styledef']
@@ -272,18 +295,18 @@ class Document(object):
         self.set_metadata(new_metadata)
 
     def get_metadata(self):
-        """ return metadata of ast """
+        """ return metadata branch of `self.ast` """
         return meta.get_metadata(self.ast)
 
     def set_metadata(self, new_metadata):
-        """ set metadata branch to new_metadata """
+        """ set metadata branch of `self.ast` to `new_metadata` """
         try:
             self.ast[0]['unMeta'] = new_metadata
         except (IndexError, KeyError):
             self.ast = [{'unMeta': new_metadata}, []]
 
     def transform(self):
-        """ transform using style """
+        """ transform `self` by applying styles listed in `self.stylefull` """
         writer = self.options['pandoc']['write']
         info.log('INFO', 'panzer', 'writer:')
         info.log('INFO', 'panzer', '  %s' % writer)
@@ -344,7 +367,11 @@ class Document(object):
         self.set_metadata(new_metadata)
 
     def run_scripts(self, kind, do_not_stop=False):
-        """ execute commands of kind listed in runlist """
+        """
+        execute commands of type `kind` listed in `self.runlist`
+        `do_not_stop`:  runlist executed no matter what errors occur
+                        (used by cleanup scripts)
+        """
         # - check if no run list to run
         to_run = [entry for entry in self.runlist if entry['kind'] == kind]
         if not to_run:
@@ -397,7 +424,10 @@ class Document(object):
                 info.log_stderr(stderr, filename)
 
     def pipe_through(self, kind):
-        """ pipe through external command listed in runlist """
+        """
+        pipe through external command listed in `self.runlist`
+        (`kind` could be 'filter' or 'postprocess')
+        """
         if kind != 'filter' and kind != 'postprocess':
             raise error.InternalError('illegal invocation of '
                                       '"pipe" in panzer.py')
@@ -464,7 +494,8 @@ class Document(object):
                 self.output = out_pipe
 
     def pandoc(self):
-        """ run pandoc on document
+        """
+        run pandoc on document
 
         Normally, input to pandoc is passed via stdin and output received via
         stout. Exception is when the output file has .pdf extension or a binary
@@ -526,7 +557,10 @@ class Document(object):
             self.output = out_pipe
 
     def write(self):
-        """ write document """
+        """
+        writes `self.output` to disk or stdout
+        used to write document's output
+        """
         # case 1: pdf or binary file as output
         if self.options['pandoc']['pdf_output'] \
         or self.options['pandoc']['write'] in const.BINARY_WRITERS:
