@@ -110,7 +110,7 @@ class Document(object):
         populate `self.styledef` from
             `global_styledef`
             `local_styledef`
-            in document style definition inside `styledef` metadata field
+            document style definition inside `styledef` metadata field
         """
         info.log('INFO', 'panzer', info.pretty_title('style definitions'))
         # - print global style definitions
@@ -126,11 +126,11 @@ class Document(object):
             info.log('INFO', 'panzer', 'local:')
             for line in info.pretty_keys(local_styledef):
                 info.log('INFO', 'panzer', '  ' + line)
-        # - extract and print in document style definitions
+        # - extract and print document style definitions
         indoc_styledef = dict()
         try:
             indoc_styledef = meta.get_content(self.get_metadata(), 'styledef', 'MetaMap')
-            info.log('INFO', 'panzer', 'in document:')
+            info.log('INFO', 'panzer', 'document:')
             for line in info.pretty_keys(indoc_styledef):
                 info.log('INFO', 'panzer', '  ' + line)
         except error.MissingField as err:
@@ -148,12 +148,12 @@ class Document(object):
                      for key in self.styledef
                      if key in local_styledef
                      and key in global_styledef]
-        messages += ['in document definition of "%s" overrides local definition of "%s"'
+        messages += ['document definition of "%s" overrides local definition of "%s"'
                      % (key, key)
                      for key in self.styledef
                      if key in indoc_styledef
                      and key in local_styledef]
-        messages += ['in document definition of "%s" overrides global definition of "%s"'
+        messages += ['document definition of "%s" overrides global definition of "%s"'
                      % (key, key)
                      for key in self.styledef
                      if key in indoc_styledef
@@ -242,7 +242,7 @@ class Document(object):
         """
         1. parse `self.ast`'s `commandline` field
         2. apply result to update self.options['pandoc']['options']
-        (these are the command line options used for calling pandoc)
+        (the result are the options used for calling pandoc)
         """
         metadata = self.get_metadata()
         if 'commandline' not in metadata:

@@ -7,7 +7,7 @@ from . import util
 from . import error
 
 def update_metadata(old, new):
-    """ return old updated with new metadata """
+    """ return `old` updated with `new` metadata """
     # 1. Update with values in 'metadata' field
     try:
         old.update(get_content(new, 'metadata', 'MetaMap'))
@@ -25,7 +25,7 @@ def update_metadata(old, new):
     return old
 
 def update_commandline(old, new):
-    """ return old updated with info from `commandline` in new """
+    """ return `old` updated with info from `commandline` in `new` """
     try:
         try:
             new_commandline = get_content(new, 'commandline', 'MetaMap')
