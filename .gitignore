@@ -1,0 +1,16 @@
+# python stuff
+*.pyc
+__pycache__/
+/dist/
+build/
+venv/
+/*.egg-info
+.ropeproject/
+
+# vim tags
+tags
+
+# test stuff
+test/output-panzer/
+test/output-pandoc/
+
