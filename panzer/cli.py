@@ -119,6 +119,9 @@ def panzer_parse():
     panzer_parser.add_argument("---quiet",
                                action='store_true',
                                help='only print errors and warnings')
+    panzer_parser.add_argument("---strict",
+                               action='store_true',
+                               help='exit on first error')
     panzer_parser.add_argument("---panzer-support",
                                help='.panzer directory')
     panzer_parser.add_argument("---debug",

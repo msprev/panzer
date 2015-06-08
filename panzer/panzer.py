@@ -30,9 +30,6 @@ def main():
     info.time_stamp('panzer started')
     doc = document.Document()
     try:
-        # util.check_pandoc_exists()
-        ## don't do this as it takes too long
-        info.time_stamp('checked pandoc exists')
         doc.options = cli.parse_cli_options(doc.options)
         info.time_stamp('cli options parsed')
         info.start_logger(doc.options)
@@ -80,6 +77,10 @@ def main():
     except error.SetupError as err:
         # - errors that occur before logging starts
         print(err, file=sys.stderr)
+        sys.exit(1)
+    except error.StrictModeError:
+        info.log('CRITICAL', 'panzer',
+                 'cannot continue because error occurred while in "strict" mode')
         sys.exit(1)
     except subprocess.CalledProcessError:
         info.log('CRITICAL', 'panzer',

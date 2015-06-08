@@ -3,7 +3,7 @@ panzer user guide
 =================
 
 :Author: Mark Sprevak
-:Date:   6 June 2015
+:Date:   8 June 2015
 
 panzer
 ======
@@ -121,6 +121,7 @@ dashes (``---``). Run the command ``panzer -h`` to see them:
       -v, --version, ---version, ---v
                             show program's version number and exit
       ---quiet              only print errors and warnings
+      ---strict             exit on first error
       ---panzer-support PANZER_SUPPORT
                             .panzer directory
       ---debug DEBUG        filename to write .log and .json debug files
@@ -496,6 +497,7 @@ should probably be using a filter).
                'panzer_support':  const.DEFAULT_SUPPORT_DIR,
                'debug':           str(),
                'quiet':           False,
+               'strict':          False,
                'stdin_temp_file': str()   # tempfile used to buffer stdin
            },
            'pandoc': {

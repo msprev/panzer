@@ -41,6 +41,7 @@ class Document(object):
                 'panzer_support'  : const.DEFAULT_SUPPORT_DIR,
                 'debug'           : str(),
                 'quiet'           : False,
+                'strict'          : False,
                 'stdin_temp_file' : str()
             },
             'pandoc': {

@@ -5,6 +5,7 @@ import logging.config
 import os
 import time
 from . import const
+from . import error
 
 # - lookup table for internal strings to logging levels
 LEVELS = {
@@ -18,6 +19,7 @@ LEVELS = {
 
 def start_logger(options):
     """ start the logger """
+    # - default configuration
     config = {
         'version'                  : 1,
         'disable_existing_loggers' : False,
@@ -52,7 +54,7 @@ def start_logger(options):
             }
         }
     }
-    # - check debug flag
+    # - set 'debug' mode if requested
     if not options['panzer']['debug']:
         config['loggers'][__name__]['handlers'].remove('log_file_handler')
         del config['handlers']['log_file_handler']
@@ -62,12 +64,15 @@ def start_logger(options):
         filename = config['handlers']['log_file_handler']['filename']
         if os.path.exists(filename):
             os.remove(filename)
-    # - set verbosity level
+    # - set 'quiet' mode if requested
     if options['panzer']['quiet']:
         verbosity_level = 'WARNING'
     else:
         verbosity_level = 'INFO'
     config['handlers']['console']['level'] = verbosity_level
+    # - set 'strict' mode if requested
+    if options['panzer']['strict']:
+        log.strict_mode = True
     # - send configuration to logger
     logging.config.dictConfig(config)
     log('DEBUG', 'panzer', pretty_start_log('panzer starts'))
@@ -77,6 +82,9 @@ def start_logger(options):
 def log(level_str, sender, message):
     """ send a log message """
     my_logger = logging.getLogger(__name__)
+    # set strict_mode to default value, if not already set
+    if not hasattr(log, "strict_mode"):
+        log.strict_mode = False
     # - lookup table for internal strings to pretty output strings
     pretty_levels = {
         'CRITICAL' : 'FATAL:   ',
@@ -103,6 +111,10 @@ def log(level_str, sender, message):
     output += sender_str
     output += message_str
     my_logger.log(level, output)
+    # - if 'strict' mode and error logged, raise exception to exit panzer
+    if log.strict_mode and (level_str == 'ERROR' or level_str == 'CRITICAL'):
+        log.strict_mode = False
+        raise error.StrictModeError
 
 def go_quiet():
     """ force logging level to be --quiet """

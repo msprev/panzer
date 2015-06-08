@@ -81,6 +81,7 @@ panzer has additional command line options. These are prefixed by triple dashes 
       -v, --version, ---version, ---v
                             show program's version number and exit
       ---quiet              only print errors and warnings
+      ---strict             exit on first error
       ---panzer-support PANZER_SUPPORT
                             .panzer directory
       ---debug DEBUG        filename to write .log and .json debug files
@@ -342,6 +343,7 @@ External processes have just as much information as panzer does. panzer sends it
                 'panzer_support':  const.DEFAULT_SUPPORT_DIR,
                 'debug':           str(),
                 'quiet':           False,
+                'strict':          False,
                 'stdin_temp_file': str()   # tempfile used to buffer stdin
             },
             'pandoc': {

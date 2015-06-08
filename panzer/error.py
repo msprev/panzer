@@ -28,3 +28,11 @@ class InternalError(PanzerError):
     """ function invoked with invalid parameters """
     pass
 
+class StrictModeError(PanzerError):
+    """
+    An error on `---strict` mode that causes panzer to exit
+    - On `--strict` mode: exception raised if any error of level 'ERROR' or
+    above is logged
+    - Without `--strict` mode: exception never raised
+    """
+    pass
