@@ -90,7 +90,9 @@ def parse_cli_options(options):
         # https://docs.python.org/dev/library/argparse.html#dest
         opt_name = str(opt).replace('_', '-')
         if opt_name not in const.PANDOC_OPT_PHASE:
-            print('ERROR:   do not know reader/writer type of command line option "--%s"' % opt_name)
+            print('ERROR:   '
+                  'do not know reader/writer type of command line option "--%s"'
+                  '---ignoring' % opt_name)
             continue
         for phase in const.PANDOC_OPT_PHASE[opt_name]:
             options['pandoc']['options'][phase][opt_name] = opt_known[opt]
@@ -98,9 +100,13 @@ def parse_cli_options(options):
     # 7. print error messages for unknown options
     for opt in unknown:
         if opt in const.PANDOC_BAD_OPTS:
-            print('ERROR:   pandoc command line option "%s" not supported by panzer' % opt)
+            print('ERROR:   '
+                  'pandoc command line option "%s" not supported by panzer'
+                  '---ignoring' % opt)
         else:
-            print('ERROR:   do not recognize command line option "%s"' % opt)
+            print('ERROR:   '
+                  'do not recognize command line option "%s"'
+                  '---ignoring' % opt)
     return options
 
 def panzer_parse():
