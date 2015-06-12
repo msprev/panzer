@@ -416,9 +416,9 @@ panzer accepts pandoc filters. panzer allows filters to behave in two new ways:
 
 The follow pandoc command line options cannot be used with panzer:
 
--   `--dump-args`, `-D`
+-   `--dump-args`
 -   `--ignore-args`
--   `--print-default-template`
+-   `--print-default-template`, `-D`
 -   `--print-default-data-file`
 -   `--version`, `-v`
 -   `--help`, `-h`

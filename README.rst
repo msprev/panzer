@@ -3,7 +3,7 @@ panzer user guide
 =================
 
 :Author: Mark Sprevak
-:Date:   8 June 2015
+:Date:   12 June 2015
 
 panzer
 ======
@@ -593,9 +593,9 @@ new ways:
 
 The follow pandoc command line options cannot be used with panzer:
 
--  ``--dump-args``, ``-D``
+-  ``--dump-args``
 -  ``--ignore-args``
--  ``--print-default-template``
+-  ``--print-default-template``, ``-D``
 -  ``--print-default-data-file``
 -  ``--version``, ``-v``
 -  ``--help``, ``-h``
