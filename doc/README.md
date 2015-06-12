@@ -2,7 +2,7 @@
 title:  "panzer user guide"
 author:
  - name: Mark Sprevak
-date:  8 June 2015
+date: 12 June 2015
 style: Plain
 ...
 
@@ -493,9 +493,9 @@ panzer accepts pandoc filters.
 
 The follow pandoc command line options cannot be used with panzer:
 
--   `--dump-args`, `-D`
+-   `--dump-args`
 -   `--ignore-args`
--   `--print-default-template`
+-   `--print-default-template`, `-D`
 -   `--print-default-data-file`
 -   `--version`, `-v`
 -   `--help`, `-h`
