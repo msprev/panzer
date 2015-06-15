@@ -274,21 +274,21 @@ def expand_style_hierarchy(stylelist, styledef):
 
 def build_cli_options(dic):
     """ return a list of command line options specified in the dictionary dic """
-    cli = list()
     # flags
-    cli += ['--%s' % opt for opt in dic
-            if dic[opt] == True]
-    cli.sort()
+    flags = ['--%s' % opt for opt in dic
+             if dic[opt] == True]
+    flags.sort()
     # key-values
-    cli += ['--%s=%s' % (opt, dic[opt]) for opt in dic
-            if type(dic[opt]) is str]
-    cli.sort()
+    keyvals = ['--%s=%s' % (opt, dic[opt]) for opt in dic
+               if type(dic[opt]) is str]
+    keyvals.sort()
     # repeated key-values
-    for opt in sorted(dic):
-        if type(dic[opt]) is list:
-            for val in dic[opt]:
-                cli += ['--%s=%s' % (opt, val[0])]
-    return cli
+    rkeys = [key for key in dic if type(dic[key]) is list]
+    rkeys.sort()
+    rkeyvals = list()
+    for key in rkeys:
+        rkeyvals += ['--%s=%s' % (key, val[0]) for val in dic[key]]
+    return flags + keyvals + rkeyvals
 
 def parse_commandline(metadata):
     """ return a dictiory of pandoc command line options by parsing
