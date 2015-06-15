@@ -275,14 +275,17 @@ def expand_style_hierarchy(stylelist, styledef):
 def build_cli_options(dic):
     """ return a list of command line options specified in the dictionary dic """
     cli = list()
-    for opt in dic:
-        if dic[opt] == None:
-            pass
-        elif dic[opt] == True:
-            cli += ['--%s' % opt]
-        elif type(dic[opt]) is str:
-            cli += ['--%s=%s' % (opt, dic[opt])]
-        elif type(dic[opt]) is list:
+    # flags
+    cli += ['--%s' % opt for opt in dic
+            if dic[opt] == True]
+    cli.sort()
+    # key-values
+    cli += ['--%s=%s' % (opt, dic[opt]) for opt in dic
+            if type(dic[opt]) is str]
+    cli.sort()
+    # repeated key-values
+    for opt in sorted(dic):
+        if type(dic[opt]) is list:
             for val in dic[opt]:
                 cli += ['--%s=%s' % (opt, val[0])]
     return cli
