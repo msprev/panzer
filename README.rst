@@ -3,7 +3,7 @@ panzer user guide
 =================
 
 :Author: Mark Sprevak
-:Date:   12 June 2015
+:Date:   15 June 2015
 
 panzer
 ======
@@ -506,21 +506,16 @@ should probably be using a filter).
                'pdf_output': False,       # if pandoc will write a .pdf
                'read':       str(),       # reader
                'write':      str(),       # writer
-               'template':   str(),
-               'filter':     list(),
                'options'    : { 'r': dict(), 'w': dict() }
            }
        }
 
-   ``filter`` and ``template`` list filters and template set via the
-   command line (via ``--filter`` and ``--template`` options).
-
-   ``options`` contains the remaining command line options with which
-   pandoc is called. It consists of two separate dictionaries. The
-   dictionary under the ``'r'`` key contains all pandoc options
-   pertaining to reading the source documents to the AST. The dictionary
-   under the ``'w'`` key contains all pandoc options pertaining to
-   writing the AST to the output document.
+   ``options`` contains the command line options with which pandoc is
+   called. It consists of two separate dictionaries. The dictionary
+   under the ``'r'`` key contains all pandoc options pertaining to
+   reading the source documents to the AST. The dictionary under the
+   ``'w'`` key contains all pandoc options pertaining to writing the AST
+   to the output document.
 
 Scripts read the json message above by deserialising json input on
 stdin.
