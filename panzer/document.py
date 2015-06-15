@@ -274,6 +274,14 @@ class Document(object):
         # - delete old 'panzer_reserved' key
         if 'panzer_reserved' in metadata:
             del metadata['panzer_reserved']
+        # - create a decrapified version of self.options
+        # - remove stuff only of internal use to panzer
+        options = dict()
+        options['panzer'] = dict(self.options['panzer'])
+        options['pandoc'] = dict(self.options['pandoc'])
+        del options['pandoc']['template']
+        del options['pandoc']['filter']
+        del options['pandoc']['mutable']
         # - build new json_message
         data = [{'metadata':    metadata,
                  'template':    self.template,
@@ -281,7 +289,7 @@ class Document(object):
                  'stylefull':   self.stylefull,
                  'styledef':    self.styledef,
                  'runlist':     self.runlist,
-                 'options':     self.options}]
+                 'options':     options}]
         json_message = json.dumps(data)
         # - inject into metadata
         content = {"json_message": {
