@@ -31,6 +31,7 @@ def main():
     doc = document.Document()
     try:
         doc.options = cli.parse_cli_options(doc.options)
+        old_reader_opts = dict(doc.options['pandoc']['options']['r'])
         info.time_stamp('cli options parsed')
         info.start_logger(doc.options)
         info.time_stamp('logger started')
@@ -42,10 +43,9 @@ def main():
         info.time_stamp('document loaded')
         doc.populate(ast, global_styledef, local_styledef)
         doc.transform()
-        # check if `commandline` contains any new reader options
-        old_reader_opts = dict(doc.options['pandoc']['options']['r'])
-        doc.apply_commandline()
+        doc.lock_commandline()
         new_reader_opts = doc.options['pandoc']['options']['r']
+        # check if `commandline` contains any new reader options
         if new_reader_opts != old_reader_opts:
             # re-read input documents with new reader settings
             opts =  meta.build_cli_options(new_reader_opts)

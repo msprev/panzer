@@ -15,37 +15,11 @@ def update_metadata(old, new):
         pass
     except error.WrongType as err:
         info.log('WARNING', 'panzer', err)
-    # 2. Update with values in 'commandline' field
-    old = update_commandline(old, new)
-    # 3. Update with values in fields for additive lists
+    # 2. Update with values in fields for additive lists
     old = update_additive_lists(old, new)
-    # 4. Update 'template' field
+    # 3. Update 'template' field
     if 'template' in new:
         old['template'] = new['template']
-    return old
-
-def update_commandline(old, new):
-    """ return `old` updated with info from `commandline` in `new` """
-    try:
-        try:
-            new_commandline = get_content(new, 'commandline', 'MetaMap')
-        except error.MissingField:
-            # field not in incoming metadata, quit
-            return old
-        try:
-            old_commandline = get_content(old, 'commandline', 'MetaMap')
-        except error.MissingField:
-            # field not in old metadata, start with an empty dict
-            old_commandline = dict()
-    except error.WrongType as err:
-        # wrong type of value under field, quit
-        info.log('WARNING', 'panzer', err)
-        return old
-    old_commandline.update(new_commandline)
-    if old_commandline == dict():
-        # if still empty, don't bother adding it
-        return old
-    set_content(old, 'commandline', old_commandline, 'MetaMap')
     return old
 
 def update_additive_lists(old, new):
@@ -327,14 +301,14 @@ def parse_commandline(metadata):
         val = None
         val_t = get_type(content, key)
         val_c = get_content(content, key)
-        # if value is 'false', ignore
+        # if value is 'false', set OPTION: False
         if val_c == False:
-            continue
-        # if value is 'true', add --OPTION
+            val = False
+        # if value is 'true', set OPTION: True
         elif val_t == 'MetaBool' and val_c == True \
             and key not in const.PANDOC_OPT_ADDITIVE:
             val = True
-        # if value type is inline code, add --OPTION=VAL
+        # if value type is inline code, set OPTION: VAL
         elif val_t == 'MetaInlines':
             if len(val_c) != 1 or val_c[0][const.T] != 'Code':
                 info.log('ERROR', 'panzer',
@@ -345,7 +319,7 @@ def parse_commandline(metadata):
                 val = [get_list_or_inline(content, key)]
             else:
                 val = get_list_or_inline(content, key)[0]
-        # if value type is list of inline codes, add repeated --OPTION=VAL
+        # if value type is list of inline codes, set OPTION: [VALS]
         elif val_t == 'MetaList' and key in const.PANDOC_OPT_ADDITIVE:
             errs = False
             for item in val_c:
@@ -370,29 +344,19 @@ def parse_commandline(metadata):
             commandline[phase][key] = val
     return commandline
 
-def update_pandoc_options(old, new):
+def update_pandoc_options(old, new, mutable):
     """ return dictionary of pandoc command line options 'old' updated with 'new'
     """
     for p in ['r', 'w']:
-        for key in old[p]:
-            if key in new[p]:
-                # if not already set in old, then override with new
-                if old[p][key] == None or old[p][key] == False:
-                    old[p][key] = new[p][key]
-                # if already set and a list, then add new at end of list
-                elif type(old[p][key]) is list:
-                    old[p][key].extend(new[p][key])
-                # if already set and same as new, then just continue quietly
-                elif old[p][key] == new[p][key]:
-                    continue
-                else:
-                # warn if new being overriden by old
-                    if type(old[p][key]) is bool:
-                        message = "--%s" % key
-                    elif type(old[p][key]) is str:
-                        message = "--%s=%s" % (key, old[p][key])
-                    info.log('WARNING', 'panzer',
-                             'command line option "%s" overriding setting '
-                             'in "commandline" metadata' % message)
+        for key in new[p]:
+            # if not mutable commandline line option, then skip it
+            if not mutable[p][key]:
+                continue
+            # if already set and a list, then add new at end of list
+            elif key in old[p] and type(old[p][key]) is list:
+                old[p][key].extend(new[p][key])
+            # else, override old with new
+            else:
+                old[p][key] = new[p][key]
     return old
 

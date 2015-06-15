@@ -52,7 +52,8 @@ class Document(object):
                 'write'      : str(),
                 'template'   : str(),
                 'filter'     : list(),
-                'options'    : { 'r': dict(), 'w': dict() }
+                'options'    : { 'r': dict(), 'w': dict() },
+                'mutable'    : { 'r': dict(), 'w': dict() }
             }
         }
 
@@ -238,20 +239,29 @@ class Document(object):
             info.log('INFO', 'panzer', line)
         self.runlist = runlist
 
-    def apply_commandline(self):
+    def apply_commandline(self, metadata):
         """
         1. parse `self.ast`'s `commandline` field
         2. apply result to update self.options['pandoc']['options']
         (the result are the options used for calling pandoc)
         """
-        metadata = self.get_metadata()
         if 'commandline' not in metadata:
             return
         commandline = meta.parse_commandline(metadata)
         if not commandline:
             return
         self.options['pandoc']['options'] = \
-            meta.update_pandoc_options(self.options['pandoc']['options'], commandline)
+            meta.update_pandoc_options(self.options['pandoc']['options'],
+                                       commandline,
+                                       self.options['pandoc']['mutable'])
+
+    def lock_commandline(self):
+        """
+        make the commandline line options all immutable
+        """
+        for phase in self.options['pandoc']['mutable']:
+            for opt in self.options['pandoc']['mutable'][phase]:
+                self.options['pandoc']['mutable'][phase][opt] = False
 
     def json_message(self):
         """
@@ -318,18 +328,16 @@ class Document(object):
         for style in self.stylefull:
             all_s = meta.get_nested_content(self.styledef, [style, 'all'], 'MetaMap')
             new_metadata = meta.update_metadata(new_metadata, all_s)
+            self.apply_commandline(all_s)
             cur_s = meta.get_nested_content(self.styledef, [style, writer], 'MetaMap')
             new_metadata = meta.update_metadata(new_metadata, cur_s)
+            self.apply_commandline(cur_s)
         # - add in document metadata in document
         indoc_data = self.get_metadata()
         # -- add items from additive fields in indoc metadata
         new_metadata = meta.update_additive_lists(new_metadata, indoc_data)
         # -- add items from indoc `commandline` field
-        new_metadata = meta.update_commandline(new_metadata, indoc_data)
-        # -- delete those fields
-        indoc_data = {key: indoc_data[key]
-                      for key in indoc_data
-                      if key not in const.RUNLIST_KIND and key != 'commandline'}
+        self.apply_commandline(indoc_data)
         # -- add all other (non-additive) fields in
         new_metadata.update(indoc_data)
         # 2. Apply kill rules to trim run lists

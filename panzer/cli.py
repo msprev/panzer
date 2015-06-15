@@ -96,6 +96,16 @@ def parse_cli_options(options):
             continue
         for phase in const.PANDOC_OPT_PHASE[opt_name]:
             options['pandoc']['options'][phase][opt_name] = opt_known[opt]
+            # cli option is mutable by `commandline` metadata if
+            # - not set ( == None or == False)
+            # - of type list
+            if opt_known[opt] == None \
+                    or opt_known[opt] == False  \
+                    or type(opt_known[opt]) is list:
+                options['pandoc']['mutable'][phase][opt_name] = True
+            else:
+                options['pandoc']['mutable'][phase][opt_name] = False
+
     options['pandoc'] = set_quirky_dependencies(options['pandoc'])
     # 7. print error messages for unknown options
     for opt in unknown:
