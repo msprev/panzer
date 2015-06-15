@@ -247,16 +247,19 @@ def expand_style_hierarchy(stylelist, styledef):
     return expanded_list
 
 def build_cli_options(dic):
-    """ return a list of command line options specified in the dictionary dic """
-    # flags
+    """
+    return a sorted list of command line options specified in the options
+    dictionary `dic`
+    """
+    # - flags
     flags = ['--%s' % opt for opt in dic
              if dic[opt] == True]
     flags.sort()
-    # key-values
+    # - key-values
     keyvals = ['--%s=%s' % (opt, dic[opt]) for opt in dic
                if type(dic[opt]) is str]
     keyvals.sort()
-    # repeated key-values
+    # - repeated key-values
     rkeys = [key for key in dic if type(dic[key]) is list]
     rkeys.sort()
     rkeyvals = list()
@@ -302,7 +305,7 @@ def parse_commandline(metadata):
         val_t = get_type(content, key)
         val_c = get_content(content, key)
         # if value is 'false', set OPTION: False
-        if val_c == False:
+        if val_t == 'MetaBool' and val_c == False:
             val = False
         # if value is 'true', set OPTION: True
         elif val_t == 'MetaBool' and val_c == True \
@@ -345,7 +348,9 @@ def parse_commandline(metadata):
     return commandline
 
 def update_pandoc_options(old, new, mutable):
-    """ return dictionary of pandoc command line options 'old' updated with 'new'
+    """
+    return dictionary of pandoc command line options 'old' updated with 'new'
+    only options marked as mutable can be changed
     """
     for p in ['r', 'w']:
         for key in new[p]:

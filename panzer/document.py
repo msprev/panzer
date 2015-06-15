@@ -52,8 +52,8 @@ class Document(object):
                 'write'      : str(),
                 'template'   : str(),
                 'filter'     : list(),
-                'options'    : { 'r': dict(), 'w': dict() },
-                'mutable'    : { 'r': dict(), 'w': dict() }
+                'options'    : {'r': dict(), 'w': dict()},
+                'mutable'    : {'r': dict(), 'w': dict()}
             }
         }
 
@@ -344,10 +344,10 @@ class Document(object):
         indoc_data = self.get_metadata()
         # -- add items from additive fields in indoc metadata
         new_metadata = meta.update_additive_lists(new_metadata, indoc_data)
-        # -- add items from indoc `commandline` field
-        self.apply_commandline(indoc_data)
         # -- add all other (non-additive) fields in
         new_metadata.update(indoc_data)
+        # -- apply items from indoc `commandline` field
+        self.apply_commandline(indoc_data)
         # 2. Apply kill rules to trim run lists
         for field in const.RUNLIST_KIND:
             try:
