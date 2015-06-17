@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 from setuptools import setup
 from panzer.version import VERSION
 
@@ -7,7 +9,7 @@ with open('README.rst') as file:
 setup(name='panzer',
       version=VERSION,
       description='pandoc with styles',
-      long_description=readme_text,
+      long_description=readme_text.encode('utf8'),
       url='https://github.com/msprev/panzer',
       author='Mark Sprevak',
       author_email='mark.sprevak@ed.ac.uk',
