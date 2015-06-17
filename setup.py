@@ -3,7 +3,7 @@
 from setuptools import setup
 from panzer.version import VERSION
 
-with open('README.rst') as file:
+with open('README.rst', 'r', encoding='utf8') as file:
     readme_text = file.read()
 
 setup(name='panzer',
