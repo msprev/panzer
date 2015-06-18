@@ -357,10 +357,18 @@ def update_pandoc_options(old, new, mutable):
             # if not mutable commandline line option, then skip it
             if not mutable[p][key]:
                 continue
-            # if already set and a list, then add new at end of list
+            # if 'False', reset old[p][key] to default
+            elif new[p][key] == False:
+                if type(old[p][key]) is list:
+                    old[p][key] = list()
+                elif type(old[p][key]) is str:
+                    old[p][key] = None
+                elif type(old[p][key]) is bool:
+                    old[p][key] = False
+            # if list, extend old list with new
             elif key in old[p] and type(old[p][key]) is list:
                 old[p][key].extend(new[p][key])
-            # else, override old with new
+            # otherwise, override old with new
             else:
                 old[p][key] = new[p][key]
     return old
