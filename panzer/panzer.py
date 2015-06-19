@@ -4,7 +4,7 @@
 for more info: <https://github.com/msprev/panzer>
 
 Author    : Mark Sprevak <mark.sprevak@ed.ac.uk>
-Copyright : Copyright 2014, Mark Sprevak
+Copyright : Copyright 2015, Mark Sprevak
 License   : BSD3
 """
 
