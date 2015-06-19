@@ -85,6 +85,7 @@ def load_styledef(path, options):
     for f in filenames:
         with open(f, 'r', encoding=const.ENCODING) as styles_file:
             data += styles_file.readlines()
+            data += ['\n']
     if data == []:
         return dict()
     # - top and tail with metadata markings
