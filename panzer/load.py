@@ -78,7 +78,7 @@ def load_styledef(path, options):
                      for f in os.listdir(styles_dir)
                      if f.endswith('.yaml')
                      or f.endswith('.yml')]
-    # - read .panzer/style.yaml -- legacy option
+    # - read .panzer/styles.yaml -- legacy option
     elif os.path.exists(os.path.join(path, 'styles.yaml')):
         filenames = [os.path.join(path, 'styles.yaml')]
     data = list()

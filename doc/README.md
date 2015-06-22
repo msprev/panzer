@@ -219,6 +219,9 @@ Styles may be defined:
 -   'Locally' in `.yaml` files in `./styles/`)
 -   'In document' inside a `styledef` field in the document's yaml metadata block
 
+If no `.panzer/styles/` directory is found, panzer will look for global style definitions in `.panzer/styles.yaml` if it exists.
+If no `./styles/` directory is found, panzer will look for local style definitions in `./styles.yaml` if it exists.
+
 Overriding among style settings is determined by the following rules:
 
   \#   overriding rule
