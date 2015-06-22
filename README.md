@@ -26,6 +26,8 @@ Styles are defined in a `yaml` file ([example](https://github.com/msprev/dot-pan
 A style can also be defined inside the document’s metadata block:
 
 ``` yaml
+---
+style: Notes
 styledef:
     Notes:
         all:
@@ -39,6 +41,7 @@ styledef:
                 columns: "`75`"
             filter:
                 - run: deemph.py
+...
 ```
 
 Style settings can be overridden by adding the appropriate field outside a style definition in the document’s metadata block:
