@@ -3,7 +3,7 @@ panzer user guide
 =================
 
 :Author: Mark Sprevak
-:Date:   15 June 2015
+:Date:   22 June 2015
 
 panzer
 ======
@@ -15,14 +15,18 @@ this document be an article/CV/notes/letter’).
 
 You can think of styles as a level up in abstraction from a pandoc
 template. Styles are combinations of templates, metadata settings,
-pandoc command line options, and instructions to run filters,
-pre/postprocessors. These settings can be customised on a per writer and
+pandoc command line options, and instructions to run filters, scripts
+and postprocessors. These settings can be customised on a per writer and
 per document basis. Styles can be combined and can bear inheritance
 relations to each other. panzer exposes a large amount of structured
 information to the external processes called by styles, allowing those
 processes to be both more powerful and themselves controllable via
-metadata. Styles simplify makefiles, bundling everything related to the
-look of the document in one place.
+metadata (and hence also by styles). Styles simplify makefiles, bundling
+everything related to the look of the document in one place.
+
+You can think of panzer as an exoskeleton that sits around pandoc and
+twiddles the right knobs regarding pandoc’s configuration based on a
+single setting in your document, ``style``.
 
 To use a style, add a field with your style name to the yaml metadata
 block of your document:
@@ -63,15 +67,18 @@ A style can also be defined inside the document’s metadata block:
                 filter:
                     - run: deemph.py
 
-Style settings can be overridden inside a document by adding the
-appropriate field outside a style definition:
+Style settings can be overridden by adding the appropriate field outside
+a style definition in the document’s metadata block:
 
 .. code:: yaml
 
+    ---
+    style: Letter
     filter:
         - run: deemph.py
     commandline:
         - latex-engine: "`xelatex`"
+    ...
 
 Installation
 ============
@@ -402,7 +409,8 @@ line option (e.g. ``standalone``).
             - "`file3.txt`"
 
 Repeated key-value options in ``comandline`` are added after any
-provided from the command line.
+provided from the command line. Overriding styles append to repeated
+key-value lists of the styles that they override.
 
 ``false`` plays a special role. ``false`` means that the pandoc command
 line option with the field’s name, if set, should be unset. ``false``
@@ -506,7 +514,7 @@ should probably be using a filter).
                'pdf_output': False,       # if pandoc will write a .pdf
                'read':       str(),       # reader
                'write':      str(),       # writer
-               'options'    : { 'r': dict(), 'w': dict() }
+               'options':    {'r': dict(), 'w': dict()}
            }
        }
 
