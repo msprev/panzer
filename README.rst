@@ -3,7 +3,7 @@ panzer user guide
 =================
 
 :Author: Mark Sprevak
-:Date:   22 June 2015
+:Date:   2 July 2015
 
 panzer
 ======
@@ -25,8 +25,7 @@ metadata (and hence also by styles). Styles simplify makefiles, bundling
 everything related to the look of the document in one place.
 
 You can think of panzer as an exoskeleton that sits around pandoc and
-twiddles the right knobs regarding pandoc’s configuration based on a
-single setting in your document, ``style``.
+configures pandoc based on a single choice in your document, ``style``.
 
 To use a style, add a field with your style name to the yaml metadata
 block of your document:

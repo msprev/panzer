@@ -2,7 +2,7 @@
 title:  "panzer user guide"
 author:
  - name: Mark Sprevak
-date: 22 June 2015
+date: 2 July 2015
 style: Plain
 ...
 
@@ -18,7 +18,7 @@ You can think of styles as a level up in abstraction from a pandoc template.
     panzer exposes a large amount of structured information to the external processes called by styles, allowing those processes to be both more powerful and themselves controllable via metadata (and hence also by styles).
     Styles simplify makefiles, bundling everything related to the look of the document in one place.
 
-You can think of panzer as an exoskeleton that sits around pandoc and twiddles the right knobs regarding pandoc's configuration based on a single setting in your document, `style`.
+You can think of panzer as an exoskeleton that sits around pandoc and configures pandoc based on a single choice in your document, `style`.
 
 To use a style, add a field with your style name to the yaml metadata block of your document:
 
