@@ -3,7 +3,7 @@ panzer user guide
 =================
 
 :Author: Mark Sprevak
-:Date:   2 July 2015
+:Date:   21 July 2015
 
 panzer
 ======
@@ -644,6 +644,15 @@ Similar
 
 Release notes
 =============
+
+-  1.0 (21 July 2015)
+
+   -  first release!
+   -  updated documentation
+   -  new: ``---strict`` option to address
+      https://github.com/msprev/panzer/issues/10
+   -  refactored ``commandline`` implementation
+   -  multiple fixes
 
 -  1.0b2 (23 May 2015):
 

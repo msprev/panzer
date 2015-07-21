@@ -464,6 +464,12 @@ Similar
 Release notes
 =============
 
+-   1.0 (21 July 2015)
+    -   first release!
+    -   updated documentation
+    -   new: `---strict` option to address https://github.com/msprev/panzer/issues/10
+    -   refactored `commandline` implementation
+    -   multiple fixes
 -   1.0b2 (23 May 2015):
     -   new: `commandline` - set arbitrary pandoc command line options via metadata
 -   1.0b1 (14 May 2015):

@@ -2,7 +2,7 @@
 title:  "panzer user guide"
 author:
  - name: Mark Sprevak
-date: 2 July 2015
+date: 21 July 2015
 style: Plain
 ...
 
@@ -539,6 +539,13 @@ Pull requests welcome:
 * <https://github.com/balachia/panopy>
 
 # Release notes
+
+-   1.0 (21 July 2015)
+    -   first release!
+    -   updated documentation
+    -   new: `---strict` option to address https://github.com/msprev/panzer/issues/10
+    -   refactored `commandline` implementation
+    -   multiple fixes
 
 -   1.0b2 (23 May 2015):
     -   new: `commandline` - set arbitrary pandoc command line options via metadata
