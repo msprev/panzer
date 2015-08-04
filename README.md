@@ -21,13 +21,12 @@ style:
     - BoldHeadings
 ```
 
-Styles are defined in a `yaml` file ([example](https://github.com/msprev/dot-panzer/blob/master/styles/styles.yaml)). The style definition file, plus associated executables, are placed in the `.panzer` directory in the user’s home folder ([example](https://github.com/msprev/dot-panzer)).
+Styles are defined in a yaml file ([example](https://github.com/msprev/dot-panzer/blob/master/styles/styles.yaml)). The style definition file, plus associated executables, are placed in the `.panzer` directory in the user’s home folder ([example](https://github.com/msprev/dot-panzer)).
 
 A style can also be defined inside the document’s metadata block:
 
 ``` yaml
 ---
-style: Notes
 styledef:
     Notes:
         all:
@@ -48,7 +47,6 @@ Style settings can be overridden by adding the appropriate field outside a style
 
 ``` yaml
 ---
-style: Letter
 filter:
     - run: deemph.py
 commandline:
@@ -193,7 +191,7 @@ Overriding among style settings is determined by the following rules:
 | 3   | Writer-specific settings override settings for `all`               |
 | 4   | In a list, later styles override earlier ones                      |
 | 5   | Children override parents                                          |
-| 5   | Fields set outside a style definition override any style’s setting |
+| 6   | Fields set outside a style definition override any style’s setting |
 
 For fields that pertain to scripts/filters, overriding is *additive*; for other fields, it is *non-additive*:
 
@@ -464,12 +462,19 @@ Similar
 Release notes
 =============
 
--   1.0 (21 July 2015)
-    -   first release!
-    -   updated documentation
-    -   new: `---strict` option to address https://github.com/msprev/panzer/issues/10
-    -   refactored `commandline` implementation
-    -   multiple fixes
+-   1.0 (21 July 2015):
+    -   new: `---strict` panzer command line option: [\#10](https://github.com/msprev/panzer/issues/10)
+    -   new: `commandline` allows repeated options using lists: [\#3](https://github.com/msprev/panzer/issues/3)
+    -   new: `commandline` lists behave as additive in style inheritance: [\#6](https://github.com/msprev/panzer/issues/6)
+    -   new: support multiple yaml style definition files: [\#4](https://github.com/msprev/panzer/issues/4)
+    -   new: support local yaml style definition files: [\#4](https://github.com/msprev/panzer/issues/4)
+    -   new: simplify format for panzer’s json message: [ce2a12](https://github.com/msprev/panzer/commit/f3a6cc28b78957827cb572e254977c2344ce2a12)
+    -   new: reproduce pandoc’s reader depending on writer settings: [\#1](https://github.com/msprev/panzer/issues/1), [\#7](https://github.com/msprev/panzer/issues/7)
+    -   fix: refactor `commandline` implementation: [\#1](https://github.com/msprev/panzer/issues/1)
+    -   fix: improve documentation: [\#2](https://github.com/msprev/panzer/issues/2)
+    -   fix: unicode error in `setup.py`: [\#12](https://github.com/msprev/panzer/issues/12)
+    -   fix: support yaml style definition files without closing empty line: [\#13](https://github.com/msprev/panzer/issues/13)
+    -   fix: add `.gitignore` files to repository: [PR\#1](https://github.com/msprev/panzer/pull/9)
 -   1.0b2 (23 May 2015):
     -   new: `commandline` - set arbitrary pandoc command line options via metadata
 -   1.0b1 (14 May 2015):
