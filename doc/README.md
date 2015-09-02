@@ -63,6 +63,7 @@ Style settings can be overridden by adding the appropriate field outside a style
 ``` {.yaml}
 ---
 style: Notes
+numbersections: true
 filter:
     - run: smallcaps.py
 commandline:

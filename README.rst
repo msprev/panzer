@@ -76,6 +76,7 @@ a style definition in the document’s metadata block:
 
     ---
     style: Notes
+    numbersections: true
     filter:
         - run: smallcaps.py
     commandline:
