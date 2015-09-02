@@ -2,7 +2,7 @@
 title:  "panzer user guide"
 author:
  - name: Mark Sprevak
-date: 4 August 2015
+date: 2 September 2015
 style: Plain
 ...
 
@@ -18,7 +18,7 @@ You can think of styles as a level up in abstraction from a pandoc template.
     panzer exposes a large amount of structured information to the external processes called by styles, allowing those processes to be both more powerful and themselves controllable via metadata (and hence also by styles).
     Styles simplify makefiles, bundling everything related to the look of the document in one place.
 
-You can think of panzer as an exoskeleton that sits around pandoc and configures pandoc based on a single choice in your document, `style`.
+You can think of panzer as an exoskeleton that sits around pandoc and configures pandoc based on a single choice in your document.
 
 To use a style, add a field with your style name to the yaml metadata block of your document:
 
@@ -41,6 +41,7 @@ A style can also be defined inside the document's metadata block:
 
 ``` {.yaml}
 ---
+style: Notes
 styledef:
     Notes:
         all:
@@ -61,8 +62,9 @@ Style settings can be overridden by adding the appropriate field outside a style
 
 ``` {.yaml}
 ---
+style: Notes
 filter:
-    - run: deemph.py
+    - run: smallcaps.py
 commandline:
     - latex-engine: "`xelatex`"
 ...
@@ -71,25 +73,20 @@ commandline:
 # Installation
 
 ```
-    git clone https://github.com/msprev/panzer
-    cd panzer
-    python3 setup.py install
+pip3 install git+https://github.com/msprev/panzer
 ```
 
 *Requirements:*
 
 * [pandoc][]
 * [Python 3][]
-* [setuptools for Python3][] (included in some Python 3 distributions)
+* [pip][] (included in most Python 3 distributions)
 
-*To upgrade an existing installation:*
+*To upgrade existing installation:*
 
 ```
-    cd /path/to/panzer/directory/cloned
-    git pull
-    python3 setup.py install --force
+pip3 install --upgrade git+https://github.com/msprev/panzer
 ```
-
 
 # Use
 
@@ -182,6 +179,10 @@ Notes:
             fontsize: 12pt
         commandline:
             no-wrap: true
+        read:
+            markdown:
+                multiline_tables: true
+                table_captions: false
         filter:
             - run: deemph.py
         postflight:
@@ -315,7 +316,7 @@ Within each directory, each executable may have a named subdirectory:
         latexmk/
             latexmk.py
 
-## Setting pandoc command line options
+## Pandoc command line options
 
 Arbitrary pandoc command line options can be set using metadata via `commandline`.
     `commandline` can appear outside a style definition and in a document's metadata block,
@@ -454,7 +455,7 @@ panzer_reserved:
         ```
 ```
 
-this is visible to filters as the following json structure:
+this is visible to filters as the following json entity:
 
       "panzer_reserved": {
         "t": "MetaMap",
@@ -464,7 +465,13 @@ this is visible to filters as the following json structure:
             "c": [
               {
                 "t": "CodeBlock",
-                "c": [ [ "", [ "json" ], [] ], "JSON_MESSAGE" ] } ] } } }
+                "c": [ [ "", [ "json" ], [] ], "JSON_MESSAGE" ]
+              }
+            ]
+          }
+        }
+      }
+
 
 # Receiving messages from external processes
 
@@ -506,9 +513,6 @@ The follow pandoc command line options cannot be used with panzer:
 -   `--version`, `-v`
 -   `--help`, `-h`
 
-
-# Reserved fields
-
 The following metadata fields are reserved for use by panzer:
 
 * `styledef`
@@ -521,8 +525,9 @@ The following metadata fields are reserved for use by panzer:
 * `cleanup`
 * `commandline`
 * `panzer_reserved`
+* `read`
 
-The pandoc writer name `all` is also occupied.
+The writer name `all` is also occupied.
 
 # Known issues
 
@@ -531,10 +536,17 @@ Pull requests welcome:
 * Slower than I would like (calls to subprocess slow in Python)
 * Calls to subprocesses (scripts, filters, etc.) block ui
 * No Python 2 support
+* [Possible issue under Windows](https://github.com/msprev/panzer/pull/9), so far reported by only one user.
+    A leading dot plus slash is required on filter filenames.
+    Rather than having `- run: foo.bar`, on Windows
+    one needs to have `- run: ./foo.bar`.
+    More information on this is welcome.
+    I am happy to fix compatibility problems under Windows.
 
 # Similar
 
 * <https://github.com/balachia/panopy>
+* <https://github.com/phyllisstein/pandown>
 
 # Release notes
 
@@ -566,3 +578,5 @@ Pull requests welcome:
  [example-yaml]:  https://github.com/msprev/dot-panzer/blob/master/styles/styles.yaml
  [example-dot-panzer]: https://github.com/msprev/dot-panzer
  [setuptools for Python3]: http://stackoverflow.com/questions/14426491/python-3-importerror-no-module-named-setuptools
+ [pip]: https://pip.pypa.io/en/stable/index.html
+
