@@ -143,10 +143,6 @@ Notes:
             fontsize: 12pt
         commandline:
             no-wrap: true
-        read:
-            markdown:
-                multiline_tables: true
-                table_captions: false
         filter:
             - run: deemph.py
         postflight:

@@ -2,7 +2,7 @@
 title:  "panzer user guide"
 author:
  - name: Mark Sprevak
-date: 2 September 2015
+date: 4 September 2015
 style: Plain
 ...
 
@@ -180,10 +180,6 @@ Notes:
             fontsize: 12pt
         commandline:
             no-wrap: true
-        read:
-            markdown:
-                multiline_tables: true
-                table_captions: false
         filter:
             - run: deemph.py
         postflight:

@@ -3,7 +3,7 @@ panzer user guide
 =================
 
 :Author: Mark Sprevak
-:Date:   2 September 2015
+:Date:   4 September 2015
 
 panzer
 ======
@@ -214,10 +214,6 @@ Example:
                 fontsize: 12pt
             commandline:
                 no-wrap: true
-            read:
-                markdown:
-                    multiline_tables: true
-                    table_captions: false
             filter:
                 - run: deemph.py
             postflight:
