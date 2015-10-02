@@ -44,7 +44,7 @@ def check_support_directory(options):
                  'default panzer support directory "%s" not found'
                  % const.DEFAULT_SUPPORT_DIR)
         info.log('WARNING', 'panzer',
-                 'create blank support directory "%s"?'
+                 'create empty support directory "%s"?'
                  % const.DEFAULT_SUPPORT_DIR)
         input("    Press Enter to continue...")
         create_default_support_dir()
@@ -52,20 +52,28 @@ def check_support_directory(options):
         os.path.join(options['panzer']['panzer_support'], 'shared')
 
 def create_default_support_dir():
-    """ create a blank panzer support directory """
+    """ create a empty panzer support directory """
     # - create .panzer
     os.mkdir(const.DEFAULT_SUPPORT_DIR)
     info.log('INFO', 'panzer', 'created "%s"' % const.DEFAULT_SUPPORT_DIR)
-    # - create styles.yaml
-    style_definitions = os.path.join(const.DEFAULT_SUPPORT_DIR, 'styles.yaml')
-    info.log('INFO', 'panzer', 'created blank "styles.yaml"')
-    open(style_definitions, 'w').close()
     # - create subdirectories of .panzer
-    subdirs = const.RUNLIST_KIND + ['template']
+    subdirs = ['preflight',
+               'filter',
+               'postprocess',
+               'postflight',
+               'cleanup',
+               'template',
+               'styles']
     for subdir in subdirs:
         target = os.path.join(const.DEFAULT_SUPPORT_DIR, subdir)
         os.mkdir(target)
         info.log('INFO', 'panzer', 'created "%s"' % target)
+    # - create styles.yaml
+    style_definitions = os.path.join(const.DEFAULT_SUPPORT_DIR,
+                                     'styles',
+                                     'styles.yaml')
+    open(style_definitions, 'w').close()
+    info.log('INFO', 'panzer', 'created empty "styles/styles.yaml"')
 
 def resolve_path(filename, kind, options):
     """ return path to filename of kind field """
