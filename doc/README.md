@@ -2,7 +2,7 @@
 title:  "panzer user guide"
 author:
  - name: Mark Sprevak
-date: 4 September 2015
+date: 2 October 2015
 style: Plain
 ...
 
@@ -88,6 +88,21 @@ pip3 install git+https://github.com/msprev/panzer
 ```
 pip3 install --upgrade git+https://github.com/msprev/panzer
 ```
+
+## Troubleshooting
+
+An [issue][pip-issue] has been reported using pip to install on Windows.
+    If the method above does not work, use the alternative install method below.
+
+        git clone https://github.com/msprev/panzer
+        cd panzer
+        python3 setup.py install
+
+*To upgrade existing installation:*
+
+        cd /path/to/panzer/directory/cloned
+        git pull
+        python3 setup.py install --force
 
 # Use
 
@@ -576,4 +591,5 @@ Pull requests welcome:
  [example-dot-panzer]: https://github.com/msprev/dot-panzer
  [setuptools for Python3]: http://stackoverflow.com/questions/14426491/python-3-importerror-no-module-named-setuptools
  [pip]: https://pip.pypa.io/en/stable/index.html
+ [pip-issue]: https://github.com/msprev/panzer/issues/20
 

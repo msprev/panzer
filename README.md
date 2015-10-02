@@ -72,6 +72,21 @@ Installation
 
     pip3 install --upgrade git+https://github.com/msprev/panzer
 
+Troubleshooting
+---------------
+
+An [issue](https://github.com/msprev/panzer/issues/20) has been reported using pip to install on Windows. If the method above does not work, use the alternative install method below.
+
+        git clone https://github.com/msprev/panzer
+        cd panzer
+        python3 setup.py install
+
+*To upgrade existing installation:*
+
+        cd /path/to/panzer/directory/cloned
+        git pull
+        python3 setup.py install --force
+
 Use
 ===
 
