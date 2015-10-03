@@ -263,17 +263,22 @@ class Document(object):
             for opt in self.options['pandoc']['mutable'][phase]:
                 self.options['pandoc']['mutable'][phase][opt] = False
 
-    def json_message(self):
+    def json_message(self, clear=False):
         """
         create json message to pass to executables. This method does 2 things:
 
         1. injects json message into `panzer_reserved` field of `self.ast`
         2. returns json message as a string
+
+        if 'clear' is set, then embedded json message is removeed and None returned
         """
         metadata = self.get_metadata()
         # - delete old 'panzer_reserved' key
         if 'panzer_reserved' in metadata:
             del metadata['panzer_reserved']
+        if clear:
+            self.set_metadata(metadata)
+            return None
         # - create a decrapified version of self.options
         # - remove stuff only of internal use to panzer
         options = dict()
@@ -497,11 +502,13 @@ class Document(object):
                 entry['status'] = const.FAILED
                 raise
             finally:
+                # remove embedded json message
                 info.log_stderr(stderr, filename)
             # 4. Update document's data with output from commands
             if kind == 'filter':
                 try:
                     self.ast = json.loads(out_pipe)
+                    self.json_message(clear=True)
                 except ValueError:
                     info.log('ERROR', 'panzer',
                              'failed to receive json object from filter'
