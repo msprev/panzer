@@ -83,6 +83,8 @@ PANDOC_OPT_PHASE = {# general options
                     'standalone':              'w',
                     'variable':                'w',
                     'no-wrap':                 'w',
+                    'wrap':                    'w',
+                    'dpi':                     'w',
                     'columns':                 'w',
                     'table-of-contents':       'w',
                     'toc-depth':               'w',
