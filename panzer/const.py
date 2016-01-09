@@ -94,8 +94,6 @@ PANDOC_OPT_PHASE = {# general options
                     'include-before-body':     'w',
                     'include-after-body':      'w',
                     'self-contained':          'w',
-                    'offline':                 'w',
-                    'html5':                   'w',
                     'html-q-tags':             'w',
                     'ascii':                   'w',
                     'reference-links':         'w',
