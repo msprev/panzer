@@ -2,7 +2,7 @@
 title:  "panzer user guide"
 author:
  - name: Mark Sprevak
-date: 2 October 2015
+date: 18 January 2016
 style: Plain
 ...
 
@@ -194,7 +194,7 @@ Notes:
             numbersections: true
             fontsize: 12pt
         commandline:
-            no-wrap: true
+            wrap: preserve
         filter:
             - run: deemph.py
         postflight:
@@ -211,7 +211,7 @@ style: Notes
 ...
 ```
 
-it would run pandoc with filter `deemph.py` and command line option `--no-wrap` on the following and then execute `latexmk.py`.
+it would run pandoc with filter `deemph.py` and command line option `--wrap=preserve` on the following and then execute `latexmk.py`.
 
 ``` {.yaml}
 ---
@@ -337,7 +337,7 @@ Arbitrary pandoc command line options can be set using metadata via `commandline
 `commandline` contains one field for each pandoc command line option.
     The field name is the unabbreviated name of the relevant pandoc command line option (e.g. `standalone`).
 
-- For pandoc flags, the value should be boolean (`true`, `false`), e.g. `no-wrap: true`.
+- For pandoc flags, the value should be boolean (`true`, `false`), e.g. `smart: true`.
 - For pandoc key-values, the value should be a quoted inline code span, e.g. ``include-in-header: "`path/to/my/header`"``.
 - For pandoc repeated key-values, the value should be a list of inline code spans, e.g.
 

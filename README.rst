@@ -3,7 +3,7 @@ panzer user guide
 =================
 
 :Author: Mark Sprevak
-:Date:   2 October 2015
+:Date:   18 January 2016
 
 panzer
 ======
@@ -234,7 +234,7 @@ Example:
                 numbersections: true
                 fontsize: 12pt
             commandline:
-                no-wrap: true
+                wrap: preserve
             filter:
                 - run: deemph.py
             postflight:
@@ -252,7 +252,7 @@ selected,
     ...
 
 it would run pandoc with filter ``deemph.py`` and command line option
-``--no-wrap`` on the following and then execute ``latexmk.py``.
+``--wrap=preserve`` on the following and then execute ``latexmk.py``.
 
 .. code:: yaml
 
@@ -418,7 +418,7 @@ The field name is the unabbreviated name of the relevant pandoc command
 line option (e.g. ``standalone``).
 
 -  For pandoc flags, the value should be boolean (``true``, ``false``),
-   e.g. ``no-wrap: true``.
+   e.g. ``smart: true``.
 -  For pandoc key-values, the value should be a quoted inline code span,
    e.g. ``include-in-header: "`path/to/my/header`"``.
 -  For pandoc repeated key-values, the value should be a list of inline
