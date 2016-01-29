@@ -2,13 +2,13 @@
 title:  "panzer user guide"
 author:
  - name: Mark Sprevak
-date: 18 January 2016
+date: 29 January 2016
 style: Plain
 ...
 
 # panzer
 
-panzer adds 'styles' to [pandoc][].
+panzer adds *styles* to [pandoc][].
     Styles provide a way to set all options for a pandoc document with one line ('I want this document be an article/CV/notes/letter').
 
 You can think of styles as a level up in abstraction from a pandoc template.
@@ -206,7 +206,6 @@ If panzer were run on the following document with the latex writer selected,
 ``` {.yaml}
 ---
 title: "My document"
-author: John Smith
 style: Notes
 ...
 ```
@@ -216,7 +215,6 @@ it would run pandoc with filter `deemph.py` and command line option `--wrap=pres
 ``` {.yaml}
 ---
 title: "My document"
-author: John Smith
 numbersections: true
 fontsize: 12pt
 ...
@@ -227,11 +225,11 @@ fontsize: 12pt
 Styles may be defined:
 
 -   'Globally' in `.yaml` files in `.panzer/styles/`
--   'Locally' in `.yaml` files in `./styles/`)
+-   'Locally' in `.yaml` files in the current working directory `./styles/`)
 -   'In document' inside a `styledef` field in the document's yaml metadata block
 
 If no `.panzer/styles/` directory is found, panzer will look for global style definitions in `.panzer/styles.yaml` if it exists.
-If no `./styles/` directory is found, panzer will look for local style definitions in `./styles.yaml` if it exists.
+If no `./styles/` directory is found in the current working directory, panzer will look for local style definitions in `./styles.yaml` if it exists.
 
 Overriding among style settings is determined by the following rules:
 
@@ -256,7 +254,7 @@ For fields that pertain to scripts/filters, overriding is *additive*; for other 
 
 - To remove an item from an additive list, add it as the value of a `kill` field: for example, `- kill: latexmk.py`
 
-Command line options trump style settings, and cannot be overridden by any metadata setting.
+Arguments passed to panzer directly on the command line trump any style settings, and cannot be overridden by any metadata setting.
     Filters specified on the command line (via `--filter`) are run first, and cannot be removed.
     pandoc options set via panzer's command line invocation override any set via `commandline`.
 
@@ -264,7 +262,7 @@ Multiple input files are joined according to pandoc's rules.
     Metadata are merged using left-biased union.
     This means overriding behaviour when merging multiple input files is different from that of panzer, and always non-additive.
 
-If fed stdin input, panzer buffers this to a temporary file in the current working directory before proceeding.
+If fed input from stdin, panzer buffers this to a temporary file in the current working directory before proceeding.
     This is required to allow preflight scripts to access the data.
     The temporary file is removed when panzer exits.
 
