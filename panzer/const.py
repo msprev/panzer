@@ -69,6 +69,7 @@ PANDOC_OPT_PHASE = {# general options
                     # reader options
                     'parse-raw':               'r',
                     'smart':                   'r',
+                    'file-scope':              'r',
                     'old-dashes':              'r',
                     'base-header-level':       'r',
                     'indented-code-classes':   'r',

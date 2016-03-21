@@ -167,6 +167,7 @@ def pandoc_opt_parse(args):
     # reader options
     opt_parser.add_argument('--parse-raw', '-R', action='store_true')
     opt_parser.add_argument('--smart', '-S', action='store_true')
+    opt_parser.add_argument('--file-scope', action='store_true')
     opt_parser.add_argument('--old-dashes', action='store_true')
     opt_parser.add_argument('--base-header-level')
     opt_parser.add_argument('--indented-code-classes')
