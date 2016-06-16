@@ -470,6 +470,13 @@ Pull requests welcome:
 -   No Python 2 support
 -   [Possible issue under Windows](https://github.com/msprev/panzer/pull/9), so far reported by only one user. A leading dot plus slash is required on filter filenames. Rather than having `- run: foo.bar`, on Windows one needs to have `- run: ./foo.bar`. More information on this is welcome. I am happy to fix compatibility problems under Windows.
 
+FAQ
+===
+
+1.  Why do I get the error `[Errno 13] Permission denied`? Filters and scripts must be executable. Vanilla pandoc allows filters to be run without their executable permission set. panzer does not allow this. The solution: set the executable permission of your filter or script, `chmod +x myfilter_name.py` For more, see [here](https://github.com/msprev/panzer/issues/22).
+
+2.  Does panzer expand `~` or `*` inside field of a style definition? panzer does not do attempt any shell expansion or globbing inside a style definition. The reason is described [here](https://github.com/msprev/panzer/issues/23). TL;DR: expansion and globbing are messy and not something that panzer is in a position to do correctly or predictably inside a style definition. You need to use the full path to reference your home directory inside a style definition.
+
 Similar
 =======
 
