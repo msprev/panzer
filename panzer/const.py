@@ -162,9 +162,13 @@ PANDOC_WRITER_MAPPING = {
     ".epub"     : "epub",
     ".org"      : "org",
     ".asciidoc" : "asciidoc",
+    ".adoc"     : "asciidoc",
     ".pdf"      : "latex",
     ".fb2"      : "fb2",
     ".opml"     : "opml",
+    ".icml"     : "icml",
+    ".tei.xml"  : "tei",
+    ".tei"      : "tei",
     ".1"        : "man",
     ".2"        : "man",
     ".3"        : "man",
@@ -175,4 +179,3 @@ PANDOC_WRITER_MAPPING = {
     ".8"        : "man",
     ".9"        : "man"
 }
-
