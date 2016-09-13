@@ -3,7 +3,7 @@ panzer user guide
 =================
 
 :Author: Mark Sprevak
-:Date:   16 June 2016
+:Date:   13 September 2016
 
 panzer
 ======
@@ -102,6 +102,10 @@ Installation
 ::
 
     pip3 install --upgrade git+https://github.com/msprev/panzer
+
+On Arch Linux systems, the AUR package
+`panzer-git <https://aur.archlinux.org/packages/panzer-git/>`__ can be
+used.
 
 Troubleshooting
 ---------------

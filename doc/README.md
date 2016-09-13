@@ -2,7 +2,7 @@
 title:  "panzer user guide"
 author:
  - name: Mark Sprevak
-date: 16 June 2016
+date: 13 September 2016
 style: Plain
 ...
 
@@ -88,6 +88,9 @@ pip3 install git+https://github.com/msprev/panzer
 ```
 pip3 install --upgrade git+https://github.com/msprev/panzer
 ```
+
+On Arch Linux systems, the AUR package
+[panzer-git](https://aur.archlinux.org/packages/panzer-git/) can be used.
 
 ## Troubleshooting
 

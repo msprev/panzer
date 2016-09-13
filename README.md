@@ -72,8 +72,7 @@ Installation
 
     pip3 install --upgrade git+https://github.com/msprev/panzer
 
-On Arch Linux systems, the AUR package
-[panzer-git](https://aur.archlinux.org/packages/panzer-git/) can be used.
+On Arch Linux systems, the AUR package [panzer-git](https://aur.archlinux.org/packages/panzer-git/) can be used.
 
 Troubleshooting
 ---------------
