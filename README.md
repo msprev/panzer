@@ -3,7 +3,7 @@ pandoc 1.18
 
 The latest version of pandoc (1.18), released 26 Oct 2016, introduces [breaking changes in its json encoding of a document’s abstract syntax tree](https://github.com/jgm/pandoc/releases/tag/1.18).
 
-The current version of panzer (1.1) supports pandoc 1.18. If you are running an earlier version of pandoc, please use version 1.0 of panzer instead.
+The current version of panzer (1.1) now supports only pandoc 1.18. If you want to run an earlier version of pandoc, please use an earlier version (1.0) of panzer.
 
 panzer
 ======
@@ -501,9 +501,7 @@ Release notes
 =============
 
 -   1.1 (27 Oct 2016):
--   breaking change: support pandoc 1.18’s new api; earlier versions of pandoc will not work
--   fix: support all of pandoc 1.18’s command line options
-
+    -   breaking change: support pandoc 1.18’s new api; earlier versions of pandoc will not work
 -   1.0 (21 July 2015):
     -   new: `---strict` panzer command line option: [\#10](https://github.com/msprev/panzer/issues/10)
     -   new: `commandline` allows repeated options using lists: [\#3](https://github.com/msprev/panzer/issues/3)
