@@ -371,22 +371,26 @@ This passes the following options to pandoc `--smart --slide-level=3` and remove
 
 These pandoc command line options cannot be set via `commandline`:
 
--   `write`
--   `read`
--   `from`
--   `to`
--   `filter`
--   `template`
--   `output`
--   `variable`
--   `metadata`
--   `help`
--   `version`
 -   `dump-args`
+-   `filter`
+-   `from`
+-   `help`
 -   `ignore-args`
--   `print-default-template`
+-   `list-extensions`
+-   `list-highlight-languages`
+-   `list-highlight-styles`
+-   `list-input-formats`
+-   `list-output-formats`
+-   `metadata`
+-   `output`
 -   `print-default-data-file`
-
+-   `print-default-template`
+-   `read`
+-   `template`
+-   `to`
+-   `variable`
+-   `version`
+-   `write`
 
 # Passing messages to external processes
 
