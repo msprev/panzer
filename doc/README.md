@@ -2,10 +2,16 @@
 title:  "panzer user guide"
 author:
  - name: Mark Sprevak
-date: 13 September 2016
+date: 27 Oct 2016
 style: Plain
 ...
 
+# pandoc 1.18 warning
+
+The latest version of pandoc (1.18), released 26 Oct 2016, introduces [breaking changes in its json encoding of a document's abstract syntax tree](https://github.com/jgm/pandoc/releases/tag/1.18).
+
+The current version of panzer will not work with this version of pandoc. I am working on an update that will work with pandoc 1.18. In the meantime, please be patient and refrain from using pandoc 1.18 with panzer.
+ 
 # panzer
 
 panzer adds *styles* to [pandoc][].
