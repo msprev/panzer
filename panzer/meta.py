@@ -82,7 +82,7 @@ def apply_kill_rules(old_list):
                                        'MetaInlines') != to_be_killed]
         elif 'killall' in item_content:
             try:
-                if get_content(item_content, 'killall', 'MetaBool') == True:
+                if get_content(item_content, 'killall', 'MetaBool') is True:
                     new_list = list()
             except error.WrongType as err:
                 info.log('WARNING', 'panzer', err)
@@ -173,7 +173,7 @@ def get_list_or_inline(metadata, field):
 def get_metadata(ast):
     """ returns metadata branch of ast or {} if not present """
     try:
-        metadata = ast[0]['unMeta']
+        metadata = ast['meta']
     except KeyError:
         metadata = dict()
     return metadata
@@ -305,10 +305,10 @@ def parse_commandline(metadata):
         val_t = get_type(content, key)
         val_c = get_content(content, key)
         # if value is 'false', set OPTION: False
-        if val_t == 'MetaBool' and val_c == False:
+        if val_t == 'MetaBool' and val_c is False:
             val = False
         # if value is 'true', set OPTION: True
-        elif val_t == 'MetaBool' and val_c == True \
+        elif val_t == 'MetaBool' and val_c is True \
             and key not in const.PANDOC_OPT_ADDITIVE:
             val = True
         # if value type is inline code, set OPTION: VAL
@@ -358,7 +358,7 @@ def update_pandoc_options(old, new, mutable):
             if not mutable[p][key]:
                 continue
             # if 'False', reset old[p][key] to default
-            elif new[p][key] == False:
+            elif new[p][key] is False:
                 if type(old[p][key]) is list:
                     old[p][key] = list()
                 elif type(old[p][key]) is str:

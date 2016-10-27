@@ -324,10 +324,7 @@ class Document(object):
 
     def set_metadata(self, new_metadata):
         """ set metadata branch of `self.ast` to `new_metadata` """
-        try:
-            self.ast[0]['unMeta'] = new_metadata
-        except (IndexError, KeyError):
-            self.ast = [{'unMeta': new_metadata}, []]
+        self.ast['meta'] = new_metadata
 
     def transform(self):
         """ transform `self` by applying styles listed in `self.stylefull` """

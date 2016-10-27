@@ -23,7 +23,7 @@ FAILED = 'failed'
 DONE = 'done'
 
 # ast of an empty pandoc document
-EMPTY_DOCUMENT = [{'unMeta': {}}, []]
+EMPTY_DOCUMENT = {"blocks":[],"pandoc-api-version":[1,17,0,4],"meta":{}}
 
 # writers that give binary outputs
 # these cannot be written to stdout
