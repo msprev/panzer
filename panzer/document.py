@@ -45,7 +45,7 @@ class Document(object):
                 'stdin_temp_file' : str()
             },
             'pandoc': {
-                'input'      : list(),
+                'input'      : ['-'],
                 'output'     : '-',
                 'pdf_output' : False,
                 'read'       : str(),
