@@ -533,11 +533,11 @@ The follow pandoc command line options cannot be used with panzer:
 -   `--bash-completion`
 -   `--dump-args`
 -   `--ignore-args`
--   '--list-extensions'
--   '--list-highlight-languages'
--   '--list-highlight-styles'
--   '--list-input-formats'
--   '--list-output-formats'
+-   `--list-extensions`
+-   `--list-highlight-languages`
+-   `--list-highlight-styles`
+-   `--list-input-formats`
+-   `--list-output-formats`
 -   `--print-default-template`, `-D`
 -   `--print-default-data-file`
 -   `--version`, `-v`
