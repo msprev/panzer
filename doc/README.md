@@ -2,16 +2,16 @@
 title:  "panzer user guide"
 author:
  - name: Mark Sprevak
-date: 27 Oct 2016
+date: 23 November 2016
 style: Plain
 ...
 
-# pandoc 1.18 
+# pandoc 1.18
 
 The latest version of pandoc (1.18), released 26 Oct 2016, introduces [breaking changes in its json encoding of a document's abstract syntax tree](https://github.com/jgm/pandoc/releases/tag/1.18).
 
 The current version of panzer (1.1) now supports only pandoc 1.18. If you want to run an earlier version of pandoc, please use an earlier version (1.0.1 is the last such version) of panzer.
- 
+
 # panzer
 
 panzer adds *styles* to [pandoc][].
@@ -377,6 +377,7 @@ This passes the following options to pandoc `--smart --slide-level=3` and remove
 
 These pandoc command line options cannot be set via `commandline`:
 
+-   `bash-completion`
 -   `dump-args`
 -   `filter`
 -   `from`
@@ -529,8 +530,14 @@ panzer accepts pandoc filters.
 
 The follow pandoc command line options cannot be used with panzer:
 
+-   `--bash-completion`
 -   `--dump-args`
 -   `--ignore-args`
+-   '--list-extensions'
+-   '--list-highlight-languages'
+-   '--list-highlight-styles'
+-   '--list-input-formats'
+-   '--list-output-formats'
 -   `--print-default-template`, `-D`
 -   `--print-default-data-file`
 -   `--version`, `-v`

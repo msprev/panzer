@@ -3,7 +3,7 @@ panzer user guide
 =================
 
 :Author: Mark Sprevak
-:Date:   27 Oct 2016
+:Date:   23 November 2016
 
 pandoc 1.18
 ===========
@@ -472,6 +472,7 @@ options.
 
 These pandoc command line options cannot be set via ``commandline``:
 
+-  ``bash-completion``
 -  ``dump-args``
 -  ``filter``
 -  ``from``
@@ -645,8 +646,14 @@ new ways:
 
 The follow pandoc command line options cannot be used with panzer:
 
+-  ``--bash-completion``
 -  ``--dump-args``
 -  ``--ignore-args``
+-  ‘–list-extensions’
+-  ‘–list-highlight-languages’
+-  ‘–list-highlight-styles’
+-  ‘–list-input-formats’
+-  ‘–list-output-formats’
 -  ``--print-default-template``, ``-D``
 -  ``--print-default-data-file``
 -  ``--version``, ``-v``

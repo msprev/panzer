@@ -30,26 +30,35 @@ EMPTY_DOCUMENT = {"blocks":[],"pandoc-api-version":[1,17,0,4],"meta":{}}
 BINARY_WRITERS = ['odt', 'docx', 'epub', 'epub3']
 
 # forbidden options for panzer command line
-PANDOC_BAD_OPTS = ['--dump-args',
-                   '--ignore-args',
-                   '-D',
-                   '--print-default-template',
-                   '--print-default-data-file']
+PANDOC_BAD_OPTS = [
+    '--bash-completion',
+    '--dump-args',
+    '--ignore-args',
+    '--list-extensions',
+    '--list-highlight-languages',
+    '--list-highlight-styles',
+    '--list-input-formats',
+    '--list-output-formats',
+    '--print-default-data-file',
+    '--print-default-template',
+    '-D'
+]
 
 # forbidden options for 'commandline' metadata field
 PANDOC_BAD_COMMANDLINE = [
+    'bash-completion',
     'dump-args',
     'filter',
     'from',
     'help',
     'ignore-args',
+    'metadata',
+    'output',
     'list-extensions',
     'list-highlight-languages',
     'list-highlight-styles',
     'list-input-formats',
     'list-output-formats',
-    'metadata',
-    'output',
     'print-default-data-file',
     'print-default-template',
     'read',

@@ -315,6 +315,7 @@ This passes the following options to pandoc `--smart --slide-level=3` and remove
 
 These pandoc command line options cannot be set via `commandline`:
 
+-   `bash-completion`
 -   `dump-args`
 -   `filter`
 -   `from`
@@ -451,8 +452,14 @@ panzer accepts pandoc filters. panzer allows filters to behave in two new ways:
 
 The follow pandoc command line options cannot be used with panzer:
 
+-   `--bash-completion`
 -   `--dump-args`
 -   `--ignore-args`
+-   ‘–list-extensions’
+-   ‘–list-highlight-languages’
+-   ‘–list-highlight-styles’
+-   ‘–list-input-formats’
+-   ‘–list-output-formats’
 -   `--print-default-template`, `-D`
 -   `--print-default-data-file`
 -   `--version`, `-v`
