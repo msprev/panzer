@@ -232,6 +232,7 @@ def pandoc_opt_parse(args):
     opt_parser.add_argument('--toc-depth')
     opt_parser.add_argument('--top-level-division')
     opt_parser.add_argument('--variable', '-V', nargs=1, action='append')
+    opt_parser.add_argument('--verbose', action='store_true')
     opt_parser.add_argument('--webtex')
     opt_parser.add_argument('--wrap')
     opt_known_raw, unknown = opt_parser.parse_known_args(args)

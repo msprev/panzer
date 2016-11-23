@@ -142,6 +142,7 @@ PANDOC_OPT_PHASE = {
     'toc-depth':               'w',
     'top-level-division':      'w',
     'variable':                'w',
+    'verbose':                 'w',
     'webtex':                  'w',
     'wrap':                    'w'
 }
