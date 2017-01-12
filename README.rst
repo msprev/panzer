@@ -690,8 +690,8 @@ FAQ
    `here <https://github.com/msprev/panzer/issues/22>`__.
 
 2. Does panzer expand ``~`` or ``*`` inside field of a style definition?
-   panzer does not do attempt any shell expansion or globbing inside a
-   style definition. The reason is described
+   panzer does not do any shell expansion/globbing inside a style
+   definition. The reason is described
    `here <https://github.com/msprev/panzer/issues/23>`__. TL;DR:
    expansion and globbing are messy and not something that panzer is in
    a position to do correctly or predictably inside a style definition.

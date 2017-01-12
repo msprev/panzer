@@ -489,7 +489,7 @@ FAQ
 
 1.  Why do I get the error `[Errno 13] Permission denied`? Filters and scripts must be executable. Vanilla pandoc allows filters to be run without their executable permission set. panzer does not allow this. The solution: set the executable permission of your filter or script, `chmod +x myfilter_name.py` For more, see [here](https://github.com/msprev/panzer/issues/22).
 
-2.  Does panzer expand `~` or `*` inside field of a style definition? panzer does not do attempt any shell expansion or globbing inside a style definition. The reason is described [here](https://github.com/msprev/panzer/issues/23). TL;DR: expansion and globbing are messy and not something that panzer is in a position to do correctly or predictably inside a style definition. You need to use the full path to reference your home directory inside a style definition.
+2.  Does panzer expand `~` or `*` inside field of a style definition? panzer does not do any shell expansion/globbing inside a style definition. The reason is described [here](https://github.com/msprev/panzer/issues/23). TL;DR: expansion and globbing are messy and not something that panzer is in a position to do correctly or predictably inside a style definition. You need to use the full path to reference your home directory inside a style definition.
 
 Similar
 =======
