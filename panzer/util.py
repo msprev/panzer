@@ -1,6 +1,7 @@
 """ Support functions for non-core operations """
 import os
 import subprocess
+import sys
 from . import const
 from . import error
 from . import info
@@ -17,10 +18,18 @@ def check_pandoc_exists():
             raise error.SetupError(err)
     stdout_list = stdout.splitlines()
     pandoc_ver = stdout_list[0].split(' ')[1]
+    # print('pandoc version: %s' % pandoc_ver, file=sys.stderr)
     if versiontuple(pandoc_ver) < versiontuple(const.REQUIRE_PANDOC_ATLEAST):
         raise error.SetupError('pandoc %s or greater required'
                                '---found pandoc version %s'
                                % (const.REQUIRE_PANDOC_ATLEAST, pandoc_ver))
+    # check whether to use the new >=1.18 pandoc API or old (<1.18) one
+    NEW_PANDOC_API = "1.18"
+    if versiontuple(pandoc_ver) < versiontuple(NEW_PANDOC_API):
+        const.USE_OLD_API = True
+        # print('using old (<1.18) pandoc API')
+    # else:
+        # print('using new (>=1.18) pandoc API')
 
 def versiontuple(version_string):
     """ return tuple of version_string """

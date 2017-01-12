@@ -4,6 +4,7 @@ import os
 DEBUG_TIMING = False
 
 REQUIRE_PANDOC_ATLEAST = "1.12.1"
+USE_OLD_API = False
 
 DEFAULT_SUPPORT_DIR = os.path.join(os.path.expanduser('~'), '.panzer')
 
@@ -24,6 +25,7 @@ DONE = 'done'
 
 # ast of an empty pandoc document
 EMPTY_DOCUMENT = {"blocks":[],"pandoc-api-version":[1,17,0,4],"meta":{}}
+EMPTY_DOCUMENT_OLDAPI = [{'unMeta': {}}, []]
 
 # writers that give binary outputs
 # these cannot be written to stdout

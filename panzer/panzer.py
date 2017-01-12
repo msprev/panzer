@@ -28,6 +28,7 @@ __version__ = version.VERSION
 def main():
     """ the main function """
     info.time_stamp('panzer started')
+    util.check_pandoc_exists()
     doc = document.Document()
     try:
         doc.options = cli.parse_cli_options(doc.options)

@@ -173,7 +173,10 @@ def get_list_or_inline(metadata, field):
 def get_metadata(ast):
     """ returns metadata branch of ast or {} if not present """
     try:
-        metadata = ast['meta']
+        if const.USE_OLD_API:
+            metadata = ast[0]['unMeta']
+        else:
+            metadata = ast['meta']
     except KeyError:
         metadata = dict()
     return metadata

@@ -29,7 +29,10 @@ class Document(object):
     def __init__(self):
         """ new blank document """
         # - defaults
-        self.ast = const.EMPTY_DOCUMENT
+        if const.USE_OLD_API:
+            self.ast = const.EMPTY_DOCUMENT_OLDAPI
+        else:
+            self.ast = const.EMPTY_DOCUMENT
         self.style = list()
         self.stylefull = list()
         self.styledef = dict()
@@ -63,7 +66,10 @@ class Document(object):
         (used when re-reading from input with new reader command line options)
         """
         # - defaults
-        self.ast = const.EMPTY_DOCUMENT
+        if const.USE_OLD_API:
+            self.ast = const.EMPTY_DOCUMENT_OLDAPI
+        else:
+            self.ast = const.EMPTY_DOCUMENT
         self.style = list()
         self.stylefull = list()
         self.styledef = dict()
@@ -324,7 +330,14 @@ class Document(object):
 
     def set_metadata(self, new_metadata):
         """ set metadata branch of `self.ast` to `new_metadata` """
-        self.ast['meta'] = new_metadata
+        if const.USE_OLD_API:
+            try:
+                self.ast[0]['unMeta'] = new_metadata
+            except (IndexError, KeyError):
+                self.ast = const.EMPTY_DOCUMENT_OLDAPI
+                self.ast[0]['unMeta'] = new_metadata
+        else:
+            self.ast['meta'] = new_metadata
 
     def transform(self):
         """ transform `self` by applying styles listed in `self.stylefull` """
