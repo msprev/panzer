@@ -3,7 +3,7 @@ panzer user guide
 =================
 
 :Author: Mark Sprevak
-:Date:   12 January 2017
+:Date:   28 April 2017
 
 panzer
 ======
@@ -701,6 +701,7 @@ FAQ
 Similar
 =======
 
+-  https://heerdebeer.org/Software/markdown/pandocomatic/
 -  https://github.com/balachia/panopy
 -  https://github.com/phyllisstein/pandown
 

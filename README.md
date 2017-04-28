@@ -494,6 +494,7 @@ FAQ
 Similar
 =======
 
+-   <https://heerdebeer.org/Software/markdown/pandocomatic/>
 -   <https://github.com/balachia/panopy>
 -   <https://github.com/phyllisstein/pandown>
 

@@ -2,7 +2,7 @@
 title:  "panzer user guide"
 author:
  - name: Mark Sprevak
-date: 12 January 2017
+date: 28 April 2017
 style: Plain
 ...
 
@@ -585,6 +585,7 @@ Pull requests welcome:
 
 # Similar
 
+* <https://heerdebeer.org/Software/markdown/pandocomatic/>
 * <https://github.com/balachia/panopy>
 * <https://github.com/phyllisstein/pandown>
 
