@@ -12,11 +12,11 @@ Panzer-specific arguments are prefixed by triple dashes ('---').
 Other arguments are passed to pandoc.
 
   panzer default user data directory: "%s"
-  pandoc executable: "%s"
+  pandoc default executable: "%s"
 ''' % (const.DEFAULT_SUPPORT_DIR, shutil.which('pandoc'))
 
 PANZER_EPILOG = '''
-Copyright (C) 2015 Mark Sprevak
+Copyright (C) 2017 Mark Sprevak
 Web:  http://sites.google.com/site/msprevak
 This is free software; see the source for copying conditions. There is no
 warranty, not even for merchantability or fitness for a particular purpose.
@@ -139,7 +139,9 @@ def panzer_parse():
                                action='store_true',
                                help='exit on first error')
     panzer_parser.add_argument("---panzer-support",
-                               help='.panzer directory')
+                               help='panzer user data directory')
+    panzer_parser.add_argument("---pandoc",
+                               help='pandoc executable')
     panzer_parser.add_argument("---debug",
                                help='filename to write .log and .json debug files')
     panzer_known_raw, unknown = panzer_parser.parse_known_args()

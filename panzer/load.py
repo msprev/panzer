@@ -11,7 +11,7 @@ from . import meta
 def load(options):
     """ return ast from running pandoc on input documents """
     # 1. Build pandoc command
-    command = ['pandoc']
+    command = [options['panzer']['pandoc']]
     command += options['pandoc']['input'].copy()
     if options['pandoc']['read']:
         command += ['--read', options['pandoc']['read']]
@@ -93,7 +93,7 @@ def load_styledef(path, options):
     data.append("...\n")
     data_string = ''.join(data)
     # - build pandoc command
-    command = ['pandoc']
+    command = [options['panzer']['pandoc']]
     command += ['-']
     command += ['--write', 'json']
     command += ['--output', '-']

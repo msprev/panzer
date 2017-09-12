@@ -129,7 +129,8 @@ panzer has additional command line options.
   ---quiet              only print errors and warnings
   ---strict             exit on first error
   ---panzer-support PANZER_SUPPORT
-                        .panzer directory
+                        panzer user data directory
+  ---pandoc PANDOC      pandoc executable
   ---debug DEBUG        filename to write .log and .json debug files
 ```
 
@@ -440,6 +441,7 @@ JSON_MESSAGE = [{'metadata':    METADATA,
     OPTIONS = {
         'panzer': {
             'panzer_support':  const.DEFAULT_SUPPORT_DIR,
+            'pandoc':          'pandoc',
             'debug':           str(),
             'quiet':           False,
             'strict':          False,

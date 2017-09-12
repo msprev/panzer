@@ -42,6 +42,7 @@ class Document(object):
         self.options = {
             'panzer': {
                 'panzer_support'  : const.DEFAULT_SUPPORT_DIR,
+                'pandoc'          : 'pandoc',
                 'debug'           : str(),
                 'quiet'           : False,
                 'strict'          : False,
@@ -537,7 +538,7 @@ class Document(object):
         does not process further, and internal document not updated by pandoc.
         """
         # 1. Build pandoc command
-        command = ['pandoc']
+        command = [self.options['panzer']['pandoc']]
         command += ['-']
         command += ['--read', 'json']
         command += ['--write', self.options['pandoc']['write']]

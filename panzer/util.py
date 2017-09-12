@@ -6,14 +6,19 @@ from . import const
 from . import error
 from . import info
 
-def check_pandoc_exists():
+def check_pandoc_exists(options):
     """ check pandoc exists """
     try:
-        stdout_bytes = subprocess.check_output(["pandoc", "--version"])
+        stdout_bytes = subprocess.check_output([options['panzer']['pandoc'],
+                                                "--version"])
         stdout = stdout_bytes.decode(const.ENCODING)
+    except PermissionError as err:
+        raise error.SetupError('%s cannot be executed as pandoc executable' %
+                                options['panzer']['pandoc'])
     except OSError as err:
         if err.errno == os.errno.ENOENT:
-            raise error.SetupError('pandoc not found')
+            raise error.SetupError('%s not found as pandoc executable' %
+                                   options['panzer']['pandoc'])
         else:
             raise error.SetupError(err)
     stdout_list = stdout.splitlines()

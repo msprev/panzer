@@ -153,7 +153,8 @@ dashes (``---``). Run the command ``panzer -h`` to see them:
       ---quiet              only print errors and warnings
       ---strict             exit on first error
       ---panzer-support PANZER_SUPPORT
-                            .panzer directory
+                            panzer user data directory
+      ---pandoc PANDOC      pandoc executable
       ---debug DEBUG        filename to write .log and .json debug files
 
 Panzer expects all input and output to be utf-8.
@@ -537,6 +538,7 @@ should probably be using a filter).
        OPTIONS = {
            'panzer': {
                'panzer_support':  const.DEFAULT_SUPPORT_DIR,
+               'pandoc':          'pandoc',
                'debug':           str(),
                'quiet':           False,
                'strict':          False,
