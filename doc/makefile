@@ -12,7 +12,7 @@ OUT_BASENAME := $(basename $(SOURCE))
 ########################################################################
 
 doc:	$(SOURCE)
-	$(PANZER) $(SOURCE) -o ../$(OUT_BASENAME).md -t markdown_github ---quiet; \
+	$(PANZER) $(SOURCE) -o ../$(OUT_BASENAME).md -t gfm ---quiet; \
 	$(PANZER) $(SOURCE) -o ../$(OUT_BASENAME).rst -t rst ---quiet
 
 ########################################################################

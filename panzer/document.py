@@ -227,7 +227,9 @@ class Document(object):
         # -- filters: add writer as first argument
         for entry in runlist:
             if entry['kind'] == 'filter':
-                entry['arguments'].insert(0, self.options['pandoc']['write'])
+                writer = self.options['pandoc']['write']
+                strip_exts = (writer.split('+')[0].split('-'))[0]
+                entry['arguments'].insert(0, strip_exts)
         # -- postprocessors: remove them if output kind is pdf
         # .. or if a binary writer is selected
         if self.options['pandoc']['pdf_output'] \

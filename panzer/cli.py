@@ -167,17 +167,15 @@ def pandoc_opt_parse(args):
     # general options
     opt_parser.add_argument("--data-dir")
     # reader options
+    opt_parser.add_argument('--abbreviations')
     opt_parser.add_argument('--base-header-level')
     opt_parser.add_argument('--default-image-extension')
     opt_parser.add_argument('--extract-media')
     opt_parser.add_argument('--file-scope', action='store_true')
     opt_parser.add_argument('--indented-code-classes')
     opt_parser.add_argument('--metadata', '-M', nargs=1, action='append')
-    opt_parser.add_argument('--normalize', action='store_true')
     opt_parser.add_argument('--old-dashes', action='store_true')
-    opt_parser.add_argument('--parse-raw', '-R', action='store_true')
     opt_parser.add_argument('--preserve-tabs', '-p', action='store_true')
-    opt_parser.add_argument('--smart', '-S', action='store_true')
     opt_parser.add_argument('--tab-stop')
     opt_parser.add_argument('--track-changes')
     # writer options
@@ -192,11 +190,12 @@ def pandoc_opt_parse(args):
     opt_parser.add_argument('--css', '-c', nargs=1, action='append')
     opt_parser.add_argument('--dpi')
     opt_parser.add_argument('--email-obfuscation')
+    opt_parser.add_argument('--eol')
     opt_parser.add_argument('--epub-chapter-level')
     opt_parser.add_argument('--epub-cover-image')
     opt_parser.add_argument('--epub-embed-font')
     opt_parser.add_argument('--epub-metadata')
-    opt_parser.add_argument('--epub-stylesheet')
+    opt_parser.add_argument('--epub-subdirectory')
     opt_parser.add_argument('--gladtex', action='store_true')
     opt_parser.add_argument('--highlight-style')
     opt_parser.add_argument('--html-q-tags', action='store_true')
@@ -208,12 +207,13 @@ def pandoc_opt_parse(args):
     opt_parser.add_argument('--jsmath')
     opt_parser.add_argument('--katex')
     opt_parser.add_argument('--katex-stylesheet')
-    opt_parser.add_argument('--latex-engine')
-    opt_parser.add_argument('--latex-engine-opt', nargs=1, action='append')
+    opt_parser.add_argument('--pdf-engine')
+    opt_parser.add_argument('--pdf-engine-opt', nargs=1, action='append')
     opt_parser.add_argument('--latexmathml', '-m')
     opt_parser.add_argument('--listings', action='store_true')
+    opt_parser.add_argument('--log')
     opt_parser.add_argument('--mathjax')
-    opt_parser.add_argument('--mathml')
+    opt_parser.add_argument('--mathml', action='store_true')
     opt_parser.add_argument('--mimetex')
     opt_parser.add_argument('--natbib', action='store_true')
     opt_parser.add_argument('--no-highlight', action='store_true')
@@ -221,14 +221,16 @@ def pandoc_opt_parse(args):
     opt_parser.add_argument('--no-wrap', action='store_true')
     opt_parser.add_argument('--number-offset')
     opt_parser.add_argument('--number-sections', '-N', action='store_true')
-    opt_parser.add_argument('--reference-docx')
+    opt_parser.add_argument('--reference-doc')
     opt_parser.add_argument('--reference-links', action='store_true')
     opt_parser.add_argument('--reference-location')
-    opt_parser.add_argument('--reference-odt')
+    opt_parser.add_argument('--request-header')
+    opt_parser.add_argument('--resource-path')
     opt_parser.add_argument('--section-divs', action='store_true')
     opt_parser.add_argument('--self-contained', action='store_true')
     opt_parser.add_argument('--slide-level')
     opt_parser.add_argument('--standalone', '-s', action='store_true')
+    opt_parser.add_argument('--syntax-definition')
     opt_parser.add_argument('--table-of-contents', '--toc', action='store_true')
     opt_parser.add_argument('--title-prefix', '-T')
     opt_parser.add_argument('--toc-depth')
@@ -249,10 +251,11 @@ def set_quirky_dependencies(pandoc):
     # --smart: reader setting
     # True when the output format is latex or context, unless --no-tex-ligatures
     # is used.
-    if (pandoc['write'] == 'latex' or \
-        pandoc['write'] == 'beamer' or \
-        pandoc['write'] == 'context') \
-            and pandoc['options']['w']['no-tex-ligatures'] == False:
-        pandoc['options']['r']['smart'] = True
+    # if (pandoc['write'] == 'latex' or \
+    #     pandoc['write'] == 'beamer' or \
+    #     pandoc['write'] == 'context') \
+    #         and pandoc['options']['w']['no-tex-ligatures'] == False:
+    #     pandoc['options']['r']['smart'] = True
+    ## this is commented out as apparently not needed with pandoc >2.0
     return pandoc
 

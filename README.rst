@@ -3,7 +3,7 @@ panzer user guide
 =================
 
 :Author: Mark Sprevak
-:Date:   28 April 2017
+:Date:   7 November 2017
 
 panzer
 ======
@@ -92,7 +92,7 @@ Installation
 
 *Requirements:*
 
--  `pandoc <http://johnmacfarlane.net/pandoc/index.html>`__
+-  `pandoc <http://johnmacfarlane.net/pandoc/index.html>`__ > 2.0
 -  `Python 3 <https://www.python.org/downloads/>`__
 -  `pip <https://pip.pypa.io/en/stable/index.html>`__ (included in most
    Python 3 distributions)
@@ -164,27 +164,36 @@ Style definition
 
 A style definition may consist of:
 
-+-------------------+--------------------------------------+-------------------------------------+
-| field             | value                                | value type                          |
-+===================+======================================+=====================================+
-| ``parent``        | parent(s) of style                   | ``MetaList`` or ``MetaInlines``     |
-+-------------------+--------------------------------------+-------------------------------------+
-| ``metadata``      | default metadata fields              | ``MetaMap``                         |
-+-------------------+--------------------------------------+-------------------------------------+
-| ``commandline``   | pandoc command line options          | ``MetaMap``                         |
-+-------------------+--------------------------------------+-------------------------------------+
-| ``template``      | pandoc template                      | ``MetaInlines`` or ``MetaString``   |
-+-------------------+--------------------------------------+-------------------------------------+
-| ``preflight``     | run before input doc is processed    | ``MetaList``                        |
-+-------------------+--------------------------------------+-------------------------------------+
-| ``filter``        | pandoc filters                       | ``MetaList``                        |
-+-------------------+--------------------------------------+-------------------------------------+
-| ``postprocess``   | run on pandoc’s output               | ``MetaList``                        |
-+-------------------+--------------------------------------+-------------------------------------+
-| ``postflight``    | run after output file written        | ``MetaList``                        |
-+-------------------+--------------------------------------+-------------------------------------+
-| ``cleanup``       | run on exit irrespective of errors   | ``MetaList``                        |
-+-------------------+--------------------------------------+-------------------------------------+
++-----------------------+-----------------------+-----------------------+
+| field                 | value                 | value type            |
++=======================+=======================+=======================+
+| ``parent``            | parent(s) of style    | ``MetaList`` or       |
+|                       |                       | ``MetaInlines``       |
++-----------------------+-----------------------+-----------------------+
+| ``metadata``          | default metadata      | ``MetaMap``           |
+|                       | fields                |                       |
++-----------------------+-----------------------+-----------------------+
+| ``commandline``       | pandoc command line   | ``MetaMap``           |
+|                       | options               |                       |
++-----------------------+-----------------------+-----------------------+
+| ``template``          | pandoc template       | ``MetaInlines`` or    |
+|                       |                       | ``MetaString``        |
++-----------------------+-----------------------+-----------------------+
+| ``preflight``         | run before input doc  | ``MetaList``          |
+|                       | is processed          |                       |
++-----------------------+-----------------------+-----------------------+
+| ``filter``            | pandoc filters        | ``MetaList``          |
++-----------------------+-----------------------+-----------------------+
+| ``postprocess``       | run on pandoc’s       | ``MetaList``          |
+|                       | output                |                       |
++-----------------------+-----------------------+-----------------------+
+| ``postflight``        | run after output file | ``MetaList``          |
+|                       | written               |                       |
++-----------------------+-----------------------+-----------------------+
+| ``cleanup``           | run on exit           | ``MetaList``          |
+|                       | irrespective of       |                       |
+|                       | errors                |                       |
++-----------------------+-----------------------+-----------------------+
 
 Style definitions are hierarchically structured by *name* and *writer*.
 Style names by convention should be MixedCase (``MyNotes``) to avoid
@@ -285,21 +294,21 @@ exists.
 
 Overriding among style settings is determined by the following rules:
 
-+-----+----------------------------------------------------------------------+
-| #   | overriding rule                                                      |
-+=====+======================================================================+
-| 1   | Local style definitions override global style definitions            |
-+-----+----------------------------------------------------------------------+
-| 2   | In document style definitions override local style definitions       |
-+-----+----------------------------------------------------------------------+
-| 3   | Writer-specific settings override settings for ``all``               |
-+-----+----------------------------------------------------------------------+
-| 4   | In a list, later styles override earlier ones                        |
-+-----+----------------------------------------------------------------------+
-| 5   | Children override parents                                            |
-+-----+----------------------------------------------------------------------+
-| 6   | Fields set outside a style definition override any style’s setting   |
-+-----+----------------------------------------------------------------------+
++---+--------------------------------------------------------------------+
+| # | overriding rule                                                    |
++===+====================================================================+
+| 1 | Local style definitions override global style definitions          |
++---+--------------------------------------------------------------------+
+| 2 | In document style definitions override local style definitions     |
++---+--------------------------------------------------------------------+
+| 3 | Writer-specific settings override settings for ``all``             |
++---+--------------------------------------------------------------------+
+| 4 | In a list, later styles override earlier ones                      |
++---+--------------------------------------------------------------------+
+| 5 | Children override parents                                          |
++---+--------------------------------------------------------------------+
+| 6 | Fields set outside a style definition override any style’s setting |
++---+--------------------------------------------------------------------+
 
 For fields that pertain to scripts/filters, overriding is *additive*;
 for other fields, it is *non-additive*:
@@ -349,9 +358,10 @@ special item ``- killall: true``.
 Arguments can be passed to executables by listing them as the value of
 the ``args`` field of that item. The value of the ``args`` field is
 passed as the command line options to the external process. This value
-of ``args`` should be a quoted inline code span (e.g. ``"`--options`"``)
-to prevent the parser interpreting it as markdown. Note that filters
-always receive the writer name as their first argument.
+of ``args`` should be a quoted inline code span (e.g.
+:literal:`"`--options`"`) to prevent the parser interpreting it as
+markdown. Note that filters always receive the writer name as their
+first argument.
 
 Example:
 
@@ -370,21 +380,21 @@ argument and ``--level=2`` as its second argument.
 
 When panzer is searching for a filter ``foo.py``, it will look for:
 
-+-----+-----------------------------------------------------+
-| #   | look for                                            |
-+=====+=====================================================+
-| 1   | ``./foo.py``                                        |
-+-----+-----------------------------------------------------+
-| 2   | ``./filter/foo.py``                                 |
-+-----+-----------------------------------------------------+
-| 3   | ``./filter/foo/foo.py``                             |
-+-----+-----------------------------------------------------+
-| 4   | ``~/.panzer/filter/foo.py``                         |
-+-----+-----------------------------------------------------+
-| 5   | ``~/.panzer/filter/foo/foo.py``                     |
-+-----+-----------------------------------------------------+
-| 6   | ``foo.py`` in PATH defined by current environment   |
-+-----+-----------------------------------------------------+
++---+---------------------------------------------------+
+| # | look for                                          |
++===+===================================================+
+| 1 | ``./foo.py``                                      |
++---+---------------------------------------------------+
+| 2 | ``./filter/foo.py``                               |
++---+---------------------------------------------------+
+| 3 | ``./filter/foo/foo.py``                           |
++---+---------------------------------------------------+
+| 4 | ``~/.panzer/filter/foo.py``                       |
++---+---------------------------------------------------+
+| 5 | ``~/.panzer/filter/foo/foo.py``                   |
++---+---------------------------------------------------+
+| 6 | ``foo.py`` in PATH defined by current environment |
++---+---------------------------------------------------+
 
 Similar rules apply to other executables and to templates.
 
@@ -425,7 +435,7 @@ line option (e.g. ``standalone``).
 -  For pandoc flags, the value should be boolean (``true``, ``false``),
    e.g. ``smart: true``.
 -  For pandoc key-values, the value should be a quoted inline code span,
-   e.g. ``include-in-header: "`path/to/my/header`"``.
+   e.g. :literal:`include-in-header: "`path/to/my/header`"`.
 -  For pandoc repeated key-values, the value should be a list of inline
    code spans, e.g.
 
@@ -519,40 +529,12 @@ should probably be using a filter).
 -  ``RUNLIST`` is a list of processes in the run list; it has the
    following structure:
 
-   ::
-
-       RUNLIST = [{'kind':      'preflight'|'filter'|'postprocess'|'postflight'|'cleanup',
-                   'command':   'my command',
-                   'arguments': ['argument1', 'argument2', ...],
-                   'status':    'queued'|'running'|'failed'|'done'
-                  },
-                   ...
-                   ...
-                 ]
+   ``RUNLIST = [{'kind':      'preflight'|'filter'|'postprocess'|'postflight'|'cleanup',               'command':   'my command',               'arguments': ['argument1', 'argument2', ...],               'status':    'queued'|'running'|'failed'|'done'              },               ...               ...             ]``
 
 -  ``OPTIONS`` is a dictionary containing panzer’s and pandoc’s command
    line options:
 
-   ::
-
-       OPTIONS = {
-           'panzer': {
-               'panzer_support':  const.DEFAULT_SUPPORT_DIR,
-               'pandoc':          'pandoc',
-               'debug':           str(),
-               'quiet':           False,
-               'strict':          False,
-               'stdin_temp_file': str()   # tempfile used to buffer stdin
-           },
-           'pandoc': {
-               'input':      list(),      # list of input files
-               'output':     '-',         # output file; '-' is stdout
-               'pdf_output': False,       # if pandoc will write a .pdf
-               'read':       str(),       # reader
-               'write':      str(),       # writer
-               'options':    {'r': dict(), 'w': dict()}
-           }
-       }
+   ``OPTIONS = {       'panzer': {           'panzer_support':  const.DEFAULT_SUPPORT_DIR,           'pandoc':          'pandoc',           'debug':           str(),           'quiet':           False,           'strict':          False,           'stdin_temp_file': str()   # tempfile used to buffer stdin       },       'pandoc': {           'input':      list(),      # list of input files           'output':     '-',         # output file; '-' is stdout           'pdf_output': False,       # if pandoc will write a .pdf           'read':       str(),       # reader           'write':      str(),       # writer           'options':    {'r': dict(), 'w': dict()}       }   }``
 
    ``options`` contains the command line options with which pandoc is
    called. It consists of two separate dictionaries. The dictionary
@@ -615,12 +597,12 @@ utf-8 encoded json dictionaries, each with the following structure:
 
    ::
 
-       'CRITICAL'
-       'ERROR'
-       'WARNING'
-       'INFO'
-       'DEBUG'
-       'NOTSET'
+         'CRITICAL'
+         'ERROR'
+         'WARNING'
+         'INFO'
+         'DEBUG'
+         'NOTSET'
 
 -  ``MESSAGE`` is a string with your message
 
@@ -710,6 +692,13 @@ Similar
 Release notes
 =============
 
+-  1.3 (7 November 2017):
+-  updated for pandoc 2.0
+   `#31 <https://github.com/msprev/panzer/issues/31>`__. Please note
+   that this version of panzer *breaks compatibility with versions of
+   pandoc earlier than 2.0*. Please upgrade to a version of pandoc >2.0.
+   Versions of pandoc prior to 2.0 will no longer be supported in future
+   releases of panzer.
 -  1.2 (12 January 2017):
 
    -  fixed issue introduced by breaking change in panzer 1.1

@@ -3,8 +3,8 @@ import os
 
 DEBUG_TIMING = False
 
-REQUIRE_PANDOC_ATLEAST = "1.12.1"
 USE_OLD_API = False
+REQUIRE_PANDOC_ATLEAST = "2.0"
 
 DEFAULT_SUPPORT_DIR = os.path.join(os.path.expanduser('~'), '.panzer')
 
@@ -85,21 +85,21 @@ PANDOC_OPT_ADDITIVE = ['metadata',
 PANDOC_OPT_PHASE = {
     # general options
     'data-dir':                'rw',
+    'log':                     'rw',
     # reader options
+    'abbreviations':           'r',
     'base-header-level':       'r',
     'default-image-extension': 'r',
     'extract-media':           'r',
     'file-scope':              'r',
     'indented-code-classes':   'r',
     'metadata':                'r',
-    'normalize':               'r',
     'old-dashes':              'r',
-    'parse-raw':               'r',
     'preserve-tabs':           'r',
-    'smart':                   'r',
     'tab-stop':                'r',
     'track-changes':           'r',
     # writer options
+    'eol':                     'w',
     'ascii':                   'w',
     'atx-headers':             'w',
     'biblatex':                'w',
@@ -115,7 +115,7 @@ PANDOC_OPT_PHASE = {
     'epub-cover-image':        'w',
     'epub-embed-font':         'w',
     'epub-metadata':           'w',
-    'epub-stylesheet':         'w',
+    'epub-subdirectory':       'w',
     'gladtex':                 'w',
     'highlight-style':         'w',
     'html-q-tags':             'w',
@@ -127,8 +127,8 @@ PANDOC_OPT_PHASE = {
     'jsmath':                  'w',
     'katex':                   'w',
     'katex-stylesheet':        'w',
-    'latex-engine':            'w',
-    'latex-engine-opt':        'w',
+    'pdf-engine':              'w',
+    'pdf-engine-opt':          'w',
     'latexmathml':             'w',
     'listings':                'w',
     'mathjax':                 'w',
@@ -140,14 +140,16 @@ PANDOC_OPT_PHASE = {
     'no-wrap':                 'w',
     'number-offset':           'w',
     'number-sections':         'w',
-    'reference-docx':          'w',
+    'reference-doc':           'w',
     'reference-links':         'w',
     'reference-location':      'w',
-    'reference-odt':           'w',
+    'request-header':          'w',
+    'resource-path':           'w',
     'section-divs':            'w',
     'self-contained':          'w',
     'slide-level':             'w',
     'standalone':              'w',
+    'syntax-definition':       'w',
     'table-of-contents':       'w',
     'title-prefix':            'w',
     'toc-depth':               'w',
@@ -186,12 +188,13 @@ PANDOC_WRITER_MAPPING = {
     ".org"      : "org",
     ".asciidoc" : "asciidoc",
     ".adoc"     : "asciidoc",
-    ".pdf"      : "latex",
     ".fb2"      : "fb2",
     ".opml"     : "opml",
     ".icml"     : "icml",
     ".tei.xml"  : "tei",
     ".tei"      : "tei",
+    ".ms"       : "ms",
+    ".roff"     : "ms",
     ".1"        : "man",
     ".2"        : "man",
     ".3"        : "man",
