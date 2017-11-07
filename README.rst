@@ -433,7 +433,7 @@ The field name is the unabbreviated name of the relevant pandoc command
 line option (e.g. ``standalone``).
 
 -  For pandoc flags, the value should be boolean (``true``, ``false``),
-   e.g. ``smart: true``.
+   e.g. ``standalone: true``.
 -  For pandoc key-values, the value should be a quoted inline code span,
    e.g. :literal:`include-in-header: "`path/to/my/header`"`.
 -  For pandoc repeated key-values, the value should be a list of inline
@@ -461,14 +461,14 @@ Example:
 ::
 
     commandline:
-        smart: true
+        standalone: true
         slide-level: "`3`"
         number-sections: false
         include-in-header: false
 
-This passes the following options to pandoc ``--smart --slide-level=3``
-and removes any ``--number-sections`` and ``--include-in-header=...``
-options.
+This passes the following options to pandoc
+``--standalone --slide-level=3`` and removes any ``--number-sections``
+and ``--include-in-header=...`` options.
 
 These pandoc command line options cannot be set via ``commandline``:
 
@@ -653,6 +653,7 @@ Known issues
 
 Pull requests welcome:
 
+-  Lua filters using pandoc 2.0’s built-in interpreter not yet supported
 -  Slower than I would like (calls to subprocess slow in Python)
 -  Calls to subprocesses (scripts, filters, etc.) block ui
 -  No Python 2 support

@@ -339,7 +339,7 @@ Arbitrary pandoc command line options can be set using metadata via `commandline
 `commandline` contains one field for each pandoc command line option.
     The field name is the unabbreviated name of the relevant pandoc command line option (e.g. `standalone`).
 
-- For pandoc flags, the value should be boolean (`true`, `false`), e.g. `smart: true`.
+- For pandoc flags, the value should be boolean (`true`, `false`), e.g. `standalone: true`.
 - For pandoc key-values, the value should be a quoted inline code span, e.g. ``include-in-header: "`path/to/my/header`"``.
 - For pandoc repeated key-values, the value should be a list of inline code spans, e.g.
 
@@ -362,13 +362,13 @@ Example:
 
 ```
 commandline:
-    smart: true
+    standalone: true
     slide-level: "`3`"
     number-sections: false
     include-in-header: false
 ```
 
-This passes the following options to pandoc `--smart --slide-level=3` and removes any `--number-sections` and `--include-in-header=...` options.
+This passes the following options to pandoc `--standalone --slide-level=3` and removes any `--number-sections` and `--include-in-header=...` options.
 
 These pandoc command line options cannot be set via `commandline`:
 
