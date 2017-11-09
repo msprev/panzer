@@ -79,7 +79,7 @@ PANDOC_OPT_ADDITIVE = ['metadata',
                        'include-before-body',
                        'include-after-body',
                        'css',
-                       'latex-engine-opt']
+                       'pdf-engine-opt']
 
 # pandoc's command line options, divided by reader or writer
 PANDOC_OPT_PHASE = {
