@@ -3,7 +3,7 @@ panzer user guide
 =================
 
 :Author: Mark Sprevak
-:Date:   7 November 2017
+:Date:   9 November 2017
 
 panzer
 ======
@@ -80,7 +80,7 @@ a style definition in the document’s metadata block:
     filter:
         - run: smallcaps.py
     commandline:
-        - latex-engine: "`xelatex`"
+        - pdf-engine: "`xelatex`"
     ...
 
 Installation
@@ -483,6 +483,7 @@ These pandoc command line options cannot be set via ``commandline``:
 -  ``list-highlight-styles``
 -  ``list-input-formats``
 -  ``list-output-formats``
+-  ``lua-filter``
 -  ``metadata``
 -  ``output``
 -  ``print-default-data-file``
@@ -522,7 +523,7 @@ should probably be using a filter).
 -  ``STYLE`` is a list of current style(s)
 
 -  ``STYLEFULL`` is a list of current style(s) including all parents,
-   grandparents, etc. in order of application
+   grandparents, etc. in order of application
 
 -  ``STYLEDEF`` is a copy of all style definitions employed in document
 
@@ -694,12 +695,14 @@ Release notes
 =============
 
 -  1.3 (7 November 2017):
--  updated for pandoc 2.0
-   `#31 <https://github.com/msprev/panzer/issues/31>`__. Please note
-   that this version of panzer *breaks compatibility with versions of
-   pandoc earlier than 2.0*. Please upgrade to a version of pandoc >2.0.
-   Versions of pandoc prior to 2.0 will no longer be supported in future
-   releases of panzer.
+
+   -  updated for pandoc 2.0
+      `#31 <https://github.com/msprev/panzer/issues/31>`__. Please note
+      that this version of panzer *breaks compatibility with versions of
+      pandoc earlier than 2.0*. Please upgrade to a version of pandoc
+      >2.0. Versions of pandoc prior to 2.0 will no longer be supported
+      in future releases of panzer.
+
 -  1.2 (12 January 2017):
 
    -  fixed issue introduced by breaking change in panzer 1.1
