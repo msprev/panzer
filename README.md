@@ -597,11 +597,8 @@ The writer name `all` is also occupied.
 
 Pull requests welcome:
 
-  - Lua filters using pandoc 2.0’s built-in interpreter not yet
-    supported
   - Slower than I would like (calls to subprocess slow in Python)
   - Calls to subprocesses (scripts, filters, etc.) block ui
-  - No Python 2 support
   - [Possible issue under
     Windows](https://github.com/msprev/panzer/pull/9), so far reported
     by only one user. A leading dot plus slash is required on filter
@@ -626,6 +623,20 @@ Pull requests welcome:
     position to do correctly or predictably inside a style definition.
     You need to use the full path to reference your home directory
     inside a style definition.
+
+3.  What about the new lua filters introduced in pandoc 2.0? These
+    filters are a great addition to pandoc. But they do not fit the
+    typical use case for panzer. For this reason, I do not plan to add
+    support for them to panzer. Introducing such support (e.g. adding
+    dedicated style fields) would actually defeat their purpose by
+    making panzer’s processing slower. The motivations for using the new
+    lua filters are (i) speed; (ii) avoiding external dependencies.
+    Neither of these are typical concerns in a use case of panzer.
+    Anything that can be achieved with a lua filter (in terms of
+    document manipulation) can easily be achieved with a traditional
+    JSON filter. I recommend that unless (i) or (ii) are your priority
+    (in which case you probably shouldn’t be using panzer), you should
+    use a JSON filter.
 
 # Similar
 
