@@ -430,6 +430,7 @@ These pandoc command line options cannot be set via `commandline`:
   - `output`
   - `print-default-data-file`
   - `print-default-template`
+  - `print-highlight-style`
   - `read`
   - `template`
   - `to`
@@ -462,28 +463,44 @@ should probably be using a filter).
   - `STYLE` is a list of current style(s)
 
   - `STYLEFULL` is a list of current style(s) including all parents,
-    grandparents, etc. in order of application
+    grandparents, etc. in order of application
 
   - `STYLEDEF` is a copy of all style definitions employed in document
 
   - `RUNLIST` is a list of processes in the run list; it has the
-    following structure:
+    following
+        structure:
     
-    `RUNLIST = [{'kind':
-    'preflight'|'filter'|'postprocess'|'postflight'|'cleanup',
-    'command': 'my command', 'arguments': ['argument1', 'argument2',
-    ...], 'status': 'queued'|'running'|'failed'|'done' }, ... ... ]`
+        RUNLIST = [{'kind':      'preflight'|'filter'|'postprocess'|'postflight'|'cleanup',
+                    'command':   'my command',
+                    'arguments': ['argument1', 'argument2', ...],
+                    'status':    'queued'|'running'|'failed'|'done'
+                   },
+                    ...
+                    ...
+                  ]
 
   - `OPTIONS` is a dictionary containing panzer’s and pandoc’s command
     line options:
     
-    `OPTIONS = { 'panzer': { 'panzer_support':
-    const.DEFAULT_SUPPORT_DIR, 'pandoc': 'pandoc', 'debug': str(),
-    'quiet': False, 'strict': False, 'stdin_temp_file': str() # tempfile
-    used to buffer stdin }, 'pandoc': { 'input': list(), # list of input
-    files 'output': '-', # output file; '-' is stdout 'pdf_output':
-    False, # if pandoc will write a .pdf 'read': str(), # reader
-    'write': str(), # writer 'options': {'r': dict(), 'w': dict()} } }`
+        OPTIONS = {
+            'panzer': {
+                'panzer_support':  const.DEFAULT_SUPPORT_DIR,
+                'pandoc':          'pandoc',
+                'debug':           str(),
+                'quiet':           False,
+                'strict':          False,
+                'stdin_temp_file': str()   # tempfile used to buffer stdin
+            },
+            'pandoc': {
+                'input':      list(),      # list of input files
+                'output':     '-',         # output file; '-' is stdout
+                'pdf_output': False,       # if pandoc will write a .pdf
+                'read':       str(),       # reader
+                'write':      str(),       # writer
+                'options':    {'r': dict(), 'w': dict()}
+            }
+        }
     
     `options` contains the command line options with which pandoc is
     called. It consists of two separate dictionaries. The dictionary
@@ -640,12 +657,16 @@ Pull requests welcome:
 
 # Similar
 
-  - <https://heerdebeer.org/Software/markdown/pandocomatic/>
+  - <https://github.com/htdebeer/pandocomatic>
   - <https://github.com/balachia/panopy>
   - <https://github.com/phyllisstein/pandown>
 
 # Release notes
 
+  - 1.3.1 (18 December 2017):
+      - updated for pandoc 2.0.5
+        [\#35](https://github.com/msprev/panzer/issues/34). Support for
+        all changes to command line interface and `pptx` writer.
   - 1.3 (7 November 2017):
       - updated for pandoc 2.0
         [\#31](https://github.com/msprev/panzer/issues/31). Please note

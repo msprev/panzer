@@ -29,7 +29,7 @@ EMPTY_DOCUMENT_OLDAPI = [{'unMeta': {}}, []]
 
 # writers that give binary outputs
 # these cannot be written to stdout
-BINARY_WRITERS = ['odt', 'docx', 'epub', 'epub3']
+BINARY_WRITERS = ['odt', 'docx', 'epub', 'epub3', 'pptx']
 
 # forbidden options for panzer command line
 PANDOC_BAD_OPTS = [
@@ -43,6 +43,7 @@ PANDOC_BAD_OPTS = [
     '--list-output-formats',
     '--print-default-data-file',
     '--print-default-template',
+    '--print-highlight-style',
     '-D'
 ]
 
@@ -64,6 +65,7 @@ PANDOC_BAD_COMMANDLINE = [
     'output',
     'print-default-data-file',
     'print-default-template',
+    'print-highlight-style',
     'read',
     'template',
     'to',
@@ -97,6 +99,7 @@ PANDOC_OPT_PHASE = {
     'metadata':                'r',
     'old-dashes':              'r',
     'preserve-tabs':           'r',
+    'strip-empty-paragraphs':  'r',
     'tab-stop':                'r',
     'track-changes':           'r',
     # writer options
@@ -196,6 +199,7 @@ PANDOC_WRITER_MAPPING = {
     ".tei"      : "tei",
     ".ms"       : "ms",
     ".roff"     : "ms",
+    ".pptx"     : "pptx",
     ".1"        : "man",
     ".2"        : "man",
     ".3"        : "man",

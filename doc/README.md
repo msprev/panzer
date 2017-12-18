@@ -2,7 +2,7 @@
 title:  "panzer user guide"
 author:
  - name: Mark Sprevak
-date: 9 November 2017
+date: 18 December 2017
 style: Plain
 ...
 
@@ -388,6 +388,7 @@ These pandoc command line options cannot be set via `commandline`:
 -   `output`
 -   `print-default-data-file`
 -   `print-default-template`
+-   `print-highlight-style`
 -   `read`
 -   `template`
 -   `to`
@@ -589,12 +590,14 @@ Pull requests welcome:
 
 # Similar
 
-* <https://heerdebeer.org/Software/markdown/pandocomatic/>
+* <https://github.com/htdebeer/pandocomatic>
 * <https://github.com/balachia/panopy>
 * <https://github.com/phyllisstein/pandown>
 
 # Release notes
 
+- 1.3.1 (18 December 2017):
+    - updated for pandoc 2.0.5 [#35](https://github.com/msprev/panzer/issues/34). Support for all changes to command line interface and `pptx` writer.
 - 1.3 (7 November 2017):
     - updated for pandoc 2.0 [#31](https://github.com/msprev/panzer/issues/31). Please note that this version of panzer *breaks compatibility with versions of pandoc earlier than 2.0*. Please upgrade to a version of pandoc >2.0. Versions of pandoc prior to 2.0 will no longer be supported in future releases of panzer.
 - 1.2 (12 January 2017):
