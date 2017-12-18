@@ -30,8 +30,8 @@ Multiple styles can be supplied as a list:
 
 ``` {.yaml}
 style:
-    - Notes
-    - BoldHeadings
+  - Notes
+  - BoldHeadings
 ```
 
 Styles are defined in a yaml file ([example][example-yaml]).
@@ -43,18 +43,18 @@ A style can also be defined inside the document's metadata block:
 ---
 style: Notes
 styledef:
-    Notes:
-        all:
-            metadata:
-                numbersections: false
-        latex:
-            metadata:
-                numbersections: true
-                fontsize: 12pt
-            commandline:
-                columns: "`75`"
-            filter:
-                - run: deemph.py
+  Notes:
+    all:
+      metadata:
+        numbersections: false
+    latex:
+      metadata:
+        numbersections: true
+        fontsize: 12pt
+      commandline:
+        columns: "`75`"
+      filter:
+        - run: deemph.py
 ...
 ```
 
@@ -65,9 +65,9 @@ Style settings can be overridden by adding the appropriate field outside a style
 style: Notes
 numbersections: true
 filter:
-    - run: smallcaps.py
+  - run: smallcaps.py
 commandline:
-    - pdf-engine: "`xelatex`"
+  - pdf-engine: "`xelatex`"
 ...
 ```
 
@@ -190,19 +190,19 @@ Example:
 
 ``` {.yaml}
 Notes:
-    all:
-        metadata:
-            numbersections: false
-    latex:
-        metadata:
-            numbersections: true
-            fontsize: 12pt
-        commandline:
-            wrap: preserve
-        filter:
-            - run: deemph.py
-        postflight:
-            - run: latexmk.py
+  all:
+    metadata:
+      numbersections: false
+  latex:
+    metadata:
+      numbersections: true
+      fontsize: 12pt
+    commandline:
+      wrap: preserve
+    filter:
+      - run: deemph.py
+    postflight:
+      - run: latexmk.py
 ```
 
 If panzer were run on the following document with the latex writer selected,
@@ -289,12 +289,12 @@ Example:
 
 ``` {.yaml}
 - filter:
-    - run: setbaseheader.py
-      args: "`--level=2`"
+  - run: setbaseheader.py
+    args: "`--level=2`"
 - postflight:
-    - kill: open_pdf.py
+  - kill: open_pdf.py
 - cleanup:
-    - killall: true
+  - killall: true
 ```
 
 The filter `setbaseheader.py` receives the writer name as its first argument and `--level=2` as its second argument.
@@ -345,10 +345,10 @@ Arbitrary pandoc command line options can be set using metadata via `commandline
 
 ```
 commandline:
-    include-in-header:
-        - "`file1.txt`"
-        - "`file2.txt`"
-        - "`file3.txt`"
+  include-in-header:
+    - "`file1.txt`"
+    - "`file2.txt`"
+    - "`file3.txt`"
 ```
 
 Repeated key-value options in `comandline` are added after any provided from the command line.
@@ -362,10 +362,10 @@ Example:
 
 ```
 commandline:
-    standalone: true
-    slide-level: "`3`"
-    number-sections: false
-    include-in-header: false
+  standalone: true
+  slide-level: "`3`"
+  number-sections: false
+  include-in-header: false
 ```
 
 This passes the following options to pandoc `--standalone --slide-level=3` and removes any `--number-sections` and `--include-in-header=...` options.
@@ -471,10 +471,10 @@ Filters can read the json message by reading the metadata field, `panzer_reserve
 
 ``` {.yaml}
 panzer_reserved:
-    json_message: |
-        ``` {.json}
-        JSON_MESSAGE
-        ```
+  json_message: |
+    ``` {.json}
+    JSON_MESSAGE
+    ```
 ```
 
 this is visible to filters as the following json entity:
