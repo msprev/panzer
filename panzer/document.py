@@ -432,7 +432,8 @@ class Document(object):
                 entry['status'] = const.RUNNING
                 process = subprocess.Popen(command,
                                            stdin=subprocess.PIPE,
-                                           stderr=subprocess.PIPE)
+                                           stderr=subprocess.PIPE,
+                                           shell=True)
                 # send panzer's json message to scripts via stdin
                 in_pipe = self.json_message()
                 in_pipe_bytes = in_pipe.encode(const.ENCODING)
@@ -498,7 +499,8 @@ class Document(object):
                 process = subprocess.Popen(command,
                                            stderr=subprocess.PIPE,
                                            stdin=subprocess.PIPE,
-                                           stdout=subprocess.PIPE)
+                                           stdout=subprocess.PIPE,
+                                           shell=True)
                 in_pipe_bytes = in_pipe.encode(const.ENCODING)
                 out_pipe_bytes, stderr_bytes = \
                     process.communicate(input=in_pipe_bytes)
