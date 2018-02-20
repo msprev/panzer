@@ -289,9 +289,9 @@ Executables (scripts, filters, postprocessors) are specified by a list (the 'run
 Arguments can be passed to executables by listing them as the value of the `args` field of that item.
     The value of the `args` field is passed as the command line options to the external process.
     This value of `args` should be a quoted inline code span (e.g. ``"`--options`"``) to prevent the parser interpreting it as markdown.
-    Note that filters always receive the writer name as their first argument.
+    Note that json filters always receive the writer name as their first argument.
 
-Lua filters cannot take arguments and so should not have an `args` field.
+Lua filters cannot take arguments and the contents of their `args` field is ignored.
 
 Example:
 
@@ -535,10 +535,11 @@ panzer accepts pandoc filters.
 1. Json filters can take more than one command line argument (first argument still reserved for the writer).
 2. A `panzer_reserved` field is added to the AST metadata branch with goodies for filters to mine.
 
-For pandoc, filters and lua-filters are applied in the order specified on the command line.
-    This is not possible with panzer.
-    Instead all lua-filters are applied first, as a single batch, in the order specified first on the command line and then by the style definition.
-    Then, all json filters are applied in the order specified on the command line and then by the style definition.
+For pandoc, json filters and lua-filters are applied in the order specified by respective occurances of `--filter` and `--lua-filter` on the command line.
+    This behaviour is not entirely supported in panzer.
+    Instead, all lua-filters are applied first and in the order specified on the command line and the style definition (command line filters are applied first and unkillable).
+    Then the json filters are applied, also in the order specified on the command line and by the style definition (command line filters are applied first and unkillable).
+    The reasons for the divergence with pandoc's behaviour are complex but mainly derive from performance benefit.
 
 The follow pandoc command line options cannot be used with panzer:
 
