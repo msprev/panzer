@@ -1,3 +1,10 @@
+=================
+panzer user guide
+=================
+
+:Author: Mark Sprevak
+:Date:   20 February 2018
+
 panzer
 ======
 
@@ -58,6 +65,8 @@ A style can also be defined inside the document’s metadata block:
             fontsize: 12pt
           commandline:
             columns: "`75`"
+          lua-filter:
+            - run: macroexpand.lua
           filter:
             - run: deemph.py
     ...
@@ -177,6 +186,8 @@ A style definition may consist of:
 +-----------------------+-----------------------+-----------------------+
 | ``filter``            | pandoc filters        | ``MetaList``          |
 +-----------------------+-----------------------+-----------------------+
+| ``lua-filter``        | pandoc lua filters    | ``MetaList``          |
++-----------------------+-----------------------+-----------------------+
 | ``postprocess``       | run on pandoc’s       | ``MetaList``          |
 |                       | output                |                       |
 +-----------------------+-----------------------+-----------------------+
@@ -214,6 +225,9 @@ A special writer, ``all``, matches every writer.
    filters <http://johnmacfarlane.net/pandoc/scripting.html>`__. Filters
    gain two new properties from panzer. For more info, see section on
    `compatibility <#compatibility>`__ with pandoc.
+
+-  ``lua-filter`` lists pandoc `lua
+   filters <https://pandoc.org/lua-filters.html>`__.
 
 -  ``postprocessor`` lists executable to pipe pandoc’s output through.
    Standard unix executables (``sed``, ``tr``, etc.) are examples of
@@ -311,20 +325,22 @@ for other fields, it is *non-additive*:
    different values), then inheritance is non-additive, and only one
    (the child) wins.
 
--  For ``preflight``, ``filter``, ``postflight`` and ``cleanup`` if one
-   style overrides another, then the ‘winner’ adds its items after those
-   of the ‘loser’. For example, if the parent adds to ``postflight`` an
-   item ``-run: latexmk.py``, and the child adds ``- run: printlog.py``,
-   then ``printlog.py`` will be run after ``latexmk.py``
+-  For ``preflight``, ``lua-filter``, ``filter``, ``postflight`` and
+   ``cleanup`` if one style overrides another, then the ‘winner’ adds
+   its items after those of the ‘loser’. For example, if the parent adds
+   to ``postflight`` an item ``-run: latexmk.py``, and the child adds
+   ``- run: printlog.py``, then ``printlog.py`` will be run after
+   ``latexmk.py``
 
 -  To remove an item from an additive list, add it as the value of a
    ``kill`` field: for example, ``- kill: latexmk.py``
 
 Arguments passed to panzer directly on the command line trump any style
 settings, and cannot be overridden by any metadata setting. Filters
-specified on the command line (via ``--filter``) are run first, and
-cannot be removed. pandoc options set via panzer’s command line
-invocation override any set via ``commandline``.
+specified on the command line (via ``--filter`` and ``--lua-filter``)
+are run first, and cannot be removed. All lua filters are run before
+json filters. pandoc options set via panzer’s command line invocation
+override any set via ``commandline``.
 
 Multiple input files are joined according to pandoc’s rules. Metadata
 are merged using left-biased union. This means overriding behaviour when
@@ -355,6 +371,9 @@ of ``args`` should be a quoted inline code span (e.g.
 :literal:`"`--options`"`) to prevent the parser interpreting it as
 markdown. Note that filters always receive the writer name as their
 first argument.
+
+Lua filters cannot take arguments and so should not have an ``args``
+field.
 
 Example:
 
@@ -398,6 +417,7 @@ The typical structure for the support directory ``.panzer`` is:
     .panzer/
         cleanup/
         filter/
+        lua-filter/
         postflight/
         postprocess/
         preflight/
@@ -526,7 +546,7 @@ should probably be using a filter).
 
    ::
 
-       RUNLIST = [{'kind':      'preflight'|'filter'|'postprocess'|'postflight'|'cleanup',
+       RUNLIST = [{'kind':      'preflight'|'lua-filter'|'filter'|'postprocess'|'postflight'|'cleanup',
                    'command':   'my command',
                    'arguments': ['argument1', 'argument2', ...],
                    'status':    'queued'|'running'|'failed'|'done'
@@ -635,10 +655,17 @@ Compatibility
 panzer accepts pandoc filters. panzer allows filters to behave in two
 new ways:
 
-1. Filters can take more than one command line argument (first argument
-   still reserved for the writer).
+1. Json filters can take more than one command line argument (first
+   argument still reserved for the writer).
 2. A ``panzer_reserved`` field is added to the AST metadata branch with
    goodies for filters to mine.
+
+For pandoc, filters and lua-filters are applied in the order specified
+on the command line. This is not possible with panzer. Instead all
+lua-filters are applied first, as a single batch, in the order specified
+first on the command line and then by the style definition. Then, all
+json filters are applied in the order specified on the command line and
+then by the style definition.
 
 The follow pandoc command line options cannot be used with panzer:
 
@@ -662,6 +689,7 @@ The following metadata fields are reserved for use by panzer:
 -  ``template``
 -  ``preflight``
 -  ``filter``
+-  ``lua-filter``
 -  ``postflight``
 -  ``postprocess``
 -  ``cleanup``
@@ -704,19 +732,6 @@ FAQ
    You need to use the full path to reference your home directory inside
    a style definition.
 
-3. What about the new lua filters introduced in pandoc 2.0? These
-   filters are a great addition to pandoc. But they do not fit the
-   typical use case for panzer. For this reason, I do not plan to add
-   support for them to panzer. Introducing such support (e.g. adding
-   dedicated style fields) would actually defeat their purpose by making
-   panzer’s processing slower. The motivations for using the new lua
-   filters are (i) speed; (ii) avoiding external dependencies. Neither
-   of these are typical concerns in a use case of panzer. Anything that
-   can be achieved with a lua filter (in terms of document manipulation)
-   can easily be achieved with a traditional JSON filter. I recommend
-   that unless (i) or (ii) are your priority (in which case you probably
-   shouldn’t be using panzer), you should use a JSON filter.
-
 Similar
 =======
 
@@ -726,6 +741,10 @@ Similar
 
 Release notes
 =============
+
+-  1.4 (20 February 2018):
+
+   -  support added for lua filters
 
 -  1.3.1 (18 December 2017):
 

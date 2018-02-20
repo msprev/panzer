@@ -53,10 +53,10 @@ styledef:
         fontsize: 12pt
       commandline:
         columns: "`75`"
+      lua-filter:
+        - run: macroexpand.lua
       filter:
         - run: deemph.py
-      lua-filter:
-        - run: macro.lua
 ...
 ```
 
@@ -149,8 +149,8 @@ A style definition may consist of:
   `commandline`   pandoc command line options          `MetaMap`
   `template`      pandoc template                      `MetaInlines` or `MetaString`
   `preflight`     run before input doc is processed    `MetaList`
-  `lua-filter`    pandoc lua filters                   `MetaList`
   `filter`        pandoc filters                       `MetaList`
+  `lua-filter`    pandoc lua filters                   `MetaList`
   `postprocess`   run on pandoc's output               `MetaList`
   `postflight`    run after output file written        `MetaList`
   `cleanup`       run on exit irrespective of errors   `MetaList`
@@ -265,7 +265,7 @@ For fields that pertain to scripts/filters, overriding is *additive*; for other 
 
 Arguments passed to panzer directly on the command line trump any style settings, and cannot be overridden by any metadata setting.
     Filters specified on the command line (via `--filter` and `--lua-filter`) are run first, and cannot be removed.
-    Lua filters are run before json filters.
+    All lua filters are run before json filters.
     pandoc options set via panzer's command line invocation override any set via `commandline`.
 
 Multiple input files are joined according to pandoc's rules.
@@ -290,6 +290,8 @@ Arguments can be passed to executables by listing them as the value of the `args
     The value of the `args` field is passed as the command line options to the external process.
     This value of `args` should be a quoted inline code span (e.g. ``"`--options`"``) to prevent the parser interpreting it as markdown.
     Note that filters always receive the writer name as their first argument.
+
+Lua filters cannot take arguments and so should not have an `args` field.
 
 Example:
 
@@ -323,6 +325,7 @@ The typical structure for the support directory `.panzer` is:
     .panzer/
         cleanup/
         filter/
+        lua-filter/
         postflight/
         postprocess/
         preflight/
@@ -433,7 +436,7 @@ JSON_MESSAGE = [{'metadata':    METADATA,
 
 
     ```
-    RUNLIST = [{'kind':      'preflight'|'filter'|'postprocess'|'postflight'|'cleanup',
+    RUNLIST = [{'kind':      'preflight'|'lua-filter'|'filter'|'postprocess'|'postflight'|'cleanup',
                 'command':   'my command',
                 'arguments': ['argument1', 'argument2', ...],
                 'status':    'queued'|'running'|'failed'|'done'
@@ -529,8 +532,13 @@ The json message that panzer expects is a newline-separated sequence of utf-8 en
 panzer accepts pandoc filters.
     panzer allows filters to behave in two new ways:
 
-1. Filters can take more than one command line argument (first argument still reserved for the writer).
+1. Json filters can take more than one command line argument (first argument still reserved for the writer).
 2. A `panzer_reserved` field is added to the AST metadata branch with goodies for filters to mine.
+
+For pandoc, filters and lua-filters are applied in the order specified on the command line.
+    This is not possible with panzer.
+    Instead all lua-filters are applied first, as a single batch, in the order specified first on the command line and then by the style definition.
+    Then, all json filters are applied in the order specified on the command line and then by the style definition.
 
 The follow pandoc command line options cannot be used with panzer:
 
@@ -554,6 +562,7 @@ The following metadata fields are reserved for use by panzer:
 * `template`
 * `preflight`
 * `filter`
+* `lua-filter`
 * `postflight`
 * `postprocess`
 * `cleanup`
