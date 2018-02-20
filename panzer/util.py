@@ -73,6 +73,7 @@ def create_default_support_dir():
     # - create subdirectories of .panzer
     subdirs = ['preflight',
                'filter',
+               'lua-filter',
                'postprocess',
                'postflight',
                'cleanup',

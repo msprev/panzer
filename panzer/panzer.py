@@ -65,6 +65,8 @@ def main():
         info.time_stamp('document transformed')
         doc.run_scripts('preflight')
         info.time_stamp('preflight scripts done')
+        doc.lua_filter()
+        info.time_stamp('lua filters done')
         doc.pipe_through('filter')
         info.time_stamp('filters done')
         doc.pandoc()

@@ -56,6 +56,7 @@ class Document(object):
                 'write'      : str(),
                 'template'   : str(),
                 'filter'     : list(),
+                'lua_filter' : list(),
                 'options'    : {'r': dict(), 'w': dict()},
                 'mutable'    : {'r': dict(), 'w': dict()}
             }
@@ -219,6 +220,15 @@ class Document(object):
                     entry['command'] = cmd[0]
                     entry['arguments'] = list()
                     runlist.append(entry)
+            # - if 'lua-filter', add filter list specified on command line first
+            elif kind == 'lua-filter':
+                for cmd in self.options['pandoc']['lua_filter']:
+                    entry = dict()
+                    entry['kind'] = 'lua-filter'
+                    entry['status'] = const.QUEUED
+                    entry['command'] = cmd[0]
+                    entry['arguments'] = list()
+                    runlist.append(entry)
             #  - add commands specified in metadata
             if kind in metadata:
                 entries = meta.get_runlist(metadata, kind, self.options)
@@ -295,6 +305,7 @@ class Document(object):
         options['pandoc'] = dict(self.options['pandoc'])
         del options['pandoc']['template']
         del options['pandoc']['filter']
+        del options['pandoc']['lua_filter']
         del options['pandoc']['mutable']
         # - build new json_message
         data = [{'metadata':    metadata,
@@ -458,6 +469,71 @@ class Document(object):
                     raise
             finally:
                 info.log_stderr(stderr, filename)
+
+    def lua_filter(self):
+        """
+        pipe through pandoc with lua filters
+        """
+        info.log('INFO', 'panzer', info.pretty_title('lua-filter'))
+        command = ['pandoc']
+        command += ['-']
+        command += ['--read', 'json']
+        command += ['--write', 'json']
+        for i, entry in enumerate(self.runlist):
+            if entry['kind'] != 'lua-filter':
+                continue
+            # - add debugging info
+            command += ['--lua-filter', entry['command']]
+            info.log('INFO', 'panzer',
+                     info.pretty_runlist_entry(i,
+                                               len(self.runlist),
+                                               entry['command'],
+                                               entry['arguments']))
+        info.log('DEBUG', 'panzer', 'run "%s"' % ' '.join(command))
+        # - run the command and log any errors
+        stderr = str()
+        try:
+            for entry in self.runlist:
+                if entry['kind'] == 'lua-filter':
+                    entry['status'] = const.RUNNING
+            self.json_message()
+            # Set up incoming pipe
+            in_pipe = json.dumps(self.ast)
+            # Set up outgoing pipe in case of failure
+            out_pipe = in_pipe
+            process = subprocess.Popen(command,
+                                       stderr=subprocess.PIPE,
+                                       stdin=subprocess.PIPE,
+                                       stdout=subprocess.PIPE)
+            in_pipe_bytes = in_pipe.encode(const.ENCODING)
+            out_pipe_bytes, stderr_bytes = \
+                process.communicate(input=in_pipe_bytes)
+            for entry in self.runlist:
+                if entry['kind'] == 'lua-filter':
+                    entry['status'] = const.DONE
+            out_pipe = out_pipe_bytes.decode(const.ENCODING)
+            stderr = stderr_bytes.decode(const.ENCODING)
+            if stderr:
+                entry['stderr'] = info.decode_stderr_json(stderr)
+        except OSError as err:
+            for entry in self.runlist:
+                if entry['kind'] == 'lua-filter':
+                    entry['status'] = const.FAILED
+            info.log('ERROR', 'lua filters', err)
+        except Exception:
+            for entry in self.runlist:
+                if entry['kind'] == 'lua-filter':
+                    entry['status'] = const.FAILED
+            raise
+        finally:
+            info.log_stderr(stderr, 'lua filters')
+        # 4. Update document's data with output from commands
+        try:
+            self.ast = json.loads(out_pipe)
+        except ValueError:
+            info.log('ERROR', 'panzer',
+                     'failed to receive json object from lua filters'
+                     '---skipping all lua filters')
 
     def pipe_through(self, kind):
         """

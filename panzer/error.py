@@ -16,6 +16,10 @@ class BadArgsFormat(PanzerError):
     """ args field for item in run list has incorrect format """
     pass
 
+class NoArgsAllowed(PanzerError):
+    """ no command line arguments allowed to be passed to lua filters """
+    pass
+
 class MissingField(PanzerError):
     """ looked for metadata field, did not find it """
     pass

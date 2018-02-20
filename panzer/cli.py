@@ -157,6 +157,7 @@ def pandoc_parse(args):
     pandoc_parser.add_argument("--output", "-o")
     pandoc_parser.add_argument("--template")
     pandoc_parser.add_argument("--filter", nargs=1, action='append')
+    pandoc_parser.add_argument("--lua-filter", nargs=1, action='append')
     pandoc_known_raw, unknown = pandoc_parser.parse_known_args(args)
     pandoc_known = vars(pandoc_known_raw)
     return (pandoc_known, unknown)

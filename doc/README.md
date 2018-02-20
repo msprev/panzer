@@ -2,7 +2,7 @@
 title:  "panzer user guide"
 author:
  - name: Mark Sprevak
-date: 18 December 2017
+date: 20 February 2018
 style: Plain
 ...
 
@@ -55,6 +55,8 @@ styledef:
         columns: "`75`"
       filter:
         - run: deemph.py
+      lua-filter:
+        - run: macro.lua
 ...
 ```
 
@@ -147,6 +149,7 @@ A style definition may consist of:
   `commandline`   pandoc command line options          `MetaMap`
   `template`      pandoc template                      `MetaInlines` or `MetaString`
   `preflight`     run before input doc is processed    `MetaList`
+  `lua-filter`    pandoc lua filters                   `MetaList`
   `filter`        pandoc filters                       `MetaList`
   `postprocess`   run on pandoc's output               `MetaList`
   `postflight`    run after output file written        `MetaList`
@@ -175,6 +178,8 @@ Style definitions are hierarchically structured by *name* and *writer*.
 - `filter` lists pandoc [json filters][].
     Filters gain two new properties from panzer.
     For more info, see section on [compatibility](#compatibility) with pandoc.
+
+- `lua-filter` lists pandoc [lua filters](https://pandoc.org/lua-filters.html).
 
 - `postprocessor` lists executable to pipe pandoc's output through.
     Standard unix executables (`sed`, `tr`, etc.) are examples of possible use.
@@ -252,14 +257,15 @@ For fields that pertain to scripts/filters, overriding is *additive*; for other 
 - For `metadata`, `template`, and `commandline`, if one style overrides another (say, a parent and child set `numbersections` to different values),
     then inheritance is non-additive, and only one (the child) wins.
 
-- For `preflight`, `filter`, `postflight` and `cleanup` if one style overrides another, then the 'winner' adds its items after those of the 'loser'.
+- For `preflight`, `lua-filter`, `filter`, `postflight` and `cleanup` if one style overrides another, then the 'winner' adds its items after those of the 'loser'.
     For example, if the parent adds to `postflight` an item `-run: latexmk.py`, and the child adds `- run: printlog.py`,
         then `printlog.py` will be run after `latexmk.py`
 
 - To remove an item from an additive list, add it as the value of a `kill` field: for example, `- kill: latexmk.py`
 
 Arguments passed to panzer directly on the command line trump any style settings, and cannot be overridden by any metadata setting.
-    Filters specified on the command line (via `--filter`) are run first, and cannot be removed.
+    Filters specified on the command line (via `--filter` and `--lua-filter`) are run first, and cannot be removed.
+    Lua filters are run before json filters.
     pandoc options set via panzer's command line invocation override any set via `commandline`.
 
 Multiple input files are joined according to pandoc's rules.
@@ -585,8 +591,6 @@ Pull requests welcome:
     TL;DR: expansion and globbing are messy and not something that panzer is in a position to do correctly or predictably inside a style definition.
     You need to use the full path to reference your home directory inside a style definition.
 
-3.  What about the new lua filters introduced in pandoc 2.0? These filters are a great addition to pandoc. But they do not fit the typical use case for panzer. For this reason, I do not plan to add support for them to panzer. Introducing such support (e.g. adding dedicated style fields) would actually defeat their purpose by making panzer's processing slower. The motivations for using the new lua filters are (i) speed; (ii) avoiding external dependencies. Neither of these are typical concerns in a use case of panzer. Anything that can be achieved with a lua filter (in terms of document manipulation) can easily be achieved with a traditional JSON filter. I recommend that unless (i) or (ii) are your priority (in which case you probably shouldn't be using panzer), you should use a JSON filter.
-
 
 # Similar
 
@@ -596,6 +600,8 @@ Pull requests welcome:
 
 # Release notes
 
+- 1.4 (20 February 2018):
+    - support added for lua filters
 - 1.3.1 (18 December 2017):
     - updated for pandoc 2.0.5 [#35](https://github.com/msprev/panzer/issues/34). Support for all changes to command line interface and `pptx` writer.
 - 1.3 (7 November 2017):

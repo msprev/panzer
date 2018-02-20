@@ -206,6 +206,9 @@ def get_runlist(metadata, kind, options):
         entry['arguments'] = list()
         if 'args' in item_content:
             try:
+                # - lua filters cannot take arguments
+                if kind == 'lua-filter':
+                    raise error.NoArgsAllowed
                 if get_type(item_content, 'args') != 'MetaInlines':
                     raise error.BadArgsFormat
                 args_content = get_content(item_content, 'args', 'MetaInlines')
@@ -214,6 +217,10 @@ def get_runlist(metadata, kind, options):
                     raise error.BadArgsFormat
                 arguments_raw = args_content[0][const.C][1]
                 entry['arguments'] = shlex.split(arguments_raw)
+            except error.NoArgsAllowed:
+                info.log('ERROR', 'panzer', '"%s": lua filters do not take arguments -- arguments ignored' %
+                         command_str)
+                entry['arguments'] = list()
             except error.BadArgsFormat:
                 info.log('ERROR', 'panzer', 'Cannot read "args" of "%s". '
                          'Syntax should be args: "`--ARGUMENTS`"'
