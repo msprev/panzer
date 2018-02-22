@@ -240,21 +240,25 @@ def pretty_runlist(runlist):
         if current_kind != entry['kind']:
             output.append(entry['kind'] + ':')
             current_kind = entry['kind']
-        path = entry['command']
-        basename = os.path.splitext(os.path.basename(path))[0]
-        line = ' %d  %s' % (i+1, basename)
-        line = line.ljust(20)
-        line += '"%s"' % pretty_path(path)
+        basename = pretty_path(entry['command'])
+        if entry['arguments']:
+            basename += ' '
+            basename += ' '.join(entry['arguments'])
+        line = '%d' % (i+1)
+        line = line.rjust(3, ' ')
+        line += ' %s' % basename
         output.append(line)
     return output
 
 def pretty_runlist_entry(num, max_num, command, arguments):
     """ return pretty printed run list entry """
-    basename = os.path.splitext(os.path.basename(command))[0]
+    basename = command
     if arguments:
         basename += ' '
         basename += ' '.join(arguments)
-    line = '[%d/%d] %s' % (num+1, max_num, basename)
+    cur = '%d' % (num+1)
+    cur = cur.rjust(len(str(max_num)), ' ')
+    line = ' [%s/%d] %s' % (cur, max_num, basename)
     return line
 
 def time_stamp(text):
