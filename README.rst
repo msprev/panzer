@@ -517,10 +517,14 @@ Passing messages to external processes
 
 External processes have just as much information as panzer does. panzer
 sends its information to external processes via a json message. This
-message is sent over stdin to scripts (preflight, postflight, cleanup
-scripts), and embedded in the AST for filters. Postprocessors are an
-exception; they do not receive a json message (if you need it, you
-should probably be using a filter).
+message is sent as a string over stdin to scripts (preflight,
+postflight, cleanup scripts). It is stored inside a ``CodeBlock`` of the
+AST for filters. Note that filters need to parse the ``panzer_reserved``
+field and deserialise the contents of its ``CodeBlock`` to recover the
+json message. Some relevant discussion is
+`here <https://github.com/msprev/panzer/issues/38#issuecomment-367664291>`__.
+Postprocessors do not receive a json message (if you need it, you should
+probably be using a filter).
 
 ::
 
@@ -593,34 +597,16 @@ Scripts read the json message above by deserialising json input on
 stdin.
 
 Filters can read the json message by reading the metadata field,
-``panzer_reserved``, in the AST:
+``panzer_reserved``, stored as a raw code block in the AST, and
+deserialising the string ``JSON_MESSAGE_STR`` to recover the json:
 
 .. code:: yaml
 
     panzer_reserved:
       json_message: |
         ``` {.json}
-        JSON_MESSAGE
+        JSON_MESSAGE_STR
         ```
-
-this is visible to filters as the following json entity:
-
-::
-
-      "panzer_reserved": {
-        "t": "MetaMap",
-        "c": {
-          "json_message": {
-            "t": "MetaBlocks",
-            "c": [
-              {
-                "t": "CodeBlock",
-                "c": [ [ "", [ "json" ], [] ], "JSON_MESSAGE" ]
-              }
-            ]
-          }
-        }
-      }
 
 Receiving messages from external processes
 ==========================================
