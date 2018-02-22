@@ -470,71 +470,6 @@ class Document(object):
             finally:
                 info.log_stderr(stderr, filename)
 
-    def lua_filter(self):
-        """
-        pipe through pandoc with lua filters
-        """
-        info.log('INFO', 'panzer', info.pretty_title('lua-filter'))
-        command = ['pandoc']
-        command += ['-']
-        command += ['--read', 'json']
-        command += ['--write', 'json']
-        for i, entry in enumerate(self.runlist):
-            if entry['kind'] != 'lua-filter':
-                continue
-            # - add debugging info
-            command += ['--lua-filter', entry['command']]
-            info.log('INFO', 'panzer',
-                     info.pretty_runlist_entry(i,
-                                               len(self.runlist),
-                                               entry['command'],
-                                               entry['arguments']))
-        info.log('DEBUG', 'panzer', 'run "%s"' % ' '.join(command))
-        # - run the command and log any errors
-        stderr = str()
-        try:
-            for entry in self.runlist:
-                if entry['kind'] == 'lua-filter':
-                    entry['status'] = const.RUNNING
-            self.json_message()
-            # Set up incoming pipe
-            in_pipe = json.dumps(self.ast)
-            # Set up outgoing pipe in case of failure
-            out_pipe = in_pipe
-            process = subprocess.Popen(command,
-                                       stderr=subprocess.PIPE,
-                                       stdin=subprocess.PIPE,
-                                       stdout=subprocess.PIPE)
-            in_pipe_bytes = in_pipe.encode(const.ENCODING)
-            out_pipe_bytes, stderr_bytes = \
-                process.communicate(input=in_pipe_bytes)
-            for entry in self.runlist:
-                if entry['kind'] == 'lua-filter':
-                    entry['status'] = const.DONE
-            out_pipe = out_pipe_bytes.decode(const.ENCODING)
-            stderr = stderr_bytes.decode(const.ENCODING)
-            if stderr:
-                entry['stderr'] = info.decode_stderr_json(stderr)
-        except OSError as err:
-            for entry in self.runlist:
-                if entry['kind'] == 'lua-filter':
-                    entry['status'] = const.FAILED
-            info.log('ERROR', 'lua filters', err)
-        except Exception:
-            for entry in self.runlist:
-                if entry['kind'] == 'lua-filter':
-                    entry['status'] = const.FAILED
-            raise
-        finally:
-            info.log_stderr(stderr, 'lua filters')
-        # 4. Update document's data with output from commands
-        try:
-            self.ast = json.loads(out_pipe)
-        except ValueError:
-            info.log('ERROR', 'panzer',
-                     'failed to receive json object from lua filters'
-                     '---skipping all lua filters')
-
     def pipe_through(self, kind):
         """
         pipe through external command listed in `self.runlist`
@@ -634,18 +569,30 @@ class Document(object):
             command += ['--template=%s' % self.template]
         opts = meta.build_cli_options(self.options['pandoc']['options']['w'])
         command += opts
+        info.log('INFO', 'panzer', info.pretty_title('pandoc write'))
+        # - add lua filters
+        luafilters = list()
+        for i, entry in enumerate(self.runlist):
+            if entry['kind'] != 'lua-filter':
+                continue
+            command += ['--lua-filter', entry['command']]
+            luafilters += ['--lua-filter', entry['command']]
+            info.log('INFO', 'panzer',
+                     info.pretty_runlist_entry(i,
+                                               len(self.runlist),
+                                               entry['command'],
+                                               entry['arguments']))
         # 2. Prefill input and output pipes
         in_pipe = json.dumps(self.ast)
         out_pipe = str()
         stderr = str()
         # 3. Run pandoc command
-        info.log('INFO', 'panzer', info.pretty_title('pandoc write'))
-        if opts:
+        if opts or luafilters:
             info.log('INFO', 'panzer', 'pandoc writing with options:')
-            info.log('INFO', 'panzer', info.pretty_list(opts, separator=' '))
+            info.log('INFO', 'panzer', info.pretty_list(opts + luafilters, separator=' '))
         else:
             info.log('INFO', 'panzer', 'running')
-        info.log('DEBUG', 'panzer', 'run "%s"' % ' '.join(command))
+        info.log('INFO', 'panzer', 'run "%s"' % ' '.join(command))
         try:
             info.time_stamp('ready to do popen')
             process = subprocess.Popen(command,
