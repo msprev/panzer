@@ -294,7 +294,7 @@ for other fields, it is *non-additive*:
 Arguments passed to panzer directly on the command line trump any style
 settings, and cannot be overridden by any metadata setting. Filters
 specified on the command line (via `--filter` and `--lua-filter`) are
-run first, and cannot be removed. All lua filters are run before json
+run first, and cannot be removed. All lua filters are run after json
 filters. pandoc options set via panzer’s command line invocation
 override any set via `commandline`.
 
@@ -335,6 +335,9 @@ Example:
 - filter:
   - run: setbaseheader.py
     args: "`--level=2`"
+- postprocess:
+  - run: sed
+    args: "`-e 's/hello/goodbye/g'`"
 - postflight:
   - kill: open_pdf.py
 - cleanup:
@@ -482,7 +485,7 @@ should probably be using a filter).
     following
         structure:
     
-        RUNLIST = [{'kind':      'preflight'|'lua-filter'|'filter'|'postprocess'|'postflight'|'cleanup',
+        RUNLIST = [{'kind':      'preflight'|'filter'|'lua-filter'|'postprocess'|'postflight'|'cleanup',
                     'command':   'my command',
                     'arguments': ['argument1', 'argument2', ...],
                     'status':    'queued'|'running'|'failed'|'done'
@@ -593,10 +596,10 @@ new ways:
 For pandoc, json filters and lua-filters are applied in the order
 specified by respective occurances of `--filter` and `--lua-filter` on
 the command line. This behaviour is not entirely supported in panzer.
-Instead, all lua-filters are applied first and in the order specified on
-the command line and the style definition (command line filters are
-applied first and unkillable). Then the json filters are applied, also
-in the order specified on the command line and by the style definition
+Instead, all json filters are applied first and in the order specified
+on the command line and the style definition (command line filters are
+applied first and unkillable). Then the lua-filters are applied, also in
+the order specified on the command line and by the style definition
 (command line filters are applied first and unkillable). The reasons for
 the divergence with pandoc’s behaviour are complex but mainly derive
 from performance benefit.
@@ -672,6 +675,9 @@ Pull requests welcome:
 
 # Release notes
 
+  - 1.4.1 (22 February 2018):
+      - improved support of lua filters thanks to feedback from
+        [jzeneto](https://github.com/jzeneto)
   - 1.4 (20 February 2018):
       - support added for lua filters
   - 1.3.1 (18 December 2017):

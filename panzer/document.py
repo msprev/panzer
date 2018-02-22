@@ -441,7 +441,7 @@ class Document(object):
             stderr = str()
             try:
                 entry['status'] = const.RUNNING
-                process = subprocess.Popen(command,
+                process = subprocess.Popen(' '.join(command),
                                            stdin=subprocess.PIPE,
                                            stderr=subprocess.PIPE,
                                            shell=True)
@@ -470,21 +470,17 @@ class Document(object):
             finally:
                 info.log_stderr(stderr, filename)
 
-    def pipe_through(self, kind):
+    def jsonfilter(self):
         """
-        pipe through external command listed in `self.runlist`
-        (`kind` could be 'filter' or 'postprocess')
+        pipe through external command listed in filters
         """
-        if kind != 'filter' and kind != 'postprocess':
-            raise error.InternalError('illegal invocation of '
-                                      '"pipe" in panzer.py')
-        to_run = [entry for entry in self.runlist if entry['kind'] == kind]
+        to_run = [entry for entry in self.runlist if entry['kind'] == 'filter']
         if not to_run:
             return
-        info.log('INFO', 'panzer', info.pretty_title(kind))
+        info.log('INFO', 'panzer', info.pretty_title('filter'))
         # Run commands
         for i, entry in enumerate(self.runlist):
-            if entry['kind'] != kind:
+            if entry['kind'] != 'filter':
                 continue
             # - add debugging info
             command = [entry['command']] + entry['arguments']
@@ -501,13 +497,10 @@ class Document(object):
                 entry['status'] = const.RUNNING
                 self.json_message()
                 # Set up incoming pipe
-                if kind == 'filter':
-                    in_pipe = json.dumps(self.ast)
-                elif kind == 'postprocess':
-                    in_pipe = self.output
+                in_pipe = json.dumps(self.ast)
                 # Set up outgoing pipe in case of failure
                 out_pipe = in_pipe
-                process = subprocess.Popen(command,
+                process = subprocess.Popen(' '.join(command),
                                            stderr=subprocess.PIPE,
                                            stdin=subprocess.PIPE,
                                            stdout=subprocess.PIPE,
@@ -531,17 +524,14 @@ class Document(object):
                 # remove embedded json message
                 info.log_stderr(stderr, filename)
             # 4. Update document's data with output from commands
-            if kind == 'filter':
-                try:
-                    self.ast = json.loads(out_pipe)
-                    self.json_message(clear=True)
-                except ValueError:
-                    info.log('ERROR', 'panzer',
-                             'failed to receive json object from filter'
-                             '---skipping filter')
-                    continue
-            elif kind == 'postprocess':
-                self.output = out_pipe
+            try:
+                self.ast = json.loads(out_pipe)
+                self.json_message(clear=True)
+            except ValueError:
+                info.log('ERROR', 'panzer',
+                         'failed to receive json object from filter'
+                         '---skipping filter')
+                continue
 
     def pandoc(self):
         """
@@ -557,11 +547,7 @@ class Document(object):
         command += ['-']
         command += ['--read', 'json']
         command += ['--write', self.options['pandoc']['write']]
-        if self.options['pandoc']['pdf_output'] \
-        or self.options['pandoc']['write'] in const.BINARY_WRITERS:
-            command += ['--output', self.options['pandoc']['output']]
-        else:
-            command += ['--output', '-']
+        command += ['--output', self.options['pandoc']['output']]
         # - template specified on cli has precedence
         if self.options['pandoc']['template']:
             command += ['--template=%s' % self.options['pandoc']['template']]
@@ -571,12 +557,12 @@ class Document(object):
         command += opts
         info.log('INFO', 'panzer', info.pretty_title('pandoc write'))
         # - add lua filters
-        luafilters = list()
+        luaopts = list()
         for i, entry in enumerate(self.runlist):
             if entry['kind'] != 'lua-filter':
                 continue
             command += ['--lua-filter', entry['command']]
-            luafilters += ['--lua-filter', entry['command']]
+            luaopts += ['--lua-filter', entry['command']]
             info.log('INFO', 'panzer',
                      info.pretty_runlist_entry(i,
                                                len(self.runlist),
@@ -587,12 +573,12 @@ class Document(object):
         out_pipe = str()
         stderr = str()
         # 3. Run pandoc command
-        if opts or luafilters:
+        if opts or luaopts:
             info.log('INFO', 'panzer', 'pandoc writing with options:')
-            info.log('INFO', 'panzer', info.pretty_list(opts + luafilters, separator=' '))
+            info.log('INFO', 'panzer', info.pretty_list(opts + luaopts, separator=' '))
         else:
             info.log('INFO', 'panzer', 'running')
-        info.log('INFO', 'panzer', 'run "%s"' % ' '.join(command))
+        info.log('DEBUG', 'panzer', 'run "%s"' % ' '.join(command))
         try:
             info.time_stamp('ready to do popen')
             process = subprocess.Popen(command,
@@ -610,41 +596,90 @@ class Document(object):
             info.log('ERROR', 'pandoc', err)
         finally:
             info.log_stderr(stderr)
-        # 4. Deal with output of pandoc
+            sys.stdout.buffer.write(out_pipe_bytes)
+            sys.stdout.flush()
+        # mark all lua filters as 'done'
+        for entry in self.runlist:
+            if entry['kind'] == 'lua-filter':
+                entry['status'] = const.DONE
+        # 4. Capture output of pandoc if it is to stdout
         if self.options['pandoc']['pdf_output'] \
         or self.options['pandoc']['write'] in const.BINARY_WRITERS:
             # do nothing with a binary output
             pass
-        else:
+        elif self.options['pandoc']['output'] == '-':
             self.output = out_pipe
 
-    def write(self):
+    def postprocess(self):
         """
-        writes `self.output` to disk or stdout
-        used to write document's output
+        postprocess through external command listed in 'postprocess'
         """
-        # case 1: pdf or binary file as output
-        if self.options['pandoc']['pdf_output'] \
-        or self.options['pandoc']['write'] in const.BINARY_WRITERS:
-            info.log('DEBUG', 'panzer', 'output to binary file by pandoc')
+        to_run = [entry for entry in self.runlist if entry['kind'] == 'postprocess']
+        if not to_run:
             return
-        # case 2: no output generated
-        if not self.output and self.options['pandoc']['write'] != 'rtf':
-            # hack for rtf writer to get around issue:
-            # https://github.com/jgm/pandoc/issues/1732
-            # probably no longer needed as now fixed in pandoc 1.13.2
-            info.log('DEBUG', 'panzer', 'no output to write')
-            return
-        # case 3: stdout as output
+        info.log('INFO', 'panzer', info.pretty_title('postprocess'))
+        # prepare the input
+        # case 1: pandoc output written to stdout
         if self.options['pandoc']['output'] == '-':
-            sys.stdout.buffer.write(self.output.encode(const.ENCODING))
+            in_pipe = self.output
+        # case 2: pandoc output written to file
+        else:
+            with open(self.options['pandoc']['output'], 'r', encoding=const.ENCODING) as fp:
+                in_pipe = fp.read()
+        # Run commands
+        for i, entry in enumerate(self.runlist):
+            if entry['kind'] != 'postprocess':
+                continue
+            # - add debugging info
+            command = [entry['command']] + entry['arguments']
+            filename = os.path.basename(entry['command'])
+            info.log('INFO', 'panzer',
+                     info.pretty_runlist_entry(i,
+                                               len(self.runlist),
+                                               entry['command'],
+                                               entry['arguments']))
+            info.log('DEBUG', 'panzer', 'run "%s"' % ' '.join(command))
+            # - run the command and log any errors
+            stderr = str()
+            try:
+                entry['status'] = const.RUNNING
+                # Set up outgoing pipe in case of failure
+                out_pipe = in_pipe
+                process = subprocess.Popen(' '.join(command),
+                                           stderr=subprocess.PIPE,
+                                           stdin=subprocess.PIPE,
+                                           stdout=subprocess.PIPE,
+                                           shell=True)
+                in_pipe_bytes = in_pipe.encode(const.ENCODING)
+                out_pipe_bytes, stderr_bytes = \
+                    process.communicate(input=in_pipe_bytes)
+                entry['status'] = const.DONE
+                out_pipe = out_pipe_bytes.decode(const.ENCODING)
+                stderr = stderr_bytes.decode(const.ENCODING)
+                if stderr:
+                    entry['stderr'] = info.decode_stderr_json(stderr)
+            except OSError as err:
+                entry['status'] = const.FAILED
+                info.log('ERROR', filename, err)
+                continue
+            except Exception:
+                entry['status'] = const.FAILED
+                raise
+            finally:
+                info.log_stderr(stderr, filename)
+            self.output = out_pipe
+            in_pipe = out_pipe
+        # 4. write final output
+        # case 1: stdout as output
+        if self.options['pandoc']['output'] == '-':
+            sys.stdout.buffer.write(out_pipe_bytes)
             sys.stdout.flush()
             info.log('DEBUG', 'panzer', 'output written stdout by panzer')
-        # case 4: output to file
+        # case 2: output to file
         else:
             with open(self.options['pandoc']['output'], 'w',
                       encoding=const.ENCODING) as output_file:
-                output_file.write(self.output)
+                output_file.write(out_pipe)
                 output_file.flush()
             info.log('INFO', 'panzer', 'output written to "%s"'
                      % self.options['pandoc']['output'])
