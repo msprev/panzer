@@ -622,10 +622,12 @@ class Document(object):
         # case 1: pandoc output written to stdout
         if self.options['pandoc']['output'] == '-':
             in_pipe = self.output
+            info.log('INFO', 'panzer', "input read from pandoc's stdout")
         # case 2: pandoc output written to file
         else:
             with open(self.options['pandoc']['output'], 'r', encoding=const.ENCODING) as fp:
                 in_pipe = fp.read()
+            info.log('INFO', 'panzer', 'input read from "%s"' % self.options['pandoc']['output'])
         # Run commands
         for i, entry in enumerate(self.runlist):
             if entry['kind'] != 'postprocess':
@@ -674,6 +676,7 @@ class Document(object):
         if self.options['pandoc']['output'] == '-':
             sys.stdout.buffer.write(out_pipe_bytes)
             sys.stdout.flush()
+            info.log('INFO', 'panzer', 'output written to stdout')
             info.log('DEBUG', 'panzer', 'output written stdout by panzer')
         # case 2: output to file
         else:
