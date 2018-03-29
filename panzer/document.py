@@ -373,6 +373,9 @@ class Document(object):
         indoc_data = self.get_metadata()
         # -- add items from additive fields in indoc metadata
         new_metadata = meta.update_additive_lists(new_metadata, indoc_data)
+        for field in const.RUNLIST_KIND:
+            if field in indoc_data:
+                del indoc_data[field]
         # -- add all other (non-additive) fields in
         new_metadata.update(indoc_data)
         # -- apply items from indoc `commandline` field

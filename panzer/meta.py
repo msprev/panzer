@@ -80,6 +80,7 @@ def apply_kill_rules(old_list):
                         if get_content(i[const.C],
                                        'run',
                                        'MetaInlines') != to_be_killed]
+            continue
         elif 'killall' in item_content:
             try:
                 if get_content(item_content, 'killall', 'MetaBool') is True:
