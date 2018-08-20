@@ -53,15 +53,16 @@ def check_support_directory(options):
                      'using default panzer support directory: %s'
                      % const.DEFAULT_SUPPORT_DIR)
             options['panzer']['panzer_support'] = const.DEFAULT_SUPPORT_DIR
-    if not os.path.exists(const.DEFAULT_SUPPORT_DIR):
-        info.log('WARNING', 'panzer',
-                 'default panzer support directory "%s" not found'
-                 % const.DEFAULT_SUPPORT_DIR)
-        info.log('WARNING', 'panzer',
-                 'create empty support directory "%s"?'
-                 % const.DEFAULT_SUPPORT_DIR)
-        input("    Press Enter to continue...")
-        create_default_support_dir()
+    if options['panzer']['panzer_support'] == const.DEFAULT_SUPPORT_DIR:
+        if not os.path.exists(const.DEFAULT_SUPPORT_DIR):
+            info.log('WARNING', 'panzer',
+                     'default panzer support directory "%s" not found'
+                     % const.DEFAULT_SUPPORT_DIR)
+            info.log('WARNING', 'panzer',
+                     'create empty support directory "%s"?'
+                     % const.DEFAULT_SUPPORT_DIR)
+            input("    Press Enter to continue...")
+            create_default_support_dir()
     os.environ['PANZER_SHARED'] = \
         os.path.join(options['panzer']['panzer_support'], 'shared')
 
