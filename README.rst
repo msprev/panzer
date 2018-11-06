@@ -3,7 +3,7 @@ panzer user guide
 =================
 
 :Author: Mark Sprevak
-:Date:   22 February 2018
+:Date:   6 November 2018
 
 panzer
 ======
@@ -32,15 +32,15 @@ block of your document:
 
 .. code:: yaml
 
-    style: Notes
+   style: Notes
 
 Multiple styles can be supplied as a list:
 
 .. code:: yaml
 
-    style:
-      - Notes
-      - BoldHeadings
+   style:
+     - Notes
+     - BoldHeadings
 
 Styles are defined in a yaml file
 (`example <https://github.com/msprev/dot-panzer/blob/master/styles/styles.yaml>`__).
@@ -52,45 +52,45 @@ A style can also be defined inside the document’s metadata block:
 
 .. code:: yaml
 
-    ---
-    style: Notes
-    styledef:
-      Notes:
-        all:
-          metadata:
-            numbersections: false
-        latex:
-          metadata:
-            numbersections: true
-            fontsize: 12pt
-          commandline:
-            columns: "`75`"
-          lua-filter:
-            - run: macroexpand.lua
-          filter:
-            - run: deemph.py
-    ...
+   ---
+   style: Notes
+   styledef:
+     Notes:
+       all:
+         metadata:
+           numbersections: false
+       latex:
+         metadata:
+           numbersections: true
+           fontsize: 12pt
+         commandline:
+           columns: "`75`"
+         lua-filter:
+           - run: macroexpand.lua
+         filter:
+           - run: deemph.py
+   ...
 
 Style settings can be overridden by adding the appropriate field outside
 a style definition in the document’s metadata block:
 
 .. code:: yaml
 
-    ---
-    style: Notes
-    numbersections: true
-    filter:
-      - run: smallcaps.py
-    commandline:
-      - pdf-engine: "`xelatex`"
-    ...
+   ---
+   style: Notes
+   numbersections: true
+   filter:
+     - run: smallcaps.py
+   commandline:
+     - pdf-engine: "`xelatex`"
+   ...
 
 Installation
 ============
 
-::
+.. code:: bash
 
-    pip3 install git+https://github.com/msprev/panzer
+   pip3 install git+https://github.com/msprev/panzer
 
 *Requirements:*
 
@@ -101,9 +101,9 @@ Installation
 
 *To upgrade existing installation:*
 
-::
+.. code:: bash
 
-    pip3 install --upgrade git+https://github.com/msprev/panzer
+   pip3 install --upgrade git+https://github.com/msprev/panzer
 
 On Arch Linux systems, the AUR package
 `panzer-git <https://aur.archlinux.org/packages/panzer-git/>`__ can be
@@ -118,17 +118,17 @@ work, use the alternative install method below.
 
 ::
 
-        git clone https://github.com/msprev/panzer
-        cd panzer
-        python3 setup.py install
+       git clone https://github.com/msprev/panzer
+       cd panzer
+       python3 setup.py install
 
 *To upgrade existing installation:*
 
 ::
 
-        cd /path/to/panzer/directory/cloned
-        git pull
-        python3 setup.py install --force
+       cd /path/to/panzer/directory/cloned
+       git pull
+       python3 setup.py install --force
 
 Use
 ===
@@ -148,16 +148,16 @@ dashes (``---``). Run the command ``panzer -h`` to see them:
 
 ::
 
-      -h, --help, ---help, ---h
-                            show this help message and exit
-      -v, --version, ---version, ---v
-                            show program's version number and exit
-      ---quiet              only print errors and warnings
-      ---strict             exit on first error
-      ---panzer-support PANZER_SUPPORT
-                            panzer user data directory
-      ---pandoc PANDOC      pandoc executable
-      ---debug DEBUG        filename to write .log and .json debug files
+     -h, --help, ---help, ---h
+                           show this help message and exit
+     -v, --version, ---version, ---v
+                           show program's version number and exit
+     ---quiet              only print errors and warnings
+     ---strict             exit on first error
+     ---panzer-support PANZER_SUPPORT
+                           panzer user data directory
+     ---pandoc PANDOC      pandoc executable
+     ---debug DEBUG        filename to write .log and .json debug files
 
 Panzer expects all input and output to be utf-8.
 
@@ -246,41 +246,41 @@ Example:
 
 .. code:: yaml
 
-    Notes:
-      all:
-        metadata:
-          numbersections: false
-      latex:
-        metadata:
-          numbersections: true
-          fontsize: 12pt
-        commandline:
-          wrap: preserve
-        filter:
-          - run: deemph.py
-        postflight:
-          - run: latexmk.py
+   Notes:
+     all:
+       metadata:
+         numbersections: false
+     latex:
+       metadata:
+         numbersections: true
+         fontsize: 12pt
+       commandline:
+         wrap: preserve
+       filter:
+         - run: deemph.py
+       postflight:
+         - run: latexmk.py
 
 If panzer were run on the following document with the latex writer
 selected,
 
 .. code:: yaml
 
-    ---
-    title: "My document"
-    style: Notes
-    ...
+   ---
+   title: "My document"
+   style: Notes
+   ...
 
 it would run pandoc with filter ``deemph.py`` and command line option
 ``--wrap=preserve`` on the following and then execute ``latexmk.py``.
 
 .. code:: yaml
 
-    ---
-    title: "My document"
-    numbersections: true
-    fontsize: 12pt
-    ...
+   ---
+   title: "My document"
+   numbersections: true
+   fontsize: 12pt
+   ...
 
 Style overriding
 ----------------
@@ -379,16 +379,16 @@ Example:
 
 .. code:: yaml
 
-    - filter:
-      - run: setbaseheader.py
-        args: "`--level=2`"
-    - postprocess:
-      - run: sed
-        args: "`-e 's/hello/goodbye/g'`"
-    - postflight:
-      - kill: open_pdf.py
-    - cleanup:
-      - killall: true
+   - filter:
+     - run: setbaseheader.py
+       args: "`--level=2`"
+   - postprocess:
+     - run: sed
+       args: "`-e 's/hello/goodbye/g'`"
+   - postflight:
+     - kill: open_pdf.py
+   - cleanup:
+     - killall: true
 
 The filter ``setbaseheader.py`` receives the writer name as its first
 argument and ``--level=2`` as its second argument.
@@ -417,24 +417,24 @@ The typical structure for the support directory ``.panzer`` is:
 
 ::
 
-    .panzer/
-        cleanup/
-        filter/
-        lua-filter/
-        postflight/
-        postprocess/
-        preflight/
-        template/
-        shared/
-        styles/
+   .panzer/
+       cleanup/
+       filter/
+       lua-filter/
+       postflight/
+       postprocess/
+       preflight/
+       template/
+       shared/
+       styles/
 
 Within each directory, each executable may have a named subdirectory:
 
 ::
 
-    postflight/
-        latexmk/
-            latexmk.py
+   postflight/
+       latexmk/
+           latexmk.py
 
 Pandoc command line options
 ---------------------------
@@ -455,13 +455,13 @@ line option (e.g. ``standalone``).
 -  For pandoc repeated key-values, the value should be a list of inline
    code spans, e.g.
 
-::
+.. code:: yaml
 
-    commandline:
-      include-in-header:
-        - "`file1.txt`"
-        - "`file2.txt`"
-        - "`file3.txt`"
+   commandline:
+     include-in-header:
+       - "`file1.txt`"
+       - "`file2.txt`"
+       - "`file3.txt`"
 
 Repeated key-value options in ``comandline`` are added after any
 provided from the command line. Overriding styles append to repeated
@@ -474,13 +474,13 @@ can be used for both flags and key-value options (e.g.
 
 Example:
 
-::
+.. code:: yaml
 
-    commandline:
-      standalone: true
-      slide-level: "`3`"
-      number-sections: false
-      include-in-header: false
+   commandline:
+     standalone: true
+     slide-level: "`3`"
+     number-sections: false
+     include-in-header: false
 
 This passes the following options to pandoc
 ``--standalone --slide-level=3`` and removes any ``--number-sections``
@@ -528,13 +528,13 @@ probably be using a filter).
 
 ::
 
-    JSON_MESSAGE = [{'metadata':    METADATA,
-                     'template':    TEMPLATE,
-                     'style':       STYLE,
-                     'stylefull':   STYLEFULL,
-                     'styledef':    STYLEDEF,
-                     'runlist':     RUNLIST,
-                     'options':     OPTIONS}]
+   JSON_MESSAGE = [{'metadata':    METADATA,
+                    'template':    TEMPLATE,
+                    'style':       STYLE,
+                    'stylefull':   STYLEFULL,
+                    'styledef':    STYLEDEF,
+                    'runlist':     RUNLIST,
+                    'options':     OPTIONS}]
 
 -  ``METADATA`` is a copy of the metadata branch of the document’s AST
    (useful for scripts, not useful for filters)
@@ -551,47 +551,47 @@ probably be using a filter).
 -  ``RUNLIST`` is a list of processes in the run list; it has the
    following structure:
 
-   ::
+::
 
-       RUNLIST = [{'kind':      'preflight'|'filter'|'lua-filter'|'postprocess'|'postflight'|'cleanup',
-                   'command':   'my command',
-                   'arguments': ['argument1', 'argument2', ...],
-                   'status':    'queued'|'running'|'failed'|'done'
-                  },
-                   ...
-                   ...
-                 ]
+   RUNLIST = [{'kind':      'preflight'|'filter'|'lua-filter'|'postprocess'|'postflight'|'cleanup',
+               'command':   'my command',
+               'arguments': ['argument1', 'argument2', ...],
+               'status':    'queued'|'running'|'failed'|'done'
+              },
+               ...
+               ...
+             ]
 
 -  ``OPTIONS`` is a dictionary containing panzer’s and pandoc’s command
    line options:
 
-   ::
+.. code:: python
 
-       OPTIONS = {
-           'panzer': {
-               'panzer_support':  const.DEFAULT_SUPPORT_DIR,
-               'pandoc':          'pandoc',
-               'debug':           str(),
-               'quiet':           False,
-               'strict':          False,
-               'stdin_temp_file': str()   # tempfile used to buffer stdin
-           },
-           'pandoc': {
-               'input':      list(),      # list of input files
-               'output':     '-',         # output file; '-' is stdout
-               'pdf_output': False,       # if pandoc will write a .pdf
-               'read':       str(),       # reader
-               'write':      str(),       # writer
-               'options':    {'r': dict(), 'w': dict()}
-           }
+   OPTIONS = {
+       'panzer': {
+           'panzer_support':  const.DEFAULT_SUPPORT_DIR,
+           'pandoc':          'pandoc',
+           'debug':           str(),
+           'quiet':           False,
+           'strict':          False,
+           'stdin_temp_file': str()   # tempfile used to buffer stdin
+       },
+       'pandoc': {
+           'input':      list(),      # list of input files
+           'output':     '-',         # output file; '-' is stdout
+           'pdf_output': False,       # if pandoc will write a .pdf
+           'read':       str(),       # reader
+           'write':      str(),       # writer
+           'options':    {'r': dict(), 'w': dict()}
        }
+   }
 
-   ``options`` contains the command line options with which pandoc is
-   called. It consists of two separate dictionaries. The dictionary
-   under the ``'r'`` key contains all pandoc options pertaining to
-   reading the source documents to the AST. The dictionary under the
-   ``'w'`` key contains all pandoc options pertaining to writing the AST
-   to the output document.
+``options`` contains the command line options with which pandoc is
+called. It consists of two separate dictionaries. The dictionary under
+the ``'r'`` key contains all pandoc options pertaining to reading the
+source documents to the AST. The dictionary under the ``'w'`` key
+contains all pandoc options pertaining to writing the AST to the output
+document.
 
 Scripts read the json message above by deserialising json input on
 stdin.
@@ -600,13 +600,13 @@ Filters can read the json message by reading the metadata field,
 ``panzer_reserved``, stored as a raw code block in the AST, and
 deserialising the string ``JSON_MESSAGE_STR`` to recover the json:
 
-.. code:: yaml
+::
 
-    panzer_reserved:
-      json_message: |
-        ``` {.json}
-        JSON_MESSAGE_STR
-        ```
+   panzer_reserved:
+     json_message: |
+       ``` {.json}
+       JSON_MESSAGE_STR
+       ```
 
 Receiving messages from external processes
 ==========================================
@@ -622,19 +622,19 @@ utf-8 encoded json dictionaries, each with the following structure:
 
 ::
 
-    { 'level': LEVEL, 'message': MESSAGE }
+   { 'level': LEVEL, 'message': MESSAGE }
 
 -  ``LEVEL`` is a string that sets the error level; it can take one of
    the following values:
 
    ::
 
-         'CRITICAL'
-         'ERROR'
-         'WARNING'
-         'INFO'
-         'DEBUG'
-         'NOTSET'
+        'CRITICAL'
+        'ERROR'
+        'WARNING'
+        'INFO'
+        'DEBUG'
+        'NOTSET'
 
 -  ``MESSAGE`` is a string with your message
 
@@ -728,6 +728,7 @@ FAQ
 Similar
 =======
 
+-  https://github.com/mb21/panrun
 -  https://github.com/htdebeer/pandocomatic
 -  https://github.com/balachia/panopy
 -  https://github.com/phyllisstein/pandown

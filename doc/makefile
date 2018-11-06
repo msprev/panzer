@@ -12,8 +12,8 @@ OUT_BASENAME := $(basename $(SOURCE))
 ########################################################################
 
 doc:	$(SOURCE)
-	$(PANZER) $(SOURCE) -o ../$(OUT_BASENAME).md -t gfm ---quiet; \
-	$(PANZER) $(SOURCE) -o ../$(OUT_BASENAME).rst -t rst ---quiet
+	$(PANDOC) $(SOURCE) -o ../$(OUT_BASENAME).md -t gfm --standalone; \
+	$(PANDOC) $(SOURCE) -o ../$(OUT_BASENAME).rst -t rst --standalone
 
 ########################################################################
 #                 Standard makefile for markdown file                  #

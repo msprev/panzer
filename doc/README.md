@@ -1,9 +1,7 @@
 ---
 title:  "panzer user guide"
-author:
- - name: Mark Sprevak
-date: 22 February 2018
-style: Plain
+author: Mark Sprevak
+date: 6 November 2018
 ...
 
 # panzer
@@ -75,7 +73,7 @@ commandline:
 
 # Installation
 
-```
+``` {.bash}
 pip3 install git+https://github.com/msprev/panzer
 ```
 
@@ -87,7 +85,7 @@ pip3 install git+https://github.com/msprev/panzer
 
 *To upgrade existing installation:*
 
-```
+``` {.bash}
 pip3 install --upgrade git+https://github.com/msprev/panzer
 ```
 
@@ -355,7 +353,7 @@ Arbitrary pandoc command line options can be set using metadata via `commandline
 - For pandoc key-values, the value should be a quoted inline code span, e.g. ``include-in-header: "`path/to/my/header`"``.
 - For pandoc repeated key-values, the value should be a list of inline code spans, e.g.
 
-```
+``` {.yaml}
 commandline:
   include-in-header:
     - "`file1.txt`"
@@ -372,7 +370,7 @@ Repeated key-value options in `comandline` are added after any provided from the
 
 Example:
 
-```
+``` {.yaml}
 commandline:
   standalone: true
   slide-level: "`3`"
@@ -440,57 +438,54 @@ JSON_MESSAGE = [{'metadata':    METADATA,
 
 - `RUNLIST` is a list of processes in the run list; it has the following structure:
 
-
-    ```
-    RUNLIST = [{'kind':      'preflight'|'filter'|'lua-filter'|'postprocess'|'postflight'|'cleanup',
-                'command':   'my command',
-                'arguments': ['argument1', 'argument2', ...],
-                'status':    'queued'|'running'|'failed'|'done'
-               },
-                ...
-                ...
-              ]
-    ```
+```
+RUNLIST = [{'kind':      'preflight'|'filter'|'lua-filter'|'postprocess'|'postflight'|'cleanup',
+            'command':   'my command',
+            'arguments': ['argument1', 'argument2', ...],
+            'status':    'queued'|'running'|'failed'|'done'
+           },
+            ...
+            ...
+          ]
+```
 
 - `OPTIONS` is a dictionary containing panzer's and pandoc's command line options:
 
-    ```
-    OPTIONS = {
-        'panzer': {
-            'panzer_support':  const.DEFAULT_SUPPORT_DIR,
-            'pandoc':          'pandoc',
-            'debug':           str(),
-            'quiet':           False,
-            'strict':          False,
-            'stdin_temp_file': str()   # tempfile used to buffer stdin
-        },
-        'pandoc': {
-            'input':      list(),      # list of input files
-            'output':     '-',         # output file; '-' is stdout
-            'pdf_output': False,       # if pandoc will write a .pdf
-            'read':       str(),       # reader
-            'write':      str(),       # writer
-            'options':    {'r': dict(), 'w': dict()}
-        }
+``` {.python}
+OPTIONS = {
+    'panzer': {
+        'panzer_support':  const.DEFAULT_SUPPORT_DIR,
+        'pandoc':          'pandoc',
+        'debug':           str(),
+        'quiet':           False,
+        'strict':          False,
+        'stdin_temp_file': str()   # tempfile used to buffer stdin
+    },
+    'pandoc': {
+        'input':      list(),      # list of input files
+        'output':     '-',         # output file; '-' is stdout
+        'pdf_output': False,       # if pandoc will write a .pdf
+        'read':       str(),       # reader
+        'write':      str(),       # writer
+        'options':    {'r': dict(), 'w': dict()}
     }
-    ```
+}
+```
 
-    `options` contains the command line options with which pandoc is called.
-    It consists of two separate dictionaries.
-    The dictionary under the `'r'` key contains all pandoc options pertaining to reading the source documents to the AST.
-    The dictionary under the `'w'` key contains all pandoc options pertaining to writing the AST to the output document.
+`options` contains the command line options with which pandoc is called.
+It consists of two separate dictionaries.
+The dictionary under the `'r'` key contains all pandoc options pertaining to reading the source documents to the AST.
+The dictionary under the `'w'` key contains all pandoc options pertaining to writing the AST to the output document.
 
 Scripts read the json message above by deserialising json input on stdin.
 
 Filters can read the json message by reading the metadata field, `panzer_reserved`, stored as a raw code block in the AST, and deserialising the string `JSON_MESSAGE_STR` to recover the json:
 
-``` {.yaml}
-panzer_reserved:
-  json_message: |
-    ``` {.json}
-    JSON_MESSAGE_STR
-    ```
-```
+    panzer_reserved:
+      json_message: |
+        ``` {.json}
+        JSON_MESSAGE_STR
+        ```
 
 # Receiving messages from external processes
 
@@ -592,6 +587,7 @@ Pull requests welcome:
 
 # Similar
 
+* <https://github.com/mb21/panrun>
 * <https://github.com/htdebeer/pandocomatic>
 * <https://github.com/balachia/panopy>
 * <https://github.com/phyllisstein/pandown>
