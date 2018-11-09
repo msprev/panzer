@@ -100,6 +100,7 @@ PANDOC_OPT_PHASE = {
     'file-scope':              'r',
     'indented-code-classes':   'r',
     'metadata':                'r',
+    'metadata-file':           'r',
     'old-dashes':              'r',
     'preserve-tabs':           'r',
     'strip-empty-paragraphs':  'r',
