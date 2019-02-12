@@ -1,3 +1,15 @@
+-----
+
+My development has ceased on panzer. Over the years, pandoc has gained
+powerful new functionality (e.g. the `--metadata-file` option and Lua
+filters) that means that 90% of what can be done with panzer can be done
+with pandoc and some simple wrapper scripts. I no longer use panzer in
+my own workflow for this reason.
+
+If you would like to take over development of panzer, let me know.
+
+-----
+
 # panzer
 
 panzer adds *styles* to
@@ -171,7 +183,7 @@ of:
 Style definitions are hierarchically structured by *name* and *writer*.
 Style names by convention should be MixedCase (`MyNotes`) to avoid
 confusion with other metadata fields. Writer names are the same as those
-of the relevant pandoc writer (e.g. `latex`, `html`, `docx`, etc.) A
+of the relevant pandoc writer (e.g. `latex`, `html`, `docx`, etc.) A
 special writer, `all`, matches every writer.
 
   - `parent` takes a list or single style. Children inherit the
@@ -200,8 +212,8 @@ special writer, `all`, matches every writer.
 
   - `postprocessor` lists executable to pipe pandoc’s output through.
     Standard unix executables (`sed`, `tr`, etc.) are examples of
-    possible use. Postprocessors are skipped if a binary writer (e.g.
-    `docx`) is used.
+    possible use. Postprocessors are skipped if a binary writer
+    (e.g. `docx`) is used.
 
   - `postflight` lists executables run after the output has been
     written. If output is stdout, postflight scripts are run after
@@ -326,7 +338,7 @@ special item `- killall: true`.
 Arguments can be passed to executables by listing them as the value of
 the `args` field of that item. The value of the `args` field is passed
 as the command line options to the external process. This value of
-`args` should be a quoted inline code span (e.g. ``"`--options`"``) to
+`args` should be a quoted inline code span (e.g. ``"`--options`"``) to
 prevent the parser interpreting it as markdown. Note that json filters
 always receive the writer name as their first argument.
 
@@ -392,12 +404,12 @@ style.
 
 `commandline` contains one field for each pandoc command line option.
 The field name is the unabbreviated name of the relevant pandoc command
-line option (e.g. `standalone`).
+line option (e.g. `standalone`).
 
   - For pandoc flags, the value should be boolean (`true`, `false`),
-    e.g. `standalone: true`.
+    e.g. `standalone: true`.
   - For pandoc key-values, the value should be a quoted inline code
-    span, e.g. ``include-in-header: "`path/to/my/header`"``.
+    span, e.g. ``include-in-header: "`path/to/my/header`"``.
   - For pandoc repeated key-values, the value should be a list of inline
     code spans, e.g.
 
@@ -417,7 +429,7 @@ lists of the styles that they override.
 
 `false` plays a special role. `false` means that the pandoc command line
 option with the field’s name, if set, should be unset. `false` can be
-used for both flags and key-value options (e.g. `include-in-header:
+used for both flags and key-value options (e.g. `include-in-header:
 false`).
 
 Example:

@@ -4,6 +4,14 @@ author: Mark Sprevak
 date: 6 November 2018
 ...
 
+---
+
+My development has ceased on panzer. Over the years, pandoc has gained powerful new functionality (e.g. the `--metadata-file` option and Lua filters) that means that 90% of what can be done with panzer can be done with pandoc and some simple wrapper scripts. I no longer use panzer in my own workflow for this reason.
+
+If you would like to take over development of panzer, let me know.
+
+---
+
 # panzer
 
 panzer adds *styles* to [pandoc][].
